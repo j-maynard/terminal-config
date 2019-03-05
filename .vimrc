@@ -18,6 +18,7 @@ set confirm
 "set mouse=a
 set cmdheight=2
 set number
+set colorcolumn=72
 set shiftwidth=4
 set softtabstop=4
 set expandtab
