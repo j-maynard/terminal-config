@@ -62,7 +62,6 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 case $(uname) in
   Darwin)
     # Set up multiple Java installs
-    echo "Setting up OS X..."
     export JAVA_8_HOME=$(/usr/libexec/java_home -v1.8)
     export JAVA_11_HOME=$(/usr/libexec/java_home -v11)
     alias java8='export JAVA_HOME=$JAVA_8_HOME'
@@ -72,7 +71,7 @@ case $(uname) in
     eval "$(rbenv init -)"
     ;;
   Linux)
-    echo "Setting up Linux..."
+    # Set up multiple Java installs
     # Setup jEnv on linux
     export PATH="$HOME/.jenv/bin:$PATH"
     eval "$(jenv init -)"
