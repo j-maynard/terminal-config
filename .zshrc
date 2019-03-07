@@ -77,7 +77,7 @@ case $(uname) in
     export PATH="$HOME/.jenv/bin:$PATH"
     eval "$(jenv init -)"
     alias java8='jenv global 1.8'
-    alias java11='jenv gloal 11.0'
+    alias java11='jenv global 11.0'
     ;;
   # Linux Specific
   *)
