@@ -59,35 +59,50 @@ SPACESHIP_RPROMPT_ORDER=(
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # Mac Specific
-case $(uname) 
-Darwin)
-  # Set up multiple Java installs
-  echo "Setting up OS X..."
-  export JAVA_8_HOME=$(/usr/libexec/java_home -v1.8)
-  export JAVA_11_HOME=$(/usr/libexec/java_home -v11)
-  alias java8='export JAVA_HOME=$JAVA_8_HOME'
-  alias java11='export JAVA_HOME=$JAVA_11_HOME'
-  PATH="/usr/local/opt/ruby/bin:/usr/local/lib/ruby/gems/2.6.0/bin:/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-  MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
-  eval "$(rbenv init -)"
-  ;;
-Linux)
-  echo "Setting up Linux..."
-  # Setup jEnv on linux
-  export PATH="$HOME/.jenv/bin:$PATH"
-  eval "$(jenv init -)"
-  alias java8='jenv global 1.8'
-  alias java11='jenv gloal 11.0'
-  ;;
-# Linux Specific
-*)
-  echo "Unknwon Environment"
-  ;;
+case $(uname) in
+  Darwin)
+    # Set up multiple Java installs
+    echo "Setting up OS X..."
+    export JAVA_8_HOME=$(/usr/libexec/java_home -v1.8)
+    export JAVA_11_HOME=$(/usr/libexec/java_home -v11)
+    alias java8='export JAVA_HOME=$JAVA_8_HOME'
+    alias java11='export JAVA_HOME=$JAVA_11_HOME'
+    PATH="/usr/local/opt/ruby/bin:/usr/local/lib/ruby/gems/2.6.0/bin:/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+    eval "$(rbenv init -)"
+    ;;
+  Linux)
+    echo "Setting up Linux..."
+    # Setup jEnv on linux
+    export PATH="$HOME/.jenv/bin:$PATH"
+    eval "$(jenv init -)"
+    alias java8='jenv global 1.8'
+    alias java11='jenv gloal 11.0'
+    ;;
+  # Linux Specific
+  *)
+    echo "Unknwon Environment"
+    ;;
 esac
 
 alias ls='ls --color'
 alias tree='tree -C'
 alias browsh="docker run -e 'browsh_supporter=I have shown my support for Browsh' -it --rm browsh/browsh"
+
+# Git aliases
+alias ga='git add'
+alias gc='git commit'
+alias gr='git rm --cache'
+alias gi='git init'
+alias gclone='git clone'
+alias greset='git reset'
+alias glog='git log'
+alias gl='git log'
+alias gd='git diff'
+alias gdiff='git diff'
+alias gstat='git status'
+alias gpush='git push'
+alias gpull='git pull'
 
 java11
 
