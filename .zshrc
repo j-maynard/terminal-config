@@ -60,7 +60,7 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 
 # Mac Specific
 case $(uname) 
-"Darwin")
+Darwin)
   # Set up multiple Java installs
   echo "Setting up OS X..."
   export JAVA_8_HOME=$(/usr/libexec/java_home -v1.8)
@@ -71,7 +71,7 @@ case $(uname)
   MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
   eval "$(rbenv init -)"
   ;;
-"Linux")
+Linux)
   echo "Setting up Linux..."
   # Setup jEnv on linux
   export PATH="$HOME/.jenv/bin:$PATH"
