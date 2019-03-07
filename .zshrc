@@ -1,7 +1,7 @@
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
-HISTSIZE=1000
-SAVEHIST=1000
+HISTSIZE=10000
+SAVEHIST=10000
 bindkey -v
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
@@ -58,19 +58,37 @@ SPACESHIP_RPROMPT_ORDER=(
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-alias ls='ls --color'
-alias tree='tree -C'
-PATH="/usr/local/opt/ruby/bin:/usr/local/lib/ruby/gems/2.6.0/bin:/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+# Mac Specific
+case $(uname) 
+"Darwin")
+  # Set up multiple Java installs
+  echo "Setting up OS X..."
+  export JAVA_8_HOME=$(/usr/libexec/java_home -v1.8)
+  export JAVA_11_HOME=$(/usr/libexec/java_home -v11)
+  alias java8='export JAVA_HOME=$JAVA_8_HOME'
+  alias java11='export JAVA_HOME=$JAVA_11_HOME'
+  PATH="/usr/local/opt/ruby/bin:/usr/local/lib/ruby/gems/2.6.0/bin:/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+  MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+  eval "$(rbenv init -)"
+  ;;
+"Linux")
+  echo "Setting up Linux..."
+  # Setup jEnv on linux
+  export PATH="$HOME/.jenv/bin:$PATH"
+  eval "$(jenv init -)"
+  alias java8='jenv global 1.8'
+  alias java11='jenv gloal 11.0'
+  ;;
+# Linux Specific
+*)
+  echo "Unknwon Environment"
+  ;;
+esac
+
 alias ls='ls --color'
 alias tree='tree -C'
 alias browsh="docker run -e 'browsh_supporter=I have shown my support for Browsh' -it --rm browsh/browsh"
-eval "$(rbenv init -)"
-# Set up multiple Java installs
-export JAVA_8_HOME=$(/usr/libexec/java_home -v1.8)
-export JAVA_11_HOME=$(/usr/libexec/java_home -v11)
-alias java8='export JAVA_HOME=$JAVA_8_HOME'
-alias java11='export JAVA_HOME=$JAVA_11_HOME'
+
 java11
 
 export EXIT_SESSION=0
@@ -84,11 +102,3 @@ if [[ -z "$TMUX" ]]; then
     ~/.screenfetch/screenfetch -a ~/.screenfetch/ft.txt
   fi
 fi
-
-# if [[ -n $TMUX_PANE ]]; then
-#   if [[ "$TMUX_PANE" == "%0" ]]; then
-#     ~/.screenfetch/screenfetch -a ~/.screenfetch/ft.txt
-#   fi
-# else
-#     ~/.screenfetch/screenfetch -a ~/.screenfetch/ft.txt
-# fi
