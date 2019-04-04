@@ -107,7 +107,7 @@ java11
 
 export EXIT_SESSION=0
 if [[ -z "$TMUX" ]]; then
-  ./.tmux-attach.sh
+  ./.term-config/tmux-attach.sh
   if [[ "$?" == "0" ]]; then
     echo "Script exited 0"
     exit
