@@ -1,9 +1,10 @@
+execute pathogen#infect()
 set rtp+=~/Development/powerline/bindings/vim
 python3 from powerline.vim import setup as powerline_setup
 python3 powerline_setup()
 python3 del powerline_setup
 set nocompatible
-filetype indent plugin on
+filetype plugin indent on
 syntax on
 set wildmenu
 set showcmd
@@ -25,3 +26,8 @@ set expandtab
 set guifont=UbuntuMonoDerivativePowerline-Regular:h16
 source $VIMRUNTIME/menu.vim
 color dracula
+set updatetime=500
+autocmd StdinReadPre * let s:std_in=1
+autocmd vimenter * NERDTree
+autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in") | exe 'NERDTree' argv()[0] | wincmd p | ene | exe 'cd '.argv()[0] | endif
+map <C-n> :NERDTreeToggle<CR>

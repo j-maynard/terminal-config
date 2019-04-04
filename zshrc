@@ -66,7 +66,7 @@ case $(uname) in
     export JAVA_11_HOME=$(/usr/libexec/java_home -v11)
     alias java8='export JAVA_HOME=$JAVA_8_HOME'
     alias java11='export JAVA_HOME=$JAVA_11_HOME'
-    PATH="/usr/local/opt/ruby/bin:/usr/local/lib/ruby/gems/2.6.0/bin:/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    PATH="/opt/local/bin:/opt/local/sbin:/usr/local/opt/ruby/bin:/usr/local/lib/ruby/gems/2.6.0/bin:/usr/local/opt/coreutils/libexec/gnubin:$PATH"
     MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
     eval "$(rbenv init -)"
     ;;
@@ -96,23 +96,21 @@ alias gi='git init'
 alias gclone='git clone'
 alias greset='git reset'
 alias glog='git log'
-alias gl='git log'
-alias gd='git diff'
 alias gdiff='git diff'
 alias gstat='git status'
-alias gpush='git push'
-alias gpull='git pull'
+alias push='git push'
+alias pull='git pull'
 
 java11
 
 export EXIT_SESSION=0
 if [[ -z "$TMUX" ]]; then
-  ./.tmux-attach.sh
+  ~/.term-config/tmux-attach.sh
   if [[ "$?" == "0" ]]; then
     echo "Script exited 0"
     exit
   elif [[ "$?" == "666" ]]; then
-    echo "Script exited 666"
-    ~/.screenfetch/screenfetch -a ~/.screenfetch/ft.txt
+     "Script exited 666"
+    ~/.screenfetch/screenfetch-dev -a ~/.screenfetch/ft.txt
   fi
 fi
