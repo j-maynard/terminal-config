@@ -1,12 +1,14 @@
 #!/bin/bash
 
 termconfig="${HOME}/.term-config"
+loc="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Move term-config files in to place
-if [[ "${PWD}" != "${termconfig}" ]]; then
+if [[ "${loc}" != "${termconfig}" ]]; then
     echo "Term config not in the right palce... Moving to ${termconfig}"
-    mv ${PWD} ${termconfig}
+    mv ${loc} ${termconfig}
 fi
+
 # Remove existing files
 if [ -f "${HOME}/.emacs" ]; then
     echo "emacs config exists removing..."
@@ -27,11 +29,9 @@ if [ -d "${HOME}/.screenfetch" ]; then
     echo "user screenfetch exists removing..."
   if [ -L "${HOME}/.screenfetch" ]; then
     # It is a symlink!
-    # Symbolic link specific commands go here.
     rm "${HOME}/.screenfetch"
   else
     # It's a directory!
-    # Directory command goes here.
     rm -rf "${HOME}/.screenfetch"
   fi
 fi
@@ -40,11 +40,9 @@ if [ -d "${HOME}/.tmux" ]; then
     echo "tmux config directory exists removing..."
   if [ -L "${HOME}/.tmux" ]; then
     # It is a symlink!
-    # Symbolic link specific commands go here.
     rm "${HOME}/.tmux"
   else
     # It's a directory!
-    # Directory command goes here.
     rm -rf "${HOME}/.tmux"
   fi
 fi
@@ -68,11 +66,9 @@ if [ -d "${HOME}/.vim" ]; then
     echo "vim config directory exists removing..."
   if [ -L "${HOME}/.vim" ]; then
     # It is a symlink!
-    # Symbolic link specific commands go here.
     rm "${HOME}/.vim"
   else
     # It's a directory!
-    # Directory command goes here.
     rm -rf "${HOME}/.vim"
   fi
 fi
