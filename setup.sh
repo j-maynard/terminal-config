@@ -113,7 +113,7 @@ echo "Installing vim.pathogen..."
 mkdir -p ~/.vim/autoload ~/.vim/bundle
 curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 echo "Install Vim plugins..."
-cd ~/.vim/bundle
+git clone https://github.com/tpope/vim-sensible.git ~/.vim/bundle/vim-sensible
 git clone git://github.com/airblade/vim-gitgutter.git ~/vim/bundle/git-gutter
 git clone https://github.com/scrooloose/nerdtree.git ~/.vim/bundle/nerdtree
 git clone https://github.com/Xuyuanp/nerdtree-git-plugin.git ~/.vim/bundle/nerdtree-git-plugin
