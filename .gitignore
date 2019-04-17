@@ -1,10 +1,2 @@
-Applications/
-Documnets/
-Downloads/
-Desktop/
-Pictures/
-Movies/
-Music/
-OneDrive/
-Public/
-VirtualBox VMs/
+vim/bundle/
+vim/autoload/
