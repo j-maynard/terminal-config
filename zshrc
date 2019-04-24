@@ -61,11 +61,14 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 # Mac Specific
 case $(uname) in
   Darwin)
+    which java > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
     # Set up multiple Java installs
-    export JAVA_8_HOME=$(/usr/libexec/java_home -v1.8)
-    export JAVA_11_HOME=$(/usr/libexec/java_home -v11)
-    alias java8='export JAVA_HOME=$JAVA_8_HOME'
-    alias java11='export JAVA_HOME=$JAVA_11_HOME'
+        export JAVA_8_HOME=$(/usr/libexec/java_home -v1.8)
+        export JAVA_11_HOME=$(/usr/libexec/java_home -v11)
+        alias java8='export JAVA_HOME=$JAVA_8_HOME'
+        alias java11='export JAVA_HOME=$JAVA_11_HOME'
+    fi
     PATH="/opt/local/bin:/opt/local/sbin:/usr/local/opt/ruby/bin:/usr/local/lib/ruby/gems/2.6.0/bin:/usr/local/opt/coreutils/libexec/gnubin:$PATH"
     MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
     eval "$(rbenv init -)"
@@ -73,10 +76,13 @@ case $(uname) in
   Linux)
     # Set up multiple Java installs
     # Setup jEnv on linux
-    export PATH="$HOME/.jenv/bin:$PATH"
-    eval "$(jenv init -)"
-    alias java8='jenv global 1.8'
-    alias java11='jenv global 11.0'
+    which java > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+        export PATH="$HOME/.jenv/bin:$PATH"
+        eval "$(jenv init -)"
+        alias java8='jenv global 1.8'
+        alias java11='jenv global 11.0'
+    fi
     ;;
   # Linux Specific
   *)
@@ -86,22 +92,30 @@ esac
 
 alias ls='ls --color'
 alias tree='tree -C'
-alias browsh="docker run -e 'browsh_supporter=I have shown my support for Browsh' -it --rm browsh/browsh"
-
+which docker > /dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    alias browsh="docker run -e 'browsh_supporter=I have shown my support for Browsh' -it --rm browsh/browsh"
+fi
 # Git aliases
-alias ga='git add'
-alias gc='git commit'
-alias gr='git rm --cache'
-alias gi='git init'
-alias gclone='git clone'
-alias greset='git reset'
-alias glog='git log'
-alias gdiff='git diff'
-alias gstat='git status'
-alias push='git push'
-alias pull='git pull'
+which git > /dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    alias ga='git add'
+    alias gc='git commit'
+    alias gr='git rm --cache'
+    alias gi='git init'
+    alias gclone='git clone'
+    alias greset='git reset'
+    alias glog='git log'
+    alias gdiff='git diff'
+    alias gstat='git status'
+    alias push='git push'
+    alias pull='git pull'
+fi
 
-java11
+which java > /dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    java11
+fi
 
 export EXIT_SESSION=0
 if [[ -z "$TMUX" ]]; then
