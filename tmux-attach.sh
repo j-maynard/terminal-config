@@ -25,6 +25,25 @@ function assessSession() {
   fi
 }
 
+#Don't run this script if we're in VS Code or IntelliJ
+if [[ "$TERMINAL_EMULATOR" == "JetBrains-JediTerm" ]] ; then
+    echo "Welcome to IntelliJ..."
+    exit 666
+fi
+
+if [[ "$TERM_PROGRAM" == "vscode" ]]; then
+    echo "Welcome to Visual Studio Code..."
+    exit 666
+fi
+
+# There seems to be issues with WSL at the moment.  Don't run TMUX
+if grep -q -i 'Microsoft' /proc/version 2>/dev/null || \
+    grep -q -i 'Microsoft' /proc/sys/kernel/osrelease 2>/dev/null
+    then
+    ~/.screenfetch/screenfetch-dev -a ~/.screenfetch/ft.txt
+    echo "WSL is running... Skipping TMUX..."
+fi
+
 #Only run this script if we're not already in a TMUX Session
 if [[ -z "$TMUX" ]]; then
   # First check no sessions are runing sliently

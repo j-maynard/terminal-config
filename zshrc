@@ -110,6 +110,7 @@ if [[ $? -eq 0 ]]; then
     alias gstat='git status'
     alias push='git push'
     alias pull='git pull'
+    alias groot='groot=$(git rev-parse --show-toplevel);cd $groot'
 fi
 
 which java > /dev/null 2>&1
