@@ -25,6 +25,17 @@ function assessSession() {
   fi
 }
 
+#Don't run this script if we're in VS Code or IntelliJ
+if [[ "$TERMINAL_EMULATOR" == "JetBrains-JediTerm" ]] ; then
+    echo "Welcome to IntelliJ..."
+    exit 666
+fi
+
+if [[ "$TERM_PROGRAM" == "vscode" ]]; then
+    echo "Welcome to Visual Studio Code..."
+    exit 666
+fi
+
 #Only run this script if we're not already in a TMUX Session
 if [[ -z "$TMUX" ]]; then
   # First check no sessions are runing sliently
