@@ -10,51 +10,119 @@ zstyle :compinstall filename '/Users/jamie/.zshrc'
 autoload -Uz compinit
 compinit
 # End of lines added by compinstall
+
+# Font mode for powerlevel9k
+P9K_MODE="nerdfont-complete"
+
+# Prompt elements
+P9K_LEFT_PROMPT_ELEMENTS=(os_icon custom_user dir dir_writable vcs root_indicator)
+#P9K_RIGHT_PROMPT_ELEMENTS=(status background_jobs docker_machine java_version node_version go_version rbenv)
+P9K_RIGHT_PROMPT_ELEMENTS=(status command_execution_time background_jobs docker_machine time)
+
+# Prompt settings
+P9K_PROMPT_ON_NEWLINE=true
+P9K_RPROMPT_ON_NEWLINE=false
+P9K_MULTILINE_FIRST_PROMPT_PREFIX_ICON=$'%K{white}%k'
+P9K_MULTILINE_LAST_PROMPT_PREFIX_ICON=$'%K{green}%F{black} \uf155 %f%F{green}%k\ue0b0 %f '
+
+# Command Execution time
+P9K_COMMAND_EXECUTION_TIME_THRESHOLD='0'
+
+# Separators
+P9K_LEFT_SEGMENT_SEPARATOR_ICON=$'\ue0b0'
+P9K_LEFT_SUBSEGMENT_SEPARATOR_ICON=$'\ue0b1'
+P9K_RIGHT_SEGMENT_SEPARATOR_ICON=$'\ue0b2'
+P9K_RIGHT_SUBSEGMENT_SEPARATOR_ICON=$'\ue0b7'
+
+# Dir colours
+P9K_DIR_HOME_BACKGROUND='black'
+P9K_DIR_HOME_FOREGROUND='white'
+P9K_DIR_HOME_SUBFOLDER_BACKGROUND='black'
+P9K_DIR_HOME_SUBFOLDER_FOREGROUND='white'
+P9K_DIR_DEFAULT_BACKGROUND='yellow'
+P9K_DIR_DEFAULT_FOREGROUND='black'
+P9K_DIR_SHORTEN_LENGTH=2
+P9K_DIR_SHORTEN_STRATEGY="truncate_from_right"
+
+# OS segment
+P9K_OS_ICON_BACKGROUND='black'
+P9K_LINUX_ICON='%F{cyan} \uf303 %F{white} arch %F{cyan}linux%f'
+if [[ "$(uname)" == "Darwin" ]]; then
+  P9K_OS_ICON_ICON='\uF535'
+fi
+
+# VCS icons
+P9K_VCS_GIT_ICON=$'\uf1d2 '
+P9K_VCS_GIT_GITHUB_ICON=$'\uf113 '
+P9K_VCS_GIT_GITLAB_ICON=$'\uf296 '
+P9K_VCS_BRANCH_ICON=$''
+P9K_VCS_STAGED_ICON=$'\uf055'
+P9K_VCS_UNSTAGED_ICON=$'\uf421'
+P9K_VCS_UNTRACKED_ICON=$'\uf00d'
+P9K_VCS_INCOMING_CHANGES_ICON=$'\uf0ab '
+P9K_VCS_OUTGOING_CHANGES_ICON=$'\uf0aa '
+
+# VCS colours
+P9K_VCS_MODIFIED_BACKGROUND='blue'
+P9K_VCS_MODIFIED_FOREGROUND='black'
+P9K_VCS_UNTRACKED_BACKGROUND='green'
+P9K_VCS_UNTRACKED_FOREGROUND='black'
+P9K_VCS_CLEAN_BACKGROUND='green'
+P9K_VCS_CLEAN_FOREGROUND='black'
+
+# VCS CONFIG
+P9K_VCS_SHOW_CHANGESET=false
+
+# Status
+P9K_STATUS_OK_ICON=$'\uf164'
+P9K_STATUS_ERROR_ICON=$'\uf165'
+P9K_STATUS_ERROR_CR_ICON=$'\uf165'
+
+# Battery
+P9K_BATTERY_LOW_FOREGROUND='red'
+P9K_BATTERY_CHARGING_FOREGROUND='blue'
+P9K_BATTERY_CHARGED_FOREGROUND='green'
+P9K_BATTERY_DISCONNECTED_FOREGROUND='blue'
+P9K_BATTERY_VERBOSE=true
+
+# Programming languages
+P9K_RBENV_PROMPT_ALWAYS_SHOW=false
+P9K_GO_VERSION_PROMPT_ALWAYS_SHOW=false
+P9K_JAVA_VERSION_PROMPT_ALWAYS_SHOW=false
+P9K_NODE_VERSION__ALWAYS_SHOW=false
+P9K_NODE_VERSION_BACKGROUND='green'
+P9K_NODE_VERSION_FOREGROUND='black'
+
+# User with skull
+user_with_skull() {
+  if [[ "$(whoami)" == "jamesmaynard" ]]; then
+    echo -n "\ufb8a jamie"
+  else
+    echo -n "\ufb8a $(whoami)"
+  fi
+}
+
+P9K_CUSTOM_USER="user_with_skull"
+
+# Command auto-correction.
+ENABLE_CORRECTION="true"
+
+# Command execution time stamp shown in the history command output.
+HIST_STAMPS="dd/mm/yyyy"
+
+# Plugins to load
+plugins=(git
+         gitfast
+         golang
+         zsh-syntax-highlighting
+         zsh-autosuggestions
+         zsh-completions
+         history-substring-search)
+
+# Activate antibody
 source <(antibody init)
 antibody bundle < ~/.zsh_plugins.txt
-SPACESHIP_CHAR_SYMBOL="➽  "
-SPACESHIP_USER_SHOW="always"
-SPACESHIP_HOST_SHOW="always"
-SPACESHIP_HOST_PREFIX="on "
-SPACESHIP_TIME_SHOW=true
-SPACESHIP_PROMPT_ORDER=(
-  # time          # Time stamps section
-  user          # Username section
-  dir           # Current directory section
-  host          # Hostname section
-  git           # Git section (git_branch + git_status)
-  hg            # Mercurial section (hg_branch  + hg_status)
-  package       # Package version
-  node          # Node.js section
-  ruby          # Ruby section
-  elixir        # Elixir section
-  xcode         # Xcode section
-  swift         # Swift section
-  golang        # Go section
-  php           # PHP section
-  rust          # Rust section
-  haskell       # Haskell Stack section
-  julia         # Julia section
-  docker        # Docker section
-  aws           # Amazon Web Services section
-  venv          # virtualenv section
-  conda         # conda virtualenv section
-  pyenv         # Pyenv section
-  dotnet        # .NET section
-  ember         # Ember.js section
-  kubecontext   # Kubectl context section
-  exec_time     # Execution time
-  line_sep      # Line break
-  battery       # Battery level and status
-  vi_mode       # Vi-mode indicator
-  # jobs          # Background jobs indicator
-  exit_code     # Exit code section
-  char          # Prompt character
-)
-SPACESHIP_RPROMPT_ORDER=(
-  time
-  jobs
-)
+antibody bundle bhilburn/powerlevel9k branch:next
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
@@ -90,12 +158,21 @@ case $(uname) in
     ;;
 esac
 
-alias ls='ls --color'
+# LS with icons when available
+which colorls > /dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+    alias ls='colorls'
+else
+    alias ls='ls --color'
+fi
+
 alias tree='tree -C'
+
 which docker > /dev/null 2>&1
 if [[ $? -eq 0 ]]; then
     alias browsh="docker run -e 'browsh_supporter=I have shown my support for Browsh' -it --rm browsh/browsh"
 fi
+
 # Git aliases
 which git > /dev/null 2>&1
 if [[ $? -eq 0 ]]; then
