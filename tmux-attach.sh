@@ -25,6 +25,15 @@ function assessSession() {
   fi
 }
 
+
+if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
+    TMUX_CMD="tmux -CC"
+    export ITERM2=TRUE
+else
+    $TMUX_CMD="tmux"
+    export ITERM2=FALSE
+fi
+
 #Don't run this script if we're in VS Code or IntelliJ
 if [[ "$TERMINAL_EMULATOR" == "JetBrains-JediTerm" ]] ; then
     echo "Welcome to IntelliJ..."
@@ -50,14 +59,14 @@ if [[ -z "$TMUX" ]]; then
   tmux ls &> /dev/null
   # If this exits with 1, no sessions are running, start a new one
   if [[ "$?" == "1" ]]; then
-    exec tmux new-session "~/.screenfetch/screenfetch-dev -a ~/.screenfetch/ft.txt && zsh"
+    exec $TMUX_CMD new-session "~/.screenfetch/screenfetch-dev -a ~/.screenfetch/ft.txt && zsh"
     exit 0
   fi
 
   TMUX_SESSIONS=($(tmux ls -F '#{session_name}, #{session_attached}' |grep -v ', 1' |cut -d, -f1))
   #If no sessions are available to attach to just create a new one
   if [[ ${#TMUX_SESSIONS[@]} == "0" ]]; then
-    exec tmux new-session "~/.screenfetch/screenfetch-dev -a ~/.screenfetch/ft.txt && zsh"
+    exec $TMUX_CMD new-session "~/.screenfetch/screenfetch-dev -a ~/.screenfetch/ft.txt && zsh"
     exit 0
   fi
   echo "TMUX sessions are availble to attach to:"
@@ -75,12 +84,12 @@ if [[ -z "$TMUX" ]]; then
   done
   
   if [[ "$SESSION" = "n" ]]; then
-    exec tmux new-session "~/.screenfetch/screenfetch-dev -a ~/.screenfetch/ft.txt && zsh"
+    exec $TMUX_CMD new-session "~/.screenfetch/screenfetch-dev -a ~/.screenfetch/ft.txt && zsh"
     exit 0
   elif [[ "$SESSION" = "x" ]]; then
     exit 666
   else
-    exec tmux a -t $SESSION;
+    exec $TMUX_CMD a -t $SESSION
     exit 0
   fi
 
