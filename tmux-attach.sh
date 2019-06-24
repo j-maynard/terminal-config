@@ -30,7 +30,7 @@ if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
     TMUX_CMD="tmux -CC"
     export ITERM2=TRUE
 else
-    $TMUX_CMD="tmux"
+    TMUX_CMD="tmux"
     export ITERM2=FALSE
 fi
 
