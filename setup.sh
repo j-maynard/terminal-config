@@ -1,4 +1,8 @@
 #!/bin/bash
+if [[ -f "$HOME/.term-config-run.lock" ]]; then
+    echo "Termal Config Setup already run.  Exiting..."
+    exit 0
+fi
 
 termconfig="${HOME}/.term-config"
 loc="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -112,8 +116,12 @@ ln -s ${termconfig}/vim ${HOME}/.vim
 echo "Installing vim.pathogen..."
 mkdir -p ~/.vim/autoload ~/.vim/bundle
 curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+
 echo "Install Vim plugins..."
 git clone https://github.com/tpope/vim-sensible.git ~/.vim/bundle/vim-sensible
 git clone git://github.com/airblade/vim-gitgutter.git ~/vim/bundle/git-gutter
 git clone https://github.com/scrooloose/nerdtree.git ~/.vim/bundle/nerdtree
 git clone https://github.com/Xuyuanp/nerdtree-git-plugin.git ~/.vim/bundle/nerdtree-git-plugin
+
+touch "$HOME/.term-config-run.lock"
+echo "Terminal Config setup run sucessfully."
