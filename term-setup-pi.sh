@@ -3,7 +3,7 @@
 # Stop on error
 set -e
 
-if [[ "$HOME/.term-config-run.lock" ]]; then
+if [[ -f "$HOME/.term-config-run.lock" ]]; then
     echo "Terminal configuration script has already run.  Exiting..."
     exit 0
 fi
@@ -32,20 +32,29 @@ rm -r ./bin
 chsh -s /bin/zsh
 
 # Run setup script for terminal config
-~/terminal-config/setup.sh
+if [[ -f "$HOME/.term-config/setup.sh" ]]; then
+    ~/.term-config/setup.sh
+elif [[ -f "$HOME/terminal-config/setup.sh" ]]; then
+    ~/terminal-config/setup.sh
+fi
 
 # Install powerline for vim
 pip3 install --user setuptools
 pip3 install --user powerline-status
 mkdir -p  ~/.config/powerline
-cp -r ~/.local/lib/python3.6/site-packages/powerline/config_files/ ~/.config/powerline/
+cp -r ~/.local/lib/python3.7/site-packages/powerline/config_files/ ~/.config/powerline/
 
 cd /tmp/
 
+# Create user font directory
+if [[ ! -d "$HOME/.fonts" ]]; then
+    echo "Creating user font directory..."
+    mkdir ~/.fonts
+fi
+
 # Install Colour Emojis
-mkdir ~/.fonts
 wget https://noto-website.storage.googleapis.com/pkgs/NotoColorEmoji-unhinted.zip
-cd ~/fonts
+cd ~/.fonts
 unzip /tmp/NotoColorEmoji-unhinted.zip
 rm LICENSE_OFL.txt README
 mkdir -p ~/.config/fontconfig/
@@ -89,5 +98,5 @@ git remote set-url origin git@github.com:j-maynard/terminal-config.git
 
 cd $STARTPWD
 
-tocuh "$HOME/.term-config-run.lock"
+touch "$HOME/.term-config-run.lock"
 echo "Update the fonts for your terminal and then restart your shell to fnish"
