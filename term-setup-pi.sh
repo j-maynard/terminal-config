@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Stop on error
 set -e
 
@@ -40,8 +39,6 @@ pip3 install --user powerline-status
 mkdir -p  ~/.config/powerline
 cp -r ~/.local/lib/python3.6/site-packages/powerline/config_files/ ~/.config/powerline/
 
-cd /tmp/
-
 # Install Colour Emojis
 mkdir ~/.fonts
 wget https://noto-website.storage.googleapis.com/pkgs/NotoColorEmoji-unhinted.zip
@@ -70,7 +67,6 @@ unzip DroidSansMono.zip
 sudo fc-cache -fv
 fc-cache -fv
 
-cd /tmp
 mkdir -p ~/.config/xfce4/terminal/
 scp home:~/.config/xfce4/terminal/terminalrc ~/.config/xfce4/terminal/terminalrc
 sudo update-alternatives --set x-terminal-emulator /usr/bin/xfce4-terminal.wrapper
