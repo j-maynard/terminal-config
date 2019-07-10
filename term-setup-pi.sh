@@ -75,7 +75,6 @@ mkdir -p ~/.config/xfce4/terminal/
 scp home:~/.config/xfce4/terminal/terminalrc ~/.config/xfce4/terminal/terminalrc
 sudo update-alternatives --set x-terminal-emulator /usr/bin/xfce4-terminal.wrapper
 
-cd /tmp
 cd $STARTPWD
 sudo gem install colorls
 
@@ -83,6 +82,12 @@ git clone https://github.com/gcuisinier/jenv.git ~/.jenv
 
 # Update LightDM to be of use
 sudo sed -i 's/greeter-session=pi-greeter/#greeter-session=pi-greeter\ngreeter-session=lightdm-gtk-greeter/g' /etc/lightdm/lightdm.conf
+
+# Make sure to update the git url for term-setup to be SSH
+cd ~/.term-config
+git remote set-url origin git@github.com:j-maynard/terminal-config.git
+
+cd $STARTPWD
 
 tocuh "$HOME/.term-config-run.lock"
 echo "Update the fonts for your terminal and then restart your shell to fnish"
