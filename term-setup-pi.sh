@@ -3,7 +3,7 @@
 # Stop on error
 set -e
 
-if [[ -f "$HOME/.term-config-run.lock" ]]; then
+if [[ -f "$HOME/.term-setup-run.lock" ]]; then
     echo "Terminal configuration script has already run.  Exiting..."
     exit 0
 fi
@@ -98,5 +98,5 @@ git remote set-url origin git@github.com:j-maynard/terminal-config.git
 
 cd $STARTPWD
 
-touch "$HOME/.term-config-run.lock"
+touch "$HOME/.term-setup-run.lock"
 echo "Update the fonts for your terminal and then restart your shell to fnish"
