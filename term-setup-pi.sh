@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Stop on error
 set -e
 
@@ -44,8 +43,6 @@ pip3 install --user powerline-status
 mkdir -p  ~/.config/powerline
 cp -r ~/.local/lib/python3.7/site-packages/powerline/config_files/ ~/.config/powerline/
 
-cd /tmp/
-
 # Create user font directory
 if [[ ! -d "$HOME/.fonts" ]]; then
     echo "Creating user font directory..."
@@ -79,7 +76,6 @@ unzip DroidSansMono.zip
 sudo fc-cache -fv
 fc-cache -fv
 
-cd /tmp
 mkdir -p ~/.config/xfce4/terminal/
 scp home:~/.config/xfce4/terminal/terminalrc ~/.config/xfce4/terminal/terminalrc
 sudo update-alternatives --set x-terminal-emulator /usr/bin/xfce4-terminal.wrapper
