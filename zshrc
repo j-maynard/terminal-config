@@ -82,16 +82,21 @@ else
       P9K_PROMPT_ON_NEWLINE=true
       P9K_RPROMPT_ON_NEWLINE=false
       P9K_MULTILINE_FIRST_PROMPT_PREFIX_ICON=$'%K{white}%k'
-      P9K_MULTILINE_LAST_PROMPT_PREFIX_ICON=$'%K{green}%F{black} \uf155 %f%F{green}%k\ue0b0 %f '
+      P9K_MULTILINE_LAST_PROMPT_PREFIX_ICON=$'%K{green}%F{black} \uf155 %f%F{green}%k\ue0c6 %f '
 
       # Command Execution time
       P9K_COMMAND_EXECUTION_TIME_THRESHOLD='0'
 
       # Separators
-      P9K_LEFT_SEGMENT_SEPARATOR_ICON=$'\ue0b0'
-      P9K_LEFT_SUBSEGMENT_SEPARATOR_ICON=$'\ue0b1'
-      P9K_RIGHT_SEGMENT_SEPARATOR_ICON=$'\ue0b2'
-      P9K_RIGHT_SUBSEGMENT_SEPARATOR_ICON=$'\ue0b7'
+      #P9K_LEFT_SEGMENT_SEPARATOR_ICON=$'\ue0b0'
+      #P9K_LEFT_SUBSEGMENT_SEPARATOR_ICON=$'\ue0b1'
+      #P9K_RIGHT_SEGMENT_SEPARATOR_ICON=$'\ue0b2'
+      #P9K_RIGHT_SUBSEGMENT_SEPARATOR_ICON=$'\ue0b7'
+
+      P9K_LEFT_SEGMENT_SEPARATOR_ICON=$'\ue0c6 '
+      P9K_LEFT_SUBSEGMENT_SEPARATOR_ICON=$'\ue0c6 '
+      P9K_RIGHT_SEGMENT_SEPARATOR_ICON=$'\ue0c7 '
+      P9K_RIGHT_SUBSEGMENT_SEPARATOR_ICON=$'\ue0c7 '
 
       # Dir colours
       P9K_DIR_HOME_BACKGROUND='black'
@@ -155,9 +160,9 @@ else
       # User with skull
       user_with_skull() {
         if [[ "$(whoami)" == "jamesmaynard" ]]; then
-          echo -n "\ufb8a jamie"
+          echo -n " \ufb8a jamie"
         else
-          echo -n "\ufb8a $(whoami)"
+          echo -n " \ufb8a $(whoami)"
         fi
       }
 
