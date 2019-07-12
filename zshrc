@@ -16,6 +16,13 @@ if [[  $TERM_PROGRAM == "iTerm.app" ]]; then
     export ITERM2=TRUE
 fi
 
+# Make sure terminal config is up to date
+if [[ -d "~/.term-config" ]]; then
+    if [[ -d ~/.term-config/.git ]]; then
+        cd .term-config && git pull && cd $OLDPWD
+    fi
+fi
+
 # Activate antibody
 source <(antibody init)
 antibody bundle < ~/.zsh_plugins.txt
