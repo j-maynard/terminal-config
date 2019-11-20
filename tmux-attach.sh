@@ -25,9 +25,12 @@ function assessSession() {
   fi
 }
 
-
 if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
-    TMUX_CMD="tmux -CC"
+    if [[ "$(cat ~/.term-config/.tmux_integration)" == "false" ]]; then
+        TMUX_CMD="tmux"
+    else
+        TMUX_CMD="tmux -CC"
+    fi
     export ITERM2=TRUE
 else
     TMUX_CMD="tmux"

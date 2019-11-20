@@ -119,7 +119,7 @@ else
       P9K_OS_ICON_BACKGROUND='black'
       P9K_LINUX_ICON='%F{cyan} \uf303 %F{white} arch %F{cyan}linux%f'
       if [[ "$(uname)" == "Darwin" ]]; then
-        P9K_OS_ICON_ICON='\uF535'
+        P9K_OS_ICON_ICON='\uF535 '
       fi
 
       # VCS icons
@@ -209,12 +209,26 @@ else
       antibody bundle bhilburn/powerlevel9k branch:next
 
       # LS with icons when available
-      which colorls > /dev/null 2>&1
+      which lsd > /dev/null 2>&1
       if [[ $? -eq 0 ]]; then
-          alias ls='colorls'
-          alias tree='colorls --tree'
+          alias ls='lsd'
+          alias l='lsd -l'
+          alias la='lsd -a'
+          alias lla='lsd -la'
+          alias lt='lsd --tree'
+          alias tree='lsd --tree'
       else
-          alias ls='ls --color'
+          which colorls > /dev/null 2>&1
+          if [[ $? -eq 0 ]]; then
+            alias ls='colorls'
+            alias l='colorls -l'
+            alias la='colorls -a'
+            alias lla='colorls -la'
+            alias lt='colorls --tree'
+            alias tree='colorls --tree'
+          else
+            alias ls='ls --color'
+        fi
       fi
 fi
 
@@ -231,9 +245,10 @@ case $(uname) in
         alias java8='export JAVA_HOME=$JAVA_8_HOME'
         alias java11='export JAVA_HOME=$JAVA_11_HOME'
     fi
-    PATH="/opt/local/bin:/opt/local/sbin:/usr/local/opt/ruby/bin:/usr/local/lib/ruby/gems/2.6.0/bin:/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+    PATH="/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/opt/ruby/bin:/usr/local/lib/ruby/gems/2.6.0/bin:/usr/local/opt/coreutils/libexec/gnubin:$PATH"
     MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
     eval "$(rbenv init -)"
+    eval "$(nodenv init -)"
     ;;
   Linux)
     # Set up multiple Java installs
@@ -287,14 +302,4 @@ function addrepo() {
     echo "Line added to repos"
 }
 
-export EXIT_SESSION=0
-if [[ -z "$TMUX" ]]; then
-  ~/.term-config/tmux-attach.sh
-  if [[ "$?" == "0" ]]; then
-    echo "Script exited 0"
-    exit
-  elif [[ "$?" == "666" ]]; then
-     "Script exited 666"
-    ~/.screenfetch/screenfetch-dev -a ~/.screenfetch/ft.txt
-  fi
-fi
+export DEVDIR=$HOME/Documents/Development
