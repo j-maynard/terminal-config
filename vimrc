@@ -1,18 +1,19 @@
 execute pathogen#infect()
 set rtp+=~/Development/powerline/bindings/vim
-"python3 from powerline.vim import setup as powerline_setup
-"python3 powerline_setup()
-"python3 del powerline_setup
+python3 from powerline.vim import setup as powerline_setup
+python3 powerline_setup()
+python3 del powerline_setup
 set nocompatible
-filetype plugin indent on
+"filetype plugin indent on
+filetype indent off
 syntax on
 set wildmenu
 set showcmd
 set hlsearch
 set ignorecase
 set smartcase
-set backspace=indent,eol,start
-set autoindent
+"set backspace=indent,eol,start
+"set autoindent
 set ruler
 set laststatus=2
 set confirm
@@ -32,3 +33,5 @@ autocmd StdinReadPre * let s:std_in=1
 " autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in") | exe 'NERDTree' argv()[0] | wincmd p | ene | exe 'cd '.argv()[0] | endif
 " autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 map <C-n> :NERDTreeToggle<CR>
+set clipboard=unnamed
+map <F8> :setl noai nocin nosi inde=<CR>
