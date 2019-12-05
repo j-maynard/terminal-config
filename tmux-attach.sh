@@ -27,6 +27,29 @@ function assessSession() {
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+case $(uname) in
+    Darwin)
+        MOTD="bash $SCRIPT_DIR/macmotd/motd.sh"
+        ;;
+    Linux)
+        NF=$(which neofetch &> /dev/null && echo $?)
+        SF=$(which screenfetch &> /dev/null && echo $?)
+        LF=$(ls $SCRIPT_DIR/linmotd/motd.sh &> /dev/null && echo $?)
+        if [[ "$LF" == "0" ]]; then
+            MOTD="$SCRIPT_DIR/linmotd/motd.sh"
+        elif [[ "$NF" == "0" ]]; then
+            MOTD="neofetch"
+        elif [[ "$SF" == "0" ]]; then
+            MOTD="screenfetch"
+        else
+            MOTD="echo No MOTD setup... Think about installing neofetch, screenfetch or creating a linfetch script"
+        fi
+        ;;
+    *)
+        MOTD="Your platform '$(uname)' is not recognised."
+        ;;
+esac
+
 if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
     if [[ "$(cat $SCRIPT_DIR/tmux_integration)" == "false" ]]; then
         TMUX_CMD="tmux"
@@ -43,14 +66,14 @@ fi
 tmux ls &> /dev/null
 # If this exits with 1, no sessions are running, start a new one
 if [[ "$?" == "1" ]]; then
-  exec $TMUX_CMD new-session "bash $SCRIPT_DIR/macmotd/motd.sh && zsh"
+  exec $TMUX_CMD new-session "$MOTD && zsh"
   exit 0
 fi
 
 TMUX_SESSIONS=($(tmux ls -F '#{session_name}, #{session_attached}' |grep -v ', 1' |cut -d, -f1))
 #If no sessions are available to attach to just create a new one
 if [[ ${#TMUX_SESSIONS[@]} == "0" ]]; then
-  exec $TMUX_CMD new-session "bash $SCRIPT_DIR/macmotd/motd.sh && zsh"
+  exec $TMUX_CMD new-session "$MOTD && zsh"
   exit 0
 fi
 echo "TMUX sessions are availble to attach to:"
@@ -68,7 +91,7 @@ do
 done
 
 if [[ "$SESSION" = "n" ]]; then
-  exec $TMUX_CMD new-session "bash $SCRIPT_DIR/macmotd/motd.sh && zsh"
+  exec $TMUX_CMD new-session "$MOTD && zsh"
   exit 0
 elif [[ "$SESSION" = "x" ]]; then
   exit 666
