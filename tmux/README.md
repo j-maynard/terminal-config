@@ -103,6 +103,7 @@ Features
  - SSH/Mosh aware split pane (reconnects to remote server)
  - copy to OS clipboard (needs [`reattach-to-user-namespace`][reattach-to-user-namespace]
    on macOS, `xsel` or `xclip` on Linux)
+ - support for 4-digit hexadecimal Unicode characters (requires `perl` or Bash >= 4.1.2)
  - [Facebook PathPicker][] integration if available
  - [Urlview][] integration if available
 
@@ -207,7 +208,9 @@ To make use of these symbols, there are several options:
 - use a [pre-patched font][powerline patched fonts]
 - use your preferred font along with the [Powerline font][powerline font] (that
   only contains the Powerline symbols): [this highly depends on your operating
-  system and your terminal emulator][terminal support]
+  system and your terminal emulator][terminal support], for instance here's a
+  screenshot of iTerm2 configured to use `PowerlineSymbols.otf`
+  ![iTerm2 + Powerline font](https://user-images.githubusercontent.com/553208/62243890-8232f500-b3de-11e9-9b8c-51a5d38bdaa8.png)
 
 [source code pro]: https://github.com/adobe-fonts/source-code-pro/releases/tag/2.030R-ro/1.050R-it
 [powerline patched fonts]: https://github.com/powerline/fonts
@@ -221,10 +224,10 @@ Then edit the `~/.tmux.conf.local` file (`<prefix> e`) and adjust the following
 variables:
 
 ```
-tmux_conf_theme_left_separator_main=''
-tmux_conf_theme_left_separator_sub=''
-tmux_conf_theme_right_separator_main=''
-tmux_conf_theme_right_separator_sub=''
+tmux_conf_theme_left_separator_main='\uE0B0'
+tmux_conf_theme_left_separator_sub='\uE0B1'
+tmux_conf_theme_right_separator_main='\uE0B2'
+tmux_conf_theme_right_separator_sub='\uE0B3'
 ```
 ### Configuring the status line
 
@@ -250,7 +253,8 @@ This configuration supports the following builtin variables:
  - `#{prefix}`: is prefix being depressed?
  - `#{root}`: is current user root?
  - `#{synchronized}`: are the panes synchronized?
- - `#{uptime_d}`: uptime days
+ - `#{uptime_y}`: uptime years
+ - `#{uptime_d}`: uptime days, modulo 365 when `#{uptime_y}` is used
  - `#{uptime_h}`: uptime hours
  - `#{uptime_m}`: uptime minutes
  - `#{uptime_s}`: uptime seconds
