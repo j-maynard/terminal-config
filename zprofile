@@ -42,3 +42,5 @@ if [[ $RUN == 'true' ]]; then
     echo "TMUX Session not attached"
   fi
 fi
+
+export PATH="$HOME/.cargo/bin:$PATH"

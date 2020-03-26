@@ -12,4 +12,4 @@ if [[ -v WSLENV ]]; then
 else
     export NF_SAFE=true
 fi
-
+export PATH=$HOME/.cargo/bin:$PATH
