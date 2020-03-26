@@ -3,6 +3,8 @@
 # load Powerlevel10K
 if [[ "$TERMINAL_EMULATOR" == "JetBrains-JediTerm" ]] ; then
       source ~/.term-config/theme/spaceship.zsh
+elif [[ "$NF_SAFE" == "false" ]]; then
+      source ~/.term-config/theme/spaceship-safe.zsh
 else
       source ~/.term-config/theme/powerlevel10k.zsh
 fi
