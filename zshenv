@@ -10,7 +10,11 @@ if [[ -v WSLENV ]]; then
         export NF_SAFE=true
     fi
 else
-    export NF_SAFE=true
+    if [[ "$TERM" == "linux" && -z $DISPLAY ]]; then
+        export NF_SAFE=false
+    else
+        export NF_SAFE=true
+    fi
 fi
 export PATH=$HOME/.cargo/bin:$PATH
 export RUN=false
