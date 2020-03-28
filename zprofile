@@ -1,5 +1,7 @@
 #!/bin/zsh
 # Set run
+echo "Running zprofile..."
+
 if [[ -z $RUN ]]; then
   RUN=true
 fi
@@ -31,6 +33,8 @@ if [[ -z $TERM_DETECT ]]; then
     RUN=false
   fi
 fi
+
+echo "RUN = $RUN"
 
 if [[ $RUN == 'true' ]]; then
   export EXIT_SESSION=0
