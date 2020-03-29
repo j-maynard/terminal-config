@@ -3,6 +3,13 @@ STARTPWD=$(pwd)
 sudo apt-get update
 sudo apt-get install -y git zsh python3.8 idle-python3.8 python3.8-dev python3-pip build-essential jed htop links lynx tree tmux openjdk-11-jdk openjdk-8-jdk maven emacs26 vim-nox vim-gtk vim-gnome
 chsh -s /bin/zsh
+git clone https://github.com/gcuisinier/jenv.git ~/.jenv
+export PATH="$HOME/.jenv/bin:$PATH"
+eval "$(jenv init -)"
+
+jenv add /usr/lib/jvm/java-11-openjdk-amd64
+jenv add /usr/lib/jvm/java-8-openjdk-amd64
+
 pip3 install --user setuptools
 pip3 install --user powerline-status
 mkdir -p  ~/.config/powerline

@@ -11,10 +11,12 @@ if [[ -v WSLENV ]]; then
     fi
 else
     if [[ "$TERM" == "linux" && -z $DISPLAY ]]; then
+        export TERM_PROG='linux_console'
+        export NF_SAFE=false
+    elif [[ $TERM_PROG == 'linux_console' ]]; then
         export NF_SAFE=false
     else
         export NF_SAFE=true
     fi
 fi
 export PATH=$HOME/.cargo/bin:$PATH
-export RUN=false
