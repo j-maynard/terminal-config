@@ -200,14 +200,15 @@
   typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=15
   # Make the icon bold.
   typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='%B${P9K_CONTENT}'
-  typeset -g POWERLEVEL9K_LINUX_ICON='%F{cyan} \uf303 %F{white} arch %F{cyan}linux%f'
+  # typeset -g POWERLEVEL9K_LINUX_ICON='%F{cyan} \uf303 %F{white} arch %F{cyan}linux%f'
+  typeset -g POWERLEVEL9K_LINUX_ICON='\uf31c '
   typeset -g POWERLEVEL9K_APPLE_ICON='\uF535'
 
   ##############################[ custom_user: user with skull ]################################
 
   user_with_skull() {
     if [[ "$(whoami)" == "jamesmaynard" ]]; then
-      echo -n " \ufb8a jamie"
+        echo -n " \ufb8a jamie (GDS)"
     else
       echo -n " \ufb8a $(whoami)"
     fi

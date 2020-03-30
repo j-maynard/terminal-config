@@ -123,5 +123,9 @@ git clone git://github.com/airblade/vim-gitgutter.git ~/vim/bundle/git-gutter
 git clone https://github.com/scrooloose/nerdtree.git ~/.vim/bundle/nerdtree
 git clone https://github.com/Xuyuanp/nerdtree-git-plugin.git ~/.vim/bundle/nerdtree-git-plugin
 
+echo "Install Vim colors..."
+mkdir -p ~/.vim/colors
+scp jamie@home:/home/jamie/.vim/colors/dracula.vim ~/.vim/colors/dracula.vim
+
 touch "$HOME/.term-config-run.lock"
 echo "Terminal Config setup run sucessfully."
