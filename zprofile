@@ -11,15 +11,10 @@ if ! [[ -z "$TMUX" ]]; then
 fi
 
 if [[ -z $TERM_DETECT ]]; then
-  # Exclude program detection code
+  # Exclude program detection code for Apple Terminal
+  # as various scripts including Powershell break
+  # if tmux is run first
   if [[ $TERM_PROGRAM == 'Apple_Terminal' ]]; then;
-    RUN=false
-  fi
-
-  # Exclude linux console until a fix for environment
-  # issues can be found and a new "safe" tmux theme can
-  # be found.
-  if [[ $TERM == 'linux' || $TERM_PROGRAM == 'linux_console' ]]; then;
     RUN=false
   fi
 

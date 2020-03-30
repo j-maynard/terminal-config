@@ -6,12 +6,12 @@ which neomutt
 if [[ $? == 0 ]]; then
     sudo apt install libslang2-dev libnotmuch-dev libgettextpo-dev \
     libncursesw5-dev libidn11-dev libldap2-dev xsltproc ncurses-dev \
-    libgpgme-dev libtokyocabinet-dev
+    libgpgme-dev libtokyocabinet-dev libsasl2-dev libgss-dev 
 else
     sudo apt install libslang2 libslang2-dev notmuch notmuch-mutt libnotmuch-dev  \
     libgpgme11 libgpgme-dev libtokyocabinet-dev tokyocabinet-bin \
     libldap2-dev libidn11-dev libncursesw5-dev ncursesw gettext libgettextpo-dev \
-    xsltproc ncurses-dev
+    xsltproc ncurses-dev libsasl2-dev gnutls-bin libgss-dev libgss3 
 fi
 
 # Clone neomutt
@@ -26,7 +26,9 @@ cd neomutt
  --gpgme \
  --pkgconf \
  --with-slang=/usr/include \
- --with-notmuch=/usr/include
+ --with-notmuch=/usr/include \
+ --sasl \
+ --gnutls
 
 make clean
 make
@@ -39,6 +41,6 @@ rm -rf neomutt
 # remove dev libraries
 sudo apt remove libslang2-dev libnotmuch-dev libgettextpo-dev \
 libncursesw5-dev libidn11-dev libldap2-dev ncurses-dev \
-libgpgme-dev libtokyocabinet-dev
+libgpgme-dev libtokyocabinet-dev libsasl2-dev libgss-dev
 
 cd $STARTDIR
