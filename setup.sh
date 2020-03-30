@@ -77,6 +77,17 @@ if [ -d "${HOME}/.vim" ]; then
   fi
 fi
 
+if [ -d "${HOME}/.mutt" ]; then 
+    echo "mutt config directory exists removing..."
+  if [ -L "${HOME}/.mutt" ]; then
+    # It is a symlink!
+    rm "${HOME}/.mutt"
+  else
+    # It's a directory!
+    rm -rf "${HOME}/.mutt"
+  fi
+fi
+
 if [ -f "${HOME}/.vimrc" ]; then
     echo "vimrc config exists removing..."
     rm ${HOME}/.vimrc
@@ -112,6 +123,7 @@ ln -s ${termconfig}/vimrc ${HOME}/.vimrc
 ln -s ${termconfig}/zsh_plugins.txt ${HOME}/.zsh_plugins.txt
 ln -s ${termconfig}/zshrc ${HOME}/.zshrc
 ln -s ${termconfig}/vim ${HOME}/.vim
+ln -s ${termconfig}/mutt ${HOME}/.mutt
 
 echo "Installing vim.pathogen..."
 mkdir -p ~/.vim/autoload ~/.vim/bundle
@@ -122,6 +134,10 @@ git clone https://github.com/tpope/vim-sensible.git ~/.vim/bundle/vim-sensible
 git clone git://github.com/airblade/vim-gitgutter.git ~/vim/bundle/git-gutter
 git clone https://github.com/scrooloose/nerdtree.git ~/.vim/bundle/nerdtree
 git clone https://github.com/Xuyuanp/nerdtree-git-plugin.git ~/.vim/bundle/nerdtree-git-plugin
+
+echo "Install Vim colors..."
+mkdir -p ~/.vim/colors
+scp jamie@home:/home/jamie/.vim/colors/dracula.vim ~/.vim/colors/dracula.vim
 
 touch "$HOME/.term-config-run.lock"
 echo "Terminal Config setup run sucessfully."
