@@ -77,6 +77,17 @@ if [ -d "${HOME}/.vim" ]; then
   fi
 fi
 
+if [ -d "${HOME}/.mutt" ]; then 
+    echo "mutt config directory exists removing..."
+  if [ -L "${HOME}/.mutt" ]; then
+    # It is a symlink!
+    rm "${HOME}/.mutt"
+  else
+    # It's a directory!
+    rm -rf "${HOME}/.mutt"
+  fi
+fi
+
 if [ -f "${HOME}/.vimrc" ]; then
     echo "vimrc config exists removing..."
     rm ${HOME}/.vimrc
@@ -112,6 +123,7 @@ ln -s ${termconfig}/vimrc ${HOME}/.vimrc
 ln -s ${termconfig}/zsh_plugins.txt ${HOME}/.zsh_plugins.txt
 ln -s ${termconfig}/zshrc ${HOME}/.zshrc
 ln -s ${termconfig}/vim ${HOME}/.vim
+ln -s ${termconfig}/mutt ${HOME}/.mutt
 
 echo "Installing vim.pathogen..."
 mkdir -p ~/.vim/autoload ~/.vim/bundle
