@@ -17,4 +17,6 @@ if [[ $? -eq 0 ]]; then
     alias pull='git pull'
     alias groot='groot=$(git rev-parse --show-toplevel);cd $groot'
     alias checkout='git checkout'
+    alias force-push='git commit --amend --no-edit && git push -f'
+    alias fp='force-push'
 fi
