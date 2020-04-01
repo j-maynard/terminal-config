@@ -2,29 +2,38 @@
 #source gruvbox-powerline.neomuttrc
 source mutt-colors-solarized/mutt-colors-solarized-dark-256.muttrc
 source powerline.neomuttrc
-set ssl_starttls = yes
-# set ssl_force_tls = yes 
-# set imap_user = "{username}@me.com"
-# set imap_pass = "{password}"
-set imap_authenticators = "login"
-# set from = "{icloud e-mail address}"
-set realname = "Jamie Maynard"
-set imap_pipeline_depth = 0
-set folder = "imaps://imap.mail.me.com/"
-set spoolfile = "imaps://imap.mail.me.com/INBOX"
-set postponed = "+Drafts"
-set record = "+Sent Messages"
-set header_cache = "~/.mutt/cache/headers"
-set message_cachedir = "~/.mutt/cache/bodies"
-set certificate_file = "~/.mutt/certificates"
-# set smtp_url = "smtp://{username}@me.com@smtp.mail.me.com:587/"
-# set smtp_pass = "{password}"
-set smtp_authenticators = 'login'
-set move = no
-set imap_keepalive = 900
-set sort = reverse-date-received
+
 # set debug_level = 5
 # set debug_file = /tmp/neomutt.log
 
-# Load sensitive information from the passwords file
-source "gpg -d ~/.mutt/passwords.gpg |"
+# Loading mailboxes
+folder-hook 'icloud' 'source ~/.mutt/icloud.muttrc'
+folder-hook 'Gmail-GDS' 'source ~/.mutt/gmail.muttrc'
+
+# Macros for switching accounts
+macro index <f2> '<sync-mailbox><enter-command>source ~/.mutt/icloud.muttrc<enter><change-folder>!<enter>'
+macro index <f3> '<sync-mailbox><enter-command>source ~/.mutt/gmail.muttrc<enter><change-folder>!<enter>'
+
+# sidebar section
+set folder = "imaps://imap.mail.me.com/INBOX"
+set sidebar_visible
+set imap_check_subscribed=yes
+set sidebar_width = 30
+set sidebar_short_path=yes
+set sidebar_format = "%B%?F? [%F]?%* %?N?%N/?%S"
+set mail_check_stats = yes
+
+# key bindings
+bind index,pager <C-> sidebar-prev
+bind index,pager <C-> sidebar-next
+bind index,pager <C-> sidebar-open
+
+# other settings
+set sort=threads
+set sort_aux=last-date-received
+set text_flowed =       yes
+set editor =            vim
+set ssl_starttls =      yes
+set ssl_force_tls =     yes
+set move =              no
+set imap_keepalive =    900

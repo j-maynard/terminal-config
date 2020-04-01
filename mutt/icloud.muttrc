@@ -1,0 +1,26 @@
+# Icloud Settings for mutt
+set ssl_starttls = yes
+# set ssl_force_tls = yes 
+# set imap_user = "{username}@me.com"
+# set imap_pass = "{password}"
+set imap_authenticators = "login"
+# set from = "{icloud e-mail address}"
+set realname = "Jamie Maynard"
+set imap_pipeline_depth = 0
+set folder = "imaps://imap.mail.me.com/"
+set spoolfile = "imaps://imap.mail.me.com/INBOX"
+set postponed = "+Drafts"
+set record = "+Sent Messages"
+# set smtp_url = "smtp://{username}@me.com@smtp.mail.me.com:587/"
+# set smtp_pass = "{password}"
+set smtp_authenticators = 'login'
+set move = no
+set imap_keepalive = 900
+set sort = reverse-date-received
+
+set header_cache =      ~/.mutt/icloud/cache/headers
+set message_cachedir =  ~/.mutt/icloud/cache/bodies
+set certificate_file =  ~/.mutt/icloud/certificates
+
+# Load sensitive information from the icloud passwords file
+source "gpg -d ~/.mutt/icloud-passwords.gpg |"

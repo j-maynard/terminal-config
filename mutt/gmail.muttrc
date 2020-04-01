@@ -1,0 +1,16 @@
+# set imap_user =         '{full.email@domain.com}'
+# set imap_pass =         '{password}'
+# set smtp_url =          'smtps://{full.email@domain.com}@smtp.gmail.com:465/'
+# set smtp_pass =         '{password}'
+# set from =              '{full.email@domain.com}'
+set realname =          'James Maynard'
+set folder =            'imaps://imap.gmail.com:993'
+set spoolfile =         '+INBOX'
+set postponed =         '+[Gmail]/Drafts'
+set header_cache =      ~/.mutt/gmail/cache/headers
+set message_cachedir =  ~/.mutt/gmail/cache/bodies
+set certificate_file =  ~/.mutt/gmail/certificates
+# set signature =         ~/.mutt/gmail.signature
+
+# Load sensitive information from the Gmail passwords file
+source "gpg -d ~/.mutt/gmail-passwords.gpg |"
