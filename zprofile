@@ -1,4 +1,13 @@
 #!/bin/zsh
+
+#Set up snaps on linux
+if [[ $(uname) == 'Linux' ]]; then
+    emulate sh -c 'source /etc/profile.d/01-locale-fix.sh'
+    emulate sh -c 'source /etc/profile.d/apps-bin-path.sh'
+    emulate sh -c 'source /etc/profile.d/flatpak.sh'
+    emulate sh -c 'source /etc/profile.d/input-method-config.sh'
+fi
+
 # Set run
 if [[ -z $RUN ]]; then
   RUN=true

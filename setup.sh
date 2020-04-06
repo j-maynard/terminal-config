@@ -114,13 +114,14 @@ echo "Linking files in place from term-config"
 ln -s ${termconfig}/emacs ${HOME}/.emacs
 ln -s ${termconfig}/gitignore_global ${HOME}/.gitignore_global
 ln -s ${termconfig}/iterm2_shell_integration.zsh ${HOME}/.iterm2_shell_integration
-ln -s ${termconfig}/screenfetch ${HOME}/.screenfetch
 ln -s ${termconfig}/tmux ${HOME}/.tmux
 ln -s ${termconfig}/tmux/.tmux.conf ${HOME}/.tmux.conf
 ln -s ${termconfig}/tmux-attach.sh ${HOME}/.tmux-attach.sh
 ln -s ${termconfig}/tmux.conf.local ${HOME}/.tmux.conf.local
 ln -s ${termconfig}/vimrc ${HOME}/.vimrc
 ln -s ${termconfig}/zsh_plugins.txt ${HOME}/.zsh_plugins.txt
+ln -s ${termconfig}/zprofile ${HOME}/.zprofile
+ls -s ${termconfig}/zshenv ${HOME}/.zshenv
 ln -s ${termconfig}/zshrc ${HOME}/.zshrc
 ln -s ${termconfig}/vim ${HOME}/.vim
 ln -s ${termconfig}/mutt ${HOME}/.mutt
@@ -137,7 +138,7 @@ git clone https://github.com/Xuyuanp/nerdtree-git-plugin.git ~/.vim/bundle/nerdt
 
 echo "Install Vim colors..."
 mkdir -p ~/.vim/colors
-scp jamie@home:/home/jamie/.vim/colors/dracula.vim ~/.vim/colors/dracula.vim
+scp jamie@home.nightmares.co.uk:/home/jamie/.vim/colors/dracula.vim ~/.vim/colors/dracula.vim
 
 touch "$HOME/.term-config-run.lock"
 echo "Terminal Config setup run sucessfully."

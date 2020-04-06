@@ -2,3 +2,5 @@ vim/bundle/
 vim/autoload/
 mutt/cache/
 mutt/gmail/
+mutt/icloud-passwords.txt
+mutt/gmail-passwords.txt
