@@ -3,14 +3,38 @@
 # set smtp_url =          'smtps://{full.email@domain.com}@smtp.gmail.com:465/'
 # set smtp_pass =         '{password}'
 # set from =              '{full.email@domain.com}'
-set realname =          'James Maynard'
-set folder =            'imaps://imap.gmail.com:993'
-set spoolfile =         '+INBOX'
-set postponed =         '+[Gmail]/Drafts'
-set header_cache =      ~/.mutt/gmail/cache/headers
-set message_cachedir =  ~/.mutt/gmail/cache/bodies
-set certificate_file =  ~/.mutt/gmail/certificates
-# set signature =         ~/.mutt/gmail.signature
+
+set realname            = "Jamie Maynard"
+
+# Connection Settings
+# set ssl_force_tls     = yes
+set ssl_starttls        = yes
+set imap_authenticators = "login"
+set smtp_authenticators = "login"
+set imap_pipeline_depth = 0
+set folder              = "imaps://imap.gmail.com:993"
+set move                = no
+set imap_keepalive      = 300
+set mail_check          = 120
+set sort                = reverse-date-received
+unset imap_passive
+
+# Folder Settings
+set spoolfile           = "+INBOX"
+set mailboxes           = "+INBOX"
+set postponed           = "+[Gmail]/Drafts"
+unset record
+
+# Local Storage settings
+set header_cache        = ~/.mutt/gmail/cache/headers
+set message_cachedir    = ~/.mutt/gmail/cache/bodies
+set certificate_file    = ~/.mutt/gmail/certificates
+
+# set signature         = ~/.mutt/gmail.signature
 
 # Load sensitive information from the Gmail passwords file
-source "gpg -d ~/.mutt/gmail-passwords.gpg |"
+source 'gpg -d ~/.mutt/gmail-passwords.gpg |'
+
+# Debugging options
+# set debug_level = 2
+# set debug_file = /tmp/neomutt-gmail.log

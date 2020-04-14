@@ -10,3 +10,4 @@ zsh-users/zsh-syntax-highlighting
 zsh-users/zsh-history-substring-search
 # denysdovhan/spaceship-prompt
 # bhilburn/powerlevel9k
+StackExchange/blackbox

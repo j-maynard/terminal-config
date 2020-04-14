@@ -3,19 +3,19 @@
 source mutt-colors-solarized/mutt-colors-solarized-dark-256.muttrc
 source powerline.neomuttrc
 
-# set debug_level = 5
+# Debugging options
+# set debug_level = 2
 # set debug_file = /tmp/neomutt.log
 
 # Loading mailboxes
-folder-hook 'icloud' 'source ~/.mutt/icloud.muttrc'
-folder-hook 'Gmail-GDS' 'source ~/.mutt/gmail.muttrc'
+#folder-hook 'iCloud' 'source ~/.mutt/icloud.muttrc'
+#folder-hook 'Gmail-GDS' 'source ~/.mutt/gmail.muttrc'
 
 # Macros for switching accounts
 macro index <f2> '<sync-mailbox><enter-command>source ~/.mutt/icloud.muttrc<enter><change-folder>!<enter>'
 macro index <f3> '<sync-mailbox><enter-command>source ~/.mutt/gmail.muttrc<enter><change-folder>!<enter>'
 
 # sidebar section
-set folder = "imaps://imap.mail.me.com/INBOX"
 set sidebar_visible
 set imap_check_subscribed=yes
 set sidebar_width = 30
@@ -24,9 +24,10 @@ set sidebar_format = "%B%?F? [%F]?%* %?N?%N/?%S"
 set mail_check_stats = yes
 
 # key bindings
-bind index,pager <C-> sidebar-prev
-bind index,pager <C-> sidebar-next
-bind index,pager <C-> sidebar-open
+bind index,pager <C-up> sidebar-prev
+bind index,pager <C-down> sidebar-next
+bind index,pager <C-right> sidebar-open
+bind index,pager <C-left> sidebar-toggle-visible
 
 # other settings
 set sort=threads

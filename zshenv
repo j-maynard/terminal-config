@@ -3,9 +3,10 @@ export DEVDIR=$HOME/Development
 export TERMCONF=$HOME/.term-config
 export ITERM_INT=false
 export GPG_TTY=$(tty)
-export GPG_KEY=C9DCD64B8FF258DE
+export GPG_KEY=9073DEB608346BA4
 export NERD_FONT=true
 export NF=true
+export POWERLINE_SAFE=true
 if [[ -v WSLENV ]]; then
     if [[ "$TERM_PROG" == "wsl-term" ]]; then
         export NF_SAFE=true

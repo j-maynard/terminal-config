@@ -1,16 +1,20 @@
 #!/bin/zsh
+
 # LS with icons when available
 which lsd > /dev/null 2>&1
 if [[ $? -eq 0 ]]; then
     LS_MOD=lsd
 fi
+
 which colorls > /dev/null 2>&1
-if [[ $? -eq 0 ]]; then
+if [[ $? -eq 0 && -z $LS_MOD ]]; then
     LS_MOD=colorls
 fi
+
 if [[ "$NF_SAFE" == "false" ]]; then
     LS_MOD=safe
 fi
+
 if [[ -z $LS_MOD ]]; then
     LS_MOD=safe
 fi
