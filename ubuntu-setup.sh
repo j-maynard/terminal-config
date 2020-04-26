@@ -59,8 +59,8 @@ if [ $VERBOSE == "false" ]; then
 fi
 
 show_msg "Updating the system..."
-sudo apt update
-sudo apt upgrade -y
+sudo apt-get update
+sudo apt-get upgrade -y
 show_msg "Installing from apt... "
 show_msg "  ┣━━━━━━━━━━━━━━┓"
 show_msg "  ┣━> git        ┣━> curl"
@@ -74,7 +74,7 @@ show_msg "  ┣━> openjdk 8  ┣━> openjdk 11"
 show_msg "  ┣━> maven      ┗━> pinentry"
 show_msg "  ┗━> scdaemon"
 
-sudo apt install -y git curl zsh idle-python3.8 python3.8-dev python3-pip \
+sudo apt-get install -y git curl zsh idle-python3.8 python3.8-dev python3-pip \
 build-essential jed htop links lynx tree tmux openjdk-11-jdk openjdk-8-jdk \
 maven vim vim-nox vim-gtk3 vim-scripts most ruby-dev scdaemon \
 pinentry-qt pinentry-tty pinentry-curses
