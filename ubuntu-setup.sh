@@ -60,7 +60,7 @@ fi
 
 show_msg "Updating the system..."
 sudo apt update
-sudo apt upgrade
+sudo apt upgrade -y
 show_msg "Installing from apt... "
 show_msg "  ┣━━━━━━━━━━━━━━┓"
 show_msg "  ┣━> git        ┣━> curl"
