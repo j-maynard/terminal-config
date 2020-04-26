@@ -42,7 +42,7 @@ while [ "$1" != "" ]; do
         -v | --version)         version
                                 exit 0
                                 ;;
-        -h | --help             usage
+        -h | --help)            usage
                                 exit 0
                                 ;;
         * )                     echo -e "Unknown option $1...\n"
