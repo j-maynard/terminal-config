@@ -77,7 +77,7 @@ show_msg "  ┗━> scdaemon"
 sudo apt-get install -y git curl zsh idle-python3.8 python3.8-dev python3-pip \
 build-essential jed htop links lynx tree tmux openjdk-11-jdk openjdk-8-jdk \
 maven vim vim-nox vim-gtk3 vim-scripts most ruby-dev scdaemon \
-pinentry-qt pinentry-tty pinentry-curses
+pinentry-qt pinentry-tty pinentry-curses libappindicator3-1
 
 show_msg "Installing ftom snap..."
 show_msg "  ┣━> Slack"
