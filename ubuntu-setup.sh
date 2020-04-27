@@ -134,16 +134,16 @@ sudo chgrp users /opt/jetbrains-toolbox
 sudo chmod 775 /opt/jetbrains-toolbox
 /opt/jetbrains-toolbox/jetbrains-toolbox &
 
-if [ -f "/usr/share/sddm/scripts/Xsetup"]; then
+if [ -f "/usr/share/sddm/scripts/Xsetup" ]; then
     show_msg "SDDM present updating XSetup script..."
     curl -LSs "$GIT_REPO/XSetup.snippet" >> /usr/share/sddm/scripts/Xsetup
 fi
 
 show_msg "Running jenv/rbenv setup script..."
-bash < curl -LSs "$GIT_REPO/linux-env-setup.sh"
+curl -LSs "$GIT_REPO/linux-env-setup.sh" | bash
 
 show_msg "Running console fonts setup script..."
-bash < curl -LSs "$GIT_REPO/setup-console-font.sh"
+curl -LSs "$GIT_REPO/setup-console-font.sh" | bash
 
 cd $STARTPWD
 
