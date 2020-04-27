@@ -167,7 +167,7 @@ elif [[ -d "${HOME}/.term-config" ]]; then
     config_script ".term-config"
 else
     show_msg "Terminal Config not present, retrrieving from github"
-    git clone git@github.com:j-maynard/terminal-config.git
+    git clone https://github.com/j-maynard/terminal-config.git
     config_script "terminal-config"
 fi
 
