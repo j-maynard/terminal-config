@@ -182,10 +182,60 @@ if [ $PRIVATE == "true" ]; then
     fi
 fi
 
+setup_powerline_fonts() {
+    show_msg "Install Powerline Fonts..."
+    git clone -q https://github.com/powerline/fonts.git --depth=1 /tmp/fonts
+    cd /tmp/fonts
+    SYSTEM_FONTS=true
+    system_mac_fonts="/Library/Fonts"
+    system_linux_fonts="/usr/share/fonts"
+    user_mac_fonts="$HOME/Library/Fonts"
+    user_linux_fonts="$HOME/.local/share/fonts"
+    if [ $(uname) == "Darwin" ]; then
+        if [ $SYSTEM_FONTS == "true" ]; then
+            font_dir=$system_mac_fonts
+        else
+            font_dir=$user_mac_fonts
+        fi
+    elif [ $(uname) == "Linux" ]; then
+        if [ $SYSTEM_FONTS == "true" ]; then
+            font_dir=$system_linux_fonts
+        else
+            font_dir=$user_linux_fonts
+        fi
+    else
+        echo "Unknown Operating system... Think about extending"
+        return 1
+    fi
+    powerline_fonts_dir="$( cd "$( dirname "$0" )" && pwd )"
+    # Copy all fonts to user fonts directory
+    echo "Copying fonts..."
+    if [ $SYSTEM_FONTS == "true" ]; then
+        find "$powerline_fonts_dir" \( -name "$prefix*.[ot]tf" -or -name "$prefix*.pcf.gz" \) -type f -print0 | xargs -0 -n1 -I % sudo cp "%" "$font_dir/"
+        sudo mv ${font_dir}/*.ttf ${font_dir}/truetype/
+        sudo mv ${font_dir}/*.otf ${font_dir}/opentype/
+        # Reset font cache on Linux
+        if which fc-cache >/dev/null 2>&1 ; then
+            echo "Resetting font cache, this may take a moment..."
+            fc-cache -f "${font_dir}/truetype"
+            fc-cache -f "${font_dir}/opentype"
+        fi
+    else
+        find "$powerline_fonts_dir" \( -name "$prefix*.[ot]tf" -or -name "$prefix*.pcf.gz" \) -type f -print0 | xargs -0 -n1 -I % cp "%" "$font_dir/"
+        fc-cache -f "${font_dir}"
+    fi
+    cd /tmp
+    rm -rf /tmp/fonts
+}
+
 show_msg "Install NerdFonts..."
-git clone -q https://github.com/powerline/fonts.git --depth=1
-sudo ./fonts/install.sh
-rm -rf fonts
+git clone -q https://github.com/ryanoasis/nerd-fonts.git --depth=1 /tmp/fonts
+cd /tmp/fonts
+sudo ./install.sh --install-to-system-path
+cd $STARTPWD
+rm -r /tmp/fonts
+
+#setup_powerline_fonts
 
 unset GIT_REPO
-cd $STARTPWD
+

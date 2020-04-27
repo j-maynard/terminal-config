@@ -1,6 +1,4 @@
 #!/bin/bash
-# Stop on error
-set -e
 STARTPWD=$(pwd)
 
 SCRIPT=`realpath -s $0`
@@ -31,6 +29,45 @@ version() {
 
 show_msg() {
     echo -e $1 > /dev/tty
+}
+
+snap_install() {
+    exec > /dev/tty
+    show_msg "Installing ftom snap..."
+    show_msg "  ┣━> Slack"
+    show_msg "  ┣━> Spotify"
+    show_msg "  ┣━> Visual Studio Code"
+    show_msg "  ┣━> LSD for ls"
+    show_msg "  ┣━> Emacs"
+    show_msg "  ┗━> Insomnia"
+
+    which slack
+    if [ $? != 0 ]; then
+        sudo snap install slack --classic
+    fi
+    which spotify
+    if [ $? != 0 ]; then
+        sudo snap install spotify --classic
+    fi
+    which code
+    if [ $? != 0 ]; then
+        sudo snap install code --classic
+    fi
+    which insomnia
+    if [ $? != 0 ]; then
+        sudo snap install insomnia
+    fi
+    which lsd
+    if [ $? != 0 ]; then
+        sudo snap install lsd --devmode
+    fi
+    which emacs
+    if [ $? != 0 ]; then
+        sudo snap install emacs --classic
+    fi
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/null 
+    fi
 }
 
 VERBOSE=false
@@ -79,32 +116,22 @@ build-essential jed htop links lynx tree tmux openjdk-11-jdk openjdk-8-jdk \
 maven vim vim-nox vim-gtk3 vim-scripts most ruby-dev scdaemon \
 pinentry-qt pinentry-tty pinentry-curses libappindicator3-1
 
-show_msg "Installing ftom snap..."
-show_msg "  ┣━> Slack"
-show_msg "  ┣━> Visual Studio Code"
-show_msg "  ┣━> LSD for ls"
-show_msg "  ┣━> Emacs"
-show_msg "  ┗━> Insomnia"
-
-which slack
-if [ $? != 0 ]; then
-    sudo snap install slack --classic
-fi
-which code
-if [ $? != 0 ]; then
-    sudo snap install code --classic
-fi
-which insomnia
-if [ $? != 0 ]; then
-    sudo snap install insomnia
-fi
-which lsd
-if [ $? != 0 ]; then
-    sudo snap install lsd
-fi
-which emacs
-if [ $? != 0 ]; then
-    sudo snap install emacs --classic
+exec > /dev/tty 
+echo ""
+while true; do
+    read -p "Snap currently takes forever to install anything... You sure you want to install stuff? [Yes/No/Y/y/N/n] " yn
+    case $yn in
+        [Yy]* )   snap_install
+                  break
+                  ;;
+        [Nn]* )   break
+                  ;;
+        * )       echo "Please answer yes or no."
+                  ;;
+    esac
+done
+if [ $VERBOSE == "false" ]; then
+  exec > /dev/null
 fi
 
 cd /tmp
@@ -153,18 +180,18 @@ if [ $? != 0 ]; then
     sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 fi
 
-if [[ -f "/opt/jetbrains-toolbox/jetbrains-toolbox" ]]; then
+if [[ ! -f "/opt/jetbrains-toolbox/jetbrains-toolbox" ]]; then
     show_msg "Installing Jetbrains Toolbox..."
+    cd /tmp
     wget -q https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.17.6802.tar.gz
-    sudo tar -zxvf jetbrains-toolbox-1.17.6802.tar.gz
-    rm jetbrains-toolbox-1.17.6802.tar.gz
-    mkdir /opt/jetbrains-toolbox
+    tar -zxvf jetbrains-toolbox-1.17.6802.tar.gz
+    sudo mkdir -p /opt/jetbrains-toolbox
     sudo mv ./jetbrains-toolbox-1.17.6802/jetbrains-toolbox /opt/jetbrains-toolbox/jetbrains-toolbox
-    rm -rf ./jetbrains-toolbox-1.17.6802
+    rm -rf /tmp/jetbrains-toolbox-1.17.6802
     sudo usermod -a -G users $(whoami)
-    sudo chgrp users /opt/jetbrains-toolbox
-    sudo chmod 775 /opt/jetbrains-toolbox
-     /opt/jetbrains-toolbox/jetbrains-toolbox &
+    sudo chgrp -R users /opt/jetbrains-toolbox
+    sudo chmod -R 775 /opt/jetbrains-toolbox
+    /opt/jetbrains-toolbox/jetbrains-toolbox > /dev/null 2&>1 &
 fi
 
 if [[ -f "/usr/share/sddm/scripts/Xsetup" ]]; then
@@ -175,6 +202,9 @@ if [[ -f "/usr/share/sddm/scripts/Xsetup" ]]; then
         curl -LSs "$GIT_REPO/Xsetup.snippet" | sudo tee -a /usr/share/sddm/scripts/Xsetup
     fi
 fi
+
+show_msg "Linking /usr/bin/python3 to /usr/bin/python..."
+sudo ln -s /usr/bin/python3 /usr/bin/python
 
 show_msg "Running jenv/rbenv setup script..."
 curl -LSs "$GIT_REPO/linux-env-setup.sh" | bash

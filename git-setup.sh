@@ -1,23 +1,54 @@
 #!/bin/bash
+get_profile() {
+    if [[ "$1" =~ ^[0-9]+$ && ${#profile_names[@]}>=$1 && $1>0 ]]; then
+        p_name=${profile_names[($1-1)]}
+    else
+        return 1
+    fi
+    echo ${p_name} is selected
+    source <(gpg -d -q ${SCRIPTPATH}/encrypted/git-${p_name}.gpg)        
+}
+
 SCRIPT=`realpath -s $0`
 SCRIPTPATH=`dirname $SCRIPT`
 profiles=$(cd ${SCRIPTPATH}/encrypted && ls git*)
+
 declare -a profile_names
+
+exec > /dev/tty 
+echo "Profiles fround:"
+count=1
 for profile in $profiles
 do
-    profile_names+=($(echo $profile | cut -d '-' -f 2 | cut -d '.' -f 1))
+    p_name=$(echo $profile | cut -d '-' -f 2 | cut -d '.' -f 1)
+    echo "${count}) $p_name"
+    ((count++))
+    profile_names+=($p_name)
 done
-echo "Select a profile?"
-select profile in ${profile_names[@]}; do
-    case $profile in
-        * ) echo $profile is selected
-            source <(gpg -d -q ${SCRIPTPATH}/encrypted/git-$profile.gpg)
-            if [ $? == 0 ]; then
-                break
-            fi
-            ;;
+echo "Total number of profiles = ${#profile_names[@]}"
+while true; do
+    read -p "Select a profile? [1 - ${#profile_names[@]}] " p
+    case $p in
+        * )       get_profile $p
+                  if [ $? == 0 ]; then
+                    break
+                  fi
+                  echo "Profile selection not valid"
+                  ;;
     esac
 done
+
+# echo "Select a profile?"
+# select profile in ${profile_names[@]}; do
+#     case $profile in
+#         * ) echo $profile is selected
+#             source <(gpg -d -q ${SCRIPTPATH}/encrypted/git-$profile.gpg)
+#             if [ $? == 0 ]; then
+#                 break
+#             fi
+#             ;;
+#     esac
+# done
 git config --global user.name "${USERNAME}"
 git config --global user.email "${EMAIL}"
 git config --global user.signingkey ${SIGNING_KEY}
