@@ -151,7 +151,7 @@ fi
 
 if [ -f "/usr/share/sddm/scripts/Xsetup" ]; then
     show_msg "SDDM present updating XSetup script..."
-    sudo curl -LSs "$GIT_REPO/XSetup.snippet" >> /usr/share/sddm/scripts/Xsetup
+    sudo curl -LSs "$GIT_REPO/Xsetup.snippet" >> /usr/share/sddm/scripts/Xsetup
 fi
 
 show_msg "Running jenv/rbenv setup script..."
