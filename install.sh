@@ -174,8 +174,9 @@ fi
 if [ $PRIVATE == "true" ]; then
     show_msg "Running private setup script..."
     source <(gpg -d -q ${HOME}/.term-config/encrypted/private-setup.gpg)
+    
     show_msg "Running git setup script..."
-    ~/.term-config/git-setup.sh
+    ${HOME}/.term-config/git-setup.sh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi
