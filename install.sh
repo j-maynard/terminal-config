@@ -139,16 +139,16 @@ VERBOSE=false
 PRIVATE=false
 while [ "$1" != "" ]; do
     case $1 in
-        -p | --private-script)  PRIVATE=true
-                                ;;
-        -V | --verbose)         VERBOSE=true
-                                ;;
-        -v | --version)         version
-                                exit
-                                ;;
-        * )                     echo -e "Unknown option $1...\n"
-                                usage
-                                exit 1
+        p | -p | --private-script)  PRIVATE=true
+                                    ;;
+        V | -V | --verbose)         VERBOSE=true
+                                    ;;
+        v | -v | --version)         version
+                                    exit
+                                    ;;
+        * )                         echo -e "Unknown option $1...\n"
+                                    usage
+                                    exit 1
     esac
     shift
 done
