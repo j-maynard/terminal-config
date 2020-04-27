@@ -168,9 +168,10 @@ if [[ -f "/opt/jetbrains-toolbox/jetbrains-toolbox" ]]; then
 fi
 
 if [[ -f "/usr/share/sddm/scripts/Xsetup" ]]; then
-    grep "# Added by term-config install script" /usr/share/sddm/scripts/Xsetup
+    show_msg "SDDM present"
+    grep term-config /usr/share/sddm/scripts/Xsetup
     if [ $? != 0 ]; then
-        show_msg "SDDM present updating XSetup script..."
+        show_msg "Updating SDDM XSetup script..."
         curl -LSs "$GIT_REPO/Xsetup.snippet" | sudo tee -a /usr/share/sddm/scripts/Xsetup
     fi
 fi
