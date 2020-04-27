@@ -158,7 +158,7 @@ show_msg "Running jenv/rbenv setup script..."
 curl -LSs "$GIT_REPO/linux-env-setup.sh" | bash
 
 show_msg "Running console fonts setup script..."
-curl -LSs "$GIT_REPO/setup-console-font.sh" | bash
+curl -LSs "$GIT_REPO/console-font-setup.sh" | bash
 
 cd $STARTPWD
 
