@@ -135,12 +135,14 @@ if [ $? != 0 ]; then
     sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 fi
 
-if [ -f "/opt/jetbrains-toolbox/jetbrains-toolbox" ]; then
+if [[ -f "/opt/jetbrains-toolbox/jetbrains-toolbox" ]]; then
     show_msg "Installing Jetbrains Toolbox..."
     wget -q https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.17.6802.tar.gz
-    sudo tar -zxvf jetbrains-toolbox-1.17.6802.tar.gz -C /opt
+    sudo tar -zxvf jetbrains-toolbox-1.17.6802.tar.gz
     rm jetbrains-toolbox-1.17.6802.tar.gz
-    sudo mv /opt/jetbrains-toolbox-1.17.6802 /opt/jetbrains-toolbox
+    mkdir /opt/jetbrains-toolbox
+    sudo mv ./jetbrains-toolbox-1.17.6802/jetbrains-toolbox /opt/jetbrains-toolbox/jetbrains-toolbox
+    rm -rf ./jetbrains-toolbox-1.17.6802
     sudo usermod -a -G users $(whoami)
     sudo chgrp users /opt/jetbrains-toolbox
     sudo chmod 775 /opt/jetbrains-toolbox
