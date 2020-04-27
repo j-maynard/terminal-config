@@ -172,7 +172,10 @@ else
 fi
 
 if [ $PRIVATE == "true" ]; then
-    source <(gpg -d -q ${HOME}/.term-config/encrypted/private-setup.gpg) 
+    show_msg "Running private setup script..."
+    source <(gpg -d -q ${HOME}/.term-config/encrypted/private-setup.gpg)
+    show_msg "Running git setup script..."
+    ~/.term-config/git-setup.sh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi
@@ -182,9 +185,6 @@ show_msg "Install NerdFonts..."
 git clone -q https://github.com/powerline/fonts.git --depth=1
 sudo ./fonts/install.sh
 rm -rf fonts
-
-show_msg "Running git setup script..."
-~/.term-congig/git-setup.sh
 
 unset GIT_REPO
 cd $STARTPWD
