@@ -112,6 +112,7 @@ cp -r /usr/local/lib/python3.8/dist-packages/powerline/config_files/* ~/.config/
 show_msg "Installing golang..."
 wget -q https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
 sudo tar -zxvf /tmp/go1.11.4.linux-amd64.tar.gz --directory /usr/local/
+rm go1.11.4.linux-amd64.tar.gz
 if [[ -f "/usr/local/bin/go" ]]; then
     sudo rm /usr/local/bin/go
 fi
@@ -128,6 +129,7 @@ sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 show_msg "Installing Jetbrains Toolbox..."
 wget -q https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.17.6802.tar.gz
 sudo tar -zxvf jetbrains-toolbox-1.17.6802.tar.gz -C /opt
+rm jetbrains-toolbox-1.17.6802.tar.gz
 sudo mv /opt/jetbrains-toolbox-1.17.6802 /opt/jetbrains-toolbox
 sudo usermod -a -G users $(whoami)
 sudo chgrp users /opt/jetbrains-toolbox
