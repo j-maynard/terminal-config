@@ -85,11 +85,27 @@ show_msg "  ┣━> Visual Studio Code"
 show_msg "  ┣━> LSD for ls"
 show_msg "  ┣━> Emacs"
 show_msg "  ┗━> Insomnia"
-sudo snap install slack --classic
-sudo snap install code --classic
-sudo snap install insomnia
-sudo snap install lsd
-sudo snap install emacs --classic
+
+which slack
+if [ $? != 0 ]; then
+    sudo snap install slack --classic
+fi
+which code
+if [ $? != 0 ]; then
+    sudo snap install code --classic
+fi
+which insomnia
+if [ $? != 0 ]; then
+    sudo snap install insomnia
+fi
+which lsd
+if [ $? != 0 ]; then
+    sudo snap install lsd
+fi
+which emacs
+if [ $? != 0 ]; then
+    sudo snap install emacs --classic
+fi
 
 cd /tmp
 which google-chrome
@@ -107,7 +123,9 @@ if [ $? != 0 ]; then
 fi
 
 show_msg "Changing shells to ZSH... Please enter your passowrd!"
-chsh -s /bin/zsh
+if [[ $(awk -F: '/jamie/ { print $7}' /etc/passwd) != "/bin/zsh" ]]; then
+    chsh -s /bin/zsh
+fi
 
 show_msg "Installing powerline..."
 sudo pip3 install setuptools
