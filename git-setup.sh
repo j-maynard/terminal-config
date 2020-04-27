@@ -12,7 +12,10 @@ select profile in ${profile_names[@]}; do
     case $profile in
         * ) echo $profile is selected
             source <(gpg -d -q ${SCRIPTPATH}/encrypted/git-$profile.gpg)
-            break;;
+            if [ $? == 0 ]; then
+                break
+            fi
+            ;;
     esac
 done
 git config --global user.name "${USERNAME}"
