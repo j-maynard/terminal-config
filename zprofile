@@ -1,5 +1,12 @@
 #!/bin/zsh
 
+# NOTE TO SELF!  These have to be here
+if [[ $(uname) == 'Linux' ]]; then
+    if [ -f "/etc/profile" ]; then
+        emulate sh -c 'source /etc/profile'
+    fi
+fi
+
 # Set run
 if [[ -z $RUN ]]; then
   RUN=true

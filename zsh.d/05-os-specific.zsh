@@ -29,18 +29,10 @@ case $(uname) in
     # Setup jEnv on linux
     which java > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
-        export PATH="$HOME/bin:$HOME/.jenv/bin:$PATH"
+        export PATH="$HOME/.jenv/bin:$PATH"
         eval "$(jenv init -)"
         alias java8='jenv global 1.8'
         alias java11='jenv global 11.0'
-    fi
-
-    #Set up snaps on linux
-    if [[ $(uname) == 'Linux' ]]; then
-        emulate sh -c 'source /etc/profile.d/01-locale-fix.sh'
-        emulate sh -c 'source /etc/profile.d/apps-bin-path.sh'
-        # emulate sh -c 'source /etc/profile.d/flatpak.sh'
-        # emulate sh -c 'source /etc/profile.d/input-method-config.sh'
     fi
     ;;
   # Linux Specific
