@@ -92,13 +92,19 @@ sudo snap install lsd
 sudo snap install emacs --classic
 
 cd /tmp
-show_msg "Installing Google Chrome (Latest)..."
-wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-sudo dpkg -i google-chrome-stable_current_amd64.deb 
-rm google-chrome-stable_current_amd64.deb 
+which google-chrome
+if [ $? != 0 ]; then
+    show_msg "Installing Google Chrome (Latest)..."
+    wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    sudo dpkg -i google-chrome-stable_current_amd64.deb 
+    rm google-chrome-stable_current_amd64.deb 
+fi
 
-show_msg "Installing antibody..."
-curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
+which antibody
+if [ $? != 0 ]; then
+    show_msg "Installing antibody..."
+    curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
+fi
 
 show_msg "Changing shells to ZSH... Please enter your passowrd!"
 chsh -s /bin/zsh
@@ -109,32 +115,37 @@ sudo pip3 install powerline-status
 mkdir -p  ~/.config/powerline
 cp -r /usr/local/lib/python3.8/dist-packages/powerline/config_files/* ~/.config/powerline/
 
-show_msg "Installing golang..."
-wget -q https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
-sudo tar -zxvf /tmp/go1.11.4.linux-amd64.tar.gz --directory /usr/local/
-rm go1.11.4.linux-amd64.tar.gz
-if [[ -f "/usr/local/bin/go" ]]; then
-    sudo rm /usr/local/bin/go
+which go
+if [ $? != 0 ]; then
+    show_msg "Installing golang..."
+    wget -q https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
+    sudo tar -zxvf /tmp/go1.11.4.linux-amd64.tar.gz --directory /usr/local/
+    rm go1.11.4.linux-amd64.tar.gz
+    if [[ -f "/usr/local/bin/go" ]]; then
+        sudo rm /usr/local/bin/go
+    fi
+    if [[ -f "/usr/local/bin/godoc" ]]; then
+        sudo rm /usr/local/bin/godoc
+    fi
+    if [[ -f "/usr/local/bin/gofmt" ]]; then
+        sudo rm /usr/local/bin/gofmt
+    fi
+    sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
+    sudo ln -s /usr/local/go/bin/godoc /usr/local/bin/godoc
+    sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 fi
-if [[ -f "/usr/local/bin/godoc" ]]; then
-    sudo rm /usr/local/bin/godoc
-fi
-if [[ -f "/usr/local/bin/gofmt" ]]; then
-    sudo rm /usr/local/bin/gofmt
-fi
-sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
-sudo ln -s /usr/local/go/bin/godoc /usr/local/bin/godoc
-sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 
-show_msg "Installing Jetbrains Toolbox..."
-wget -q https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.17.6802.tar.gz
-sudo tar -zxvf jetbrains-toolbox-1.17.6802.tar.gz -C /opt
-rm jetbrains-toolbox-1.17.6802.tar.gz
-sudo mv /opt/jetbrains-toolbox-1.17.6802 /opt/jetbrains-toolbox
-sudo usermod -a -G users $(whoami)
-sudo chgrp users /opt/jetbrains-toolbox
-sudo chmod 775 /opt/jetbrains-toolbox
-/opt/jetbrains-toolbox/jetbrains-toolbox &
+if [ -f "/opt/jetbrains-toolbox/jetbrains-toolbox" ]; then
+    show_msg "Installing Jetbrains Toolbox..."
+    wget -q https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.17.6802.tar.gz
+    sudo tar -zxvf jetbrains-toolbox-1.17.6802.tar.gz -C /opt
+    rm jetbrains-toolbox-1.17.6802.tar.gz
+    sudo mv /opt/jetbrains-toolbox-1.17.6802 /opt/jetbrains-toolbox
+    sudo usermod -a -G users $(whoami)
+    sudo chgrp users /opt/jetbrains-toolbox
+    sudo chmod 775 /opt/jetbrains-toolbox
+     /opt/jetbrains-toolbox/jetbrains-toolbox &
+fi
 
 if [ -f "/usr/share/sddm/scripts/Xsetup" ]; then
     show_msg "SDDM present updating XSetup script..."
