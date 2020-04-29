@@ -46,7 +46,7 @@ CHARMAP="UTF-8"
 # FONTFACE="Fixed"
 # FONTSIZE="8x16"
 
-FONT="ter-powerline-v32n"
+FONT="ter-powerline-v24n"
 
 VIDEOMODE=
 
@@ -54,3 +54,6 @@ VIDEOMODE=
 # FONT='lat9w-08.psf.gz brl-8x8.psf'
 EOF
 
+echo "There is a bug in /bin/setupcon which prevents"
+echo "changing the font... Lets fix that..."
+sudo sed -i 's/FONTFILES="$FONTFILES `findfile $fontdir $f`"/#FONTFILES="$FONTFILES `findfile $fontdir $f`"/g' /bin/setupcon

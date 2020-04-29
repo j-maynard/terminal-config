@@ -51,6 +51,8 @@ if [[ -z $TERM_DETECT ]]; then
   fi
 fi
 
+env > ~/.term-config/tmux.env
+
 if [[ $RUN == 'true' ]]; then
   export EXIT_SESSION=0
   ~/.term-config/tmux-attach.sh
