@@ -6,3 +6,4 @@ mutt/icloud-passwords.txt
 mutt/gmail-passwords.txt
 encrypted/*.sh
 encrypted/*.txt
+tmux.env
