@@ -27,15 +27,28 @@ show_msg() {
     echo -e $1 > /dev/tty
 }
 
+set_username() {
+    if [ -z $SUDO_USER ]; then
+        $USERNAME=$USER
+    else
+        $USERNAME=$SUDO_USER
+    fi
+    if [ $USERNAME == "root" ]; then
+        $USER_PATH="/root"
+    else
+        $USER_PATH="/home/$USER"
+    fi
+}
+
 remove_existing() {
-  DOT_BACKUP="${HOME}/dot-backup"
+  DOT_BACKUP="${USER_PATH}/dot-backup"
   if [ -d $DOT_BACKUP ]; then
-    DOT_BACKUP=${HOME}/dot-backup`ls -A -d dot-backup* | wc -l`
+    DOT_BACKUP=${USER_PATH}/dot-backup`ls -A -d dot-backup* | wc -l`
   fi
 
   for FILE in ${configFiles[@]}; do
     #show_msg "Checking $FILE"
-    FILE_PATH="${HOME}/.${FILE}"
+    FILE_PATH="${USER_PATH}/.${FILE}"
     if [ -L $FILE_PATH ]; then
       show_msg "Link to config file '.${FILE}' exists... removing..."
       rm $FILE_PATH
@@ -59,13 +72,13 @@ remove_existing() {
   done
   
   # Edge cases go here
-  if [ -L "${HOME}/.tmux.conf" ]; then
+  if [ -L "${USER_PATH}/.tmux.conf" ]; then
     show_msg "Link to config file '.tmux.conf' exists... removing..."
-    rm ${HOME}/.tmux.conf
-  elif [ -f "${HOME}/.tmux.conf" ]; then
+    rm ${USER_PATH}/.tmux.conf
+  elif [ -f "${USER_PATH}/.tmux.conf" ]; then
     show_msg "config file '.tmux.conf' already exists... moving to ~/dot-backup/tmux.conf..."
     mkdir -p $DOT_BACKUP
-    mv ${HOME}/.tmux.conf $DOT_BACKUP/.tmux.conf
+    mv ${USER_PATH}/.tmux.conf $DOT_BACKUP/.tmux.conf
   fi
 
   #Check back up directory for size... if empty remove it
@@ -94,17 +107,17 @@ remove_existing() {
 link_files() {
   show_msg "Linking files in place from term-config"
   for FILE in ${configFiles[@]}; do
-    show_msg "Linking ${TERMCONFIG}/$FILE to ${HOME}/.${FILE}"
-    ln -s "${TERMCONFIG}/$FILE" "${HOME}/.${FILE}"
+    show_msg "Linking ${TERMCONFIG}/$FILE to ${USER_PATH}/.${FILE}"
+    ln -s "${TERMCONFIG}/$FILE" "${USER_PATH}/.${FILE}"
   done
 
   # Edge Cases go here
-  ln -s ${TERMCONFIG}/tmux/.tmux.conf ${HOME}/.tmux.conf
+  ln -s ${TERMCONFIG}/tmux/.tmux.conf ${USER_PATH}/.tmux.conf
 }
 
 configFiles=("emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "vimrc" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt")
 VERBOSE=false
-TERMCONFIG="${HOME}/.term-config"
+TERMCONFIG="${USER_PATH}/.term-config"
 while [ "$1" != "" ]; do
     case $1 in
         -c | --term-config)     shift
@@ -148,20 +161,20 @@ mkdir -p ~/.vim/autoload ~/.vim/bundle
 curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
 show_msg "Install Vim plugins..."
-if [ ! -d "${HOME}/.term-config/vim/bundle/vim-sensible" ]; then
-  git clone -q https://github.com/tpope/vim-sensible.git "${HOME}/.term-config/vim/bundle/vim-sensible"
+if [ ! -d "${USER_PATH}/.term-config/vim/bundle/vim-sensible" ]; then
+  git clone -q https://github.com/tpope/vim-sensible.git "${USER_PATH}/.term-config/vim/bundle/vim-sensible"
 fi
 
-if [ ! -d "${HOME}/.term-config/vim/bundle/git-gutter" ]; then
-  git clone -q git://github.com/airblade/vim-gitgutter.git "${HOME}/.term-config/vim/bundle/git-gutter"
+if [ ! -d "${USER_PATH}/.term-config/vim/bundle/git-gutter" ]; then
+  git clone -q git://github.com/airblade/vim-gitgutter.git "${USER_PATH}/.term-config/vim/bundle/git-gutter"
 fi
 
-if [ ! -d "${HOME}/.term-config/vim/bundle/nerdtree" ]; then
-  git clone -q https://github.com/scrooloose/nerdtree.git "${HOME}/.term-config/vim/bundle/nerdtree"
+if [ ! -d "${USER_PATH}/.term-config/vim/bundle/nerdtree" ]; then
+  git clone -q https://github.com/scrooloose/nerdtree.git "${USER_PATH}/.term-config/vim/bundle/nerdtree"
 fi
 
-if [ ! -d "${HOME}/.term-config/vim/bundle/nerdtree-git-plugin" ]; then
-  git clone -q https://github.com/Xuyuanp/nerdtree-git-plugin.git "${HOME}/.term-config/vim/bundle/nerdtree-git-plugin"
+if [ ! -d "${USER_PATH}/.term-config/vim/bundle/nerdtree-git-plugin" ]; then
+  git clone -q https://github.com/Xuyuanp/nerdtree-git-plugin.git "${USER_PATH}/.term-config/vim/bundle/nerdtree-git-plugin"
 fi
 
 show_msg "Terminal Config setup run sucessfully."

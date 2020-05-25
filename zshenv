@@ -8,7 +8,7 @@ export NERD_FONT=true
 export NF=true
 export POWERLINE_SAFE=true
 if [[ -v WSLENV ]]; then
-    if [[ "$TERM_PROG" == "wsl-term" ]]; then
+    if [[ "$TERM_PROG" == "winterm" ]]; then
         export NF_SAFE=true
         export POWERLINE_SAFE=true
     else

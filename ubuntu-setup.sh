@@ -15,6 +15,19 @@ green="\e[32m"
 red="\e[31m"
 yellow="\e[93m"
 
+set_username() {
+    if [ -z $SUDO_USER ]; then
+        USERNAME=$USER
+    else
+        USERNAME=$SUDO_USER
+    fi
+    if [ $USERNAME == "root" ]; then
+        USER_PATH="/root"
+    else
+        USER_PATH="/home/$USER"
+    fi
+}
+
 usage() {
     echo -e "Usage:"
     echo -e "  -V  --verbose            Shows command output for debugging"
@@ -31,141 +44,122 @@ show_msg() {
     echo -e $1 > /dev/tty
 }
 
-snap_install() {
-    exec > /dev/tty
-    show_msg "Installing ftom snap..."
-    show_msg "  ┣━> Slack"
-    show_msg "  ┣━> Spotify"
-    show_msg "  ┣━> Visual Studio Code"
-    show_msg "  ┣━> LSD for ls"
-    show_msg "  ┣━> Emacs"
-    show_msg "  ┗━> Insomnia"
+apt_update() {
+    show_msg "Updating the system..."
+    sudo apt-get update
+    sudo apt-get upgrade -y
+}
 
-    which slack
+apt_install() {
+    show_msg "Installing from apt... "
+
+    apt_pkgs=("git" "curl" "zsh"  "python3.8-dev" "python3-pip"
+    "build-essential" "jed" "htop" "links" "lynx" "tree" "tmux" "openjdk-11-jdk" "openjdk-8-jdk"
+    "maven" "vim" "vim-nox"  "vim-scripts" "most" "ruby-dev" "scdaemon"
+    "pinentry-tty" "pinentry-curses" "libxml2-utils")
+
+    x_apt_pkgs=("idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1")
+
+    PKGS=(${apt_pkgs[@]})
+    if [[ $COMMANDLINE_ONLY == "false" ]]; then
+        for pkg in ${x_apt_pkgs[@]}; do
+            PKGS="${PKGS}${pkg} "
+        done
+    fi
+
+    SORTED_PKGS=($(for a in "${PKGS[@]}"; do echo "$a "; done | sort))
+    col=0
+    for pkg in ${SORTED_PKGS[@]}; do
+        if [[ $col == '3' ]]; then
+            pkg_out="${pkg_out}${pkg}\n"
+            col=0
+        else
+            pkg_out="${pkg_out}${pkg} | "
+            col=$(expr $col + 1)
+        fi
+    done
+
+    show_msg "Installing the following packages using apt:"
+    echo -e ${pkg_out[@]} | column -t -s "|" > /dev/tty
+    exit 0
+    sudo apt-get install $PKGS
+}
+
+snap_install() {
+    show_msg "Installing the following packages from snap:"
+    show_msg "Insomnia"
+    show_msg "Slack"
+    show_msg "Spotify"
+    show_msg "Visual Studio Code"
+    show_msg "yq"
+
+    if [ $VERBOSE == "true" ]; then
+        exec > /dev/tty
+    fi
+
+    which slack > /dev/null
     if [ $? != 0 ]; then
         sudo snap install slack --classic
     fi
-    which spotify
+    which spotify > /dev/null
     if [ $? != 0 ]; then
         sudo snap install spotify --classic
     fi
-    which code
+    which code > /dev/null
     if [ $? != 0 ]; then
         sudo snap install code --classic
     fi
-    which insomnia
+    which insomnia > /dev/null
     if [ $? != 0 ]; then
         sudo snap install insomnia
     fi
-    which lsd
+    which yq > /dev/null
     if [ $? != 0 ]; then
-        sudo snap install lsd --devmode
+        sudo snap install yq
     fi
-    which emacs
-    if [ $? != 0 ]; then
-        sudo snap install emacs --classic
-    fi
+
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null 
     fi
 }
 
-VERBOSE=false
-PRIVATE=false
-while [ "$1" != "" ]; do
-    case $1 in
-        -V | --verbose)         VERBOSE=true
-                                ;;
-        -v | --version)         version
-                                exit 0
-                                ;;
-        -h | --help)            usage
-                                exit 0
-                                ;;
-        * )                     echo -e "Unknown option $1...\n"
-                                usage
-                                exit 1
-                                ;;
+install_chrome() {
+    which google-chrome
+    if [ $? != 0 ]; then
+        show_msg "Installing Google Chrome (Latest)..."
+        wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        if [ ! -f "google-chrome-stable_current_amd64.deb" ]; then
+            show_msg "${red}Failed to download Google Chrome... ${normal}${green}Skipping install...${normal}"
+            return
+        fi
+        sudo dpkg -i google-chrome-stable_current_amd64.deb 
+        rm google-chrome-stable_current_amd64.deb 
+    fi
+}
+
+install_go() {
+    wget -O xidel_0.9.8-1_amd64.deb https://sourceforge.net/projects/videlibri/files/Xidel/Xidel%200.9.8/xidel_0.9.8-1_amd64.deb/download 
+    sudo dpkg -i xidel_0.9.8-1_amd64.deb
+    GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
+    case a in $(uname -m)
+        x86_64)     ARCH=amd64
+                    ;;
+        armv6l)     ARCH=armv6l
+                    ;;
+        *)          show_msg "${red}Can't identify Arch to match to a Go download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return
     esac
-    shift
-done
-
-if [ $VERBOSE == "false" ]; then
-    echo "Silencing output"
-    exec > /dev/null 
-fi
-
-show_msg "Updating the system..."
-sudo apt-get update
-sudo apt-get upgrade -y
-show_msg "Installing from apt... "
-show_msg "  ┣━━━━━━━━━━━━━━┓"
-show_msg "  ┣━> git        ┣━> curl"
-show_msg "  ┣━> idle3      ┣━> pip3"
-show_msg "  ┣━> zsh        ┣━> jed"
-show_msg "  ┣━> htop       ┣━> most"
-show_msg "  ┣━> tree       ┣━> tmux"
-show_msg "  ┣━> lynx       ┣━> links"
-show_msg "  ┣━> htop       ┣━> vim"
-show_msg "  ┣━> openjdk 8  ┣━> openjdk 11"
-show_msg "  ┣━> maven      ┗━> pinentry"
-show_msg "  ┗━> scdaemon"
-
-sudo apt-get install -y git curl zsh idle-python3.8 python3.8-dev python3-pip \
-build-essential jed htop links lynx tree tmux openjdk-11-jdk openjdk-8-jdk \
-maven vim vim-nox vim-gtk3 vim-scripts most ruby-dev scdaemon \
-pinentry-qt pinentry-tty pinentry-curses libappindicator3-1
-
-exec > /dev/tty 
-echo ""
-while true; do
-    read -p "Snap currently takes forever to install anything... You sure you want to install stuff? [Yes/No/Y/y/N/n] " yn
-    case $yn in
-        [Yy]* )   snap_install
-                  break
-                  ;;
-        [Nn]* )   break
-                  ;;
-        * )       echo "Please answer yes or no."
-                  ;;
-    esac
-done
-if [ $VERBOSE == "false" ]; then
-  exec > /dev/null
-fi
-
-cd /tmp
-which google-chrome
-if [ $? != 0 ]; then
-    show_msg "Installing Google Chrome (Latest)..."
-    wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-    sudo dpkg -i google-chrome-stable_current_amd64.deb 
-    rm google-chrome-stable_current_amd64.deb 
-fi
-
-which antibody
-if [ $? != 0 ]; then
-    show_msg "Installing antibody..."
-    curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
-fi
-
-show_msg "Changing shells to ZSH... Please enter your passowrd!"
-if [[ $(awk -F: '/jamie/ { print $7}' /etc/passwd) != "/bin/zsh" ]]; then
-    chsh -s /bin/zsh
-fi
-
-show_msg "Installing powerline..."
-sudo pip3 install setuptools
-sudo pip3 install powerline-status
-mkdir -p  ~/.config/powerline
-cp -r /usr/local/lib/python3.8/dist-packages/powerline/config_files/* ~/.config/powerline/
-
-which go
-if [ $? != 0 ]; then
-    show_msg "Installing golang..."
-    wget -q https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
-    sudo tar -zxvf /tmp/go1.11.4.linux-amd64.tar.gz --directory /usr/local/
-    rm go1.11.4.linux-amd64.tar.gz
+    show_msg "Installing the latest version of Go -> version: ${GOVER}..."
+    wget -q https://dl.google.com/go/${GOVER}.linux-${ARCH}.tar.gz
+    if [ ! -f "${GOVER}.linux-${ARCH}.tar.gz" ]; then
+        show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
+        return
+    fi
+    if [ -d "/usr/local/go" ]; then
+        sudo rm -rf /usr/local/go
+    fi
+    sudo tar -zxvf /tmp/${GOVER}.linux-amd64.tar.gz --directory /usr/local/
+    rm ${GOVER}.linux-amd64.tar.gz
     if [[ -f "/usr/local/bin/go" ]]; then
         sudo rm /usr/local/bin/go
     fi
@@ -178,30 +172,78 @@ if [ $? != 0 ]; then
     sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
     sudo ln -s /usr/local/go/bin/godoc /usr/local/bin/godoc
     sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
-fi
+}
 
-if [[ ! -f "/opt/jetbrains-toolbox/jetbrains-toolbox" ]]; then
-    show_msg "Installing Jetbrains Toolbox..."
-    cd /tmp
-    wget -q https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.17.6802.tar.gz
-    tar -zxvf jetbrains-toolbox-1.17.6802.tar.gz
-    sudo mkdir -p /opt/jetbrains-toolbox
-    sudo mv ./jetbrains-toolbox-1.17.6802/jetbrains-toolbox /opt/jetbrains-toolbox/jetbrains-toolbox
-    rm -rf /tmp/jetbrains-toolbox-1.17.6802
-    sudo usermod -a -G users $(whoami)
-    sudo chgrp -R users /opt/jetbrains-toolbox
-    sudo chmod -R 775 /opt/jetbrains-toolbox
-    /opt/jetbrains-toolbox/jetbrains-toolbox > /dev/null 2&>1 &
-fi
-
-if [[ -f "/usr/share/sddm/scripts/Xsetup" ]]; then
-    show_msg "SDDM present"
-    grep term-config /usr/share/sddm/scripts/Xsetup
-    if [ $? != 0 ]; then
-        show_msg "Updating SDDM XSetup script..."
-        curl -LSs "$GIT_REPO/Xsetup.snippet" | sudo tee -a /usr/share/sddm/scripts/Xsetup
+fix_sddm() {
+    if [[ -f "/usr/share/sddm/scripts/Xsetup" ]]; then
+        show_msg "SDDM present"
+        grep term-config /usr/share/sddm/scripts/Xsetup
+        if [ $? != 0 ]; then
+            show_msg "Updating SDDM XSetup script..."
+            curl -LSs "$GIT_REPO/Xsetup.snippet" | sudo tee -a /usr/share/sddm/scripts/Xsetup
+        fi
     fi
+}
+
+COMMANDLINE_ONLY=false
+VERBOSE=false
+PRIVATE=false
+while [ "$1" != "" ]; do
+    case $1 in
+        -c | --commandline-only)    COMMANDLINE_ONLY=true
+                                    shift
+                                    ;;
+        -V | --verbose)             VERBOSE=true
+                                    shift
+                                    ;;
+        -v | --version)             version
+                                    exit 0
+                                    ;;
+        -h | --help)                usage
+                                    exit 0
+                                    ;;
+        * )                         echo -e "Unknown option $1...\n"
+                                    usage
+                                    exit 1
+                                    ;;
+    esac
+    shift
+done
+
+set_username
+
+if [ $VERBOSE == "false" ]; then
+    echo "Silencing output"
+    exec > /dev/null 
 fi
+
+apt_update
+apt_install
+
+if [[ $COMMANDLINE_ONLY == "false" ]]; then
+    snap_install
+    install_chrome
+    fix_sddm
+fi
+
+which antibody
+if [ $? != 0 ]; then
+    show_msg "Installing antibody..."
+    curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
+fi
+
+if [[ $(awk -F: '/${USERNAME}/ {print $7}' /etc/passwd) != "/bin/zsh" ]]; then
+    show_msg "Changing shells to ZSH... Please enter your passowrd!"
+    sudo chsh -s /bin/zsh $USERNAME
+fi
+
+show_msg "Installing powerline..."
+sudo pip3 install setuptools
+sudo pip3 install powerline-status
+mkdir -p  ${USER_PATH}/.config/powerline
+cp -r /usr/local/lib/python3.8/dist-packages/powerline/config_files/* ${USER_PATH}/.config/powerline/
+
+install_go
 
 show_msg "Linking /usr/bin/python3 to /usr/bin/python..."
 sudo ln -s /usr/bin/python3 /usr/bin/python
@@ -214,5 +256,5 @@ curl -LSs "$GIT_REPO/console-font-setup.sh" | bash
 
 cd $STARTPWD
 
-echo -e "Update the fonts for your terminal and then restart your shell to fnish"
-echo -e "I recommnd actually restarting your whole system at this point"
+show_msg "Update the fonts for your terminal and then restart your shell to fnish"
+show_msg "I recommnd actually restarting your whole system at this point"

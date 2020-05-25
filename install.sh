@@ -17,6 +17,8 @@ export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/mas
 
 usage() {
     echo -e "Usage:"
+    echo -e "  -t  --theme-only         Don't install anything just setup terminal"
+    echo -e "  -c  --commandline-only   Don't install GUI/X components"
     echo -e "  -p  --private-script     Run private scripts (These are encrypted)"
     echo -e "  -V  --verbose            Shows command output for debugging"
     echo -e "  -v  --version            Shows version details"
@@ -51,13 +53,16 @@ os_script() {
     GET=$1
     OS=$2
     MODEL=$3
+    if [ $COMMANDLINE_ONLY == 'true' ]; then 
+        ARGS='c'
+    fi
     show_msg "Getting OS/Distro setup script for '${OS}' from git"
     cd /tmp
     get_file $GET "${OS}-setup.sh" "$GIT_REPO/${OS}-setup.sh"
     chmod +x ${OS}-setup.sh
     exec > /dev/tty
     echo "Running OS/Distro setup script"
-    ./${OS}-setup.sh $MODEL
+    ./${OS}-setup.sh $MODEL $ARGS
     rm ${OS}-setup.sh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
@@ -102,6 +107,7 @@ termsetup() {
             fi
         fi
     fi
+    
 
     if [ -z "$GET" ]; then
         show_msg "No curl or wget... or error in the logic... Exiting..."
@@ -134,21 +140,46 @@ termsetup() {
     esac
 }
 
+set_username() {
+    if [ -z $SUDO_USER ]; then
+        $USERNAME=$USER
+    else
+        $USERNAME=$SUDO_USER
+    fi
+    if [ $USERNAME == "root" ]; then
+        $USER_PATH="/root"
+    else
+        $USER_PATH="/home/$USER"
+    fi
+}
 
+THEME_ONLY=false
+COMMANDLINE_ONLY=false
 VERBOSE=false
 PRIVATE=false
 while [ "$1" != "" ]; do
     case $1 in
-        p | -p | --private-script)  PRIVATE=true
-                                    ;;
-        V | -V | --verbose)         VERBOSE=true
-                                    ;;
-        v | -v | --version)         version
-                                    exit
-                                    ;;
-        * )                         echo -e "Unknown option $1...\n"
-                                    usage
-                                    exit 1
+        t | -t | --theme-only)          THEME_ONLY=true
+                                        shift
+                                        ;;
+        c | -x | --commandline-only)    COMMANDLINE_ONLY=true
+                                        shift
+                                        ;;
+        p | -p | --private-script)      PRIVATE=true
+                                        shift
+                                        ;;
+        V | -V | --verbose)             VERBOSE=true
+                                        shift
+                                        ;;
+        v | -v | --version)             version
+                                        exit
+                                        ;;
+        h | -h | --help)                usage
+                                        exit 0
+                                        ;;
+        * )                             echo -e "Unknown option $1...\n"
+                                        usage
+                                        exit 1
     esac
     shift
 done
@@ -158,12 +189,26 @@ if [ $VERBOSE == "false" ]; then
     exec > /dev/null 
 fi
 
-termsetup
+if [[ $THEME_ONLY == 'false' ]]; then
+    termsetup
+else
+    which git > /dev/null
+    if [[ $? != 0]]; then
+        show_msg "${red}This script requries ${bold}git${normal}${red} to run...  Exiting...${normal}"
+        exit 1
+    fi
 
-cd $HOME
-if [[ -d "${HOME}/terminal-config" ]]; then
+    which curl > /dev/null
+    if [[ $? != 0 ]]; then
+        show_msg "${red}This script requries ${bold}curl${normal}${red} to run...  Exiting...${normal}"
+        exit 1
+    fi
+fi
+
+cd $USER_PATH
+if [[ -d "${USER_PATH}/terminal-config" ]]; then
     config_script "terminal-config"
-elif [[ -d "${HOME}/.term-config" ]]; then
+elif [[ -d "${USER_PATH}}/.term-config" ]]; then
     config_script ".term-config"
 else
     show_msg "Terminal Config not present, retrrieving from github"
@@ -173,69 +218,23 @@ fi
 
 if [ $PRIVATE == "true" ]; then
     show_msg "Running private setup script..."
-    source <(gpg -d -q ${HOME}/.term-config/encrypted/private-setup.gpg)
+    source <(gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)
     
     show_msg "Running git setup script..."
-    ${HOME}/.term-config/git-setup.sh
+    ${USER_PATH}/.term-config/git-setup.sh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi
 fi
 
-setup_powerline_fonts() {
-    show_msg "Install Powerline Fonts..."
-    git clone -q https://github.com/powerline/fonts.git --depth=1 /tmp/fonts
+if [[ $THEME_ONLY == 'false' ]]; then
+    show_msg "Install NerdFonts..."
+    git clone -q https://github.com/ryanoasis/nerd-fonts.git --depth=1 /tmp/fonts
     cd /tmp/fonts
-    SYSTEM_FONTS=true
-    system_mac_fonts="/Library/Fonts"
-    system_linux_fonts="/usr/share/fonts"
-    user_mac_fonts="$HOME/Library/Fonts"
-    user_linux_fonts="$HOME/.local/share/fonts"
-    if [ $(uname) == "Darwin" ]; then
-        if [ $SYSTEM_FONTS == "true" ]; then
-            font_dir=$system_mac_fonts
-        else
-            font_dir=$user_mac_fonts
-        fi
-    elif [ $(uname) == "Linux" ]; then
-        if [ $SYSTEM_FONTS == "true" ]; then
-            font_dir=$system_linux_fonts
-        else
-            font_dir=$user_linux_fonts
-        fi
-    else
-        echo "Unknown Operating system... Think about extending"
-        return 1
-    fi
-    powerline_fonts_dir="$( cd "$( dirname "$0" )" && pwd )"
-    # Copy all fonts to user fonts directory
-    echo "Copying fonts..."
-    if [ $SYSTEM_FONTS == "true" ]; then
-        find "$powerline_fonts_dir" \( -name "$prefix*.[ot]tf" -or -name "$prefix*.pcf.gz" \) -type f -print0 | xargs -0 -n1 -I % sudo cp "%" "$font_dir/"
-        sudo mv ${font_dir}/*.ttf ${font_dir}/truetype/
-        sudo mv ${font_dir}/*.otf ${font_dir}/opentype/
-        # Reset font cache on Linux
-        if which fc-cache >/dev/null 2>&1 ; then
-            echo "Resetting font cache, this may take a moment..."
-            fc-cache -f "${font_dir}/truetype"
-            fc-cache -f "${font_dir}/opentype"
-        fi
-    else
-        find "$powerline_fonts_dir" \( -name "$prefix*.[ot]tf" -or -name "$prefix*.pcf.gz" \) -type f -print0 | xargs -0 -n1 -I % cp "%" "$font_dir/"
-        fc-cache -f "${font_dir}"
-    fi
-    cd /tmp
-    rm -rf /tmp/fonts
-}
-
-show_msg "Install NerdFonts..."
-git clone -q https://github.com/ryanoasis/nerd-fonts.git --depth=1 /tmp/fonts
-cd /tmp/fonts
-sudo ./install.sh --install-to-system-path
-cd $STARTPWD
-rm -r /tmp/fonts
-
-#setup_powerline_fonts
+    sudo ./install.sh --install-to-system-path
+    cd $STARTPWD
+    rm -r /tmp/fonts
+fi
 
 unset GIT_REPO
-
+cd $STARTPWD
