@@ -60,10 +60,12 @@ apt_install() {
 
     x_apt_pkgs=("idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1")
 
-    PKGS=(${apt_pkgs[@]})
+    for pkg in ${apt_pkgs[@]}; do
+	PKGS="${PKGS} ${pkg} "
+    done
     if [[ $COMMANDLINE_ONLY == "false" ]]; then
         for pkg in ${x_apt_pkgs[@]}; do
-            PKGS="${PKGS}${pkg} "
+            PKGS="${PKGS} ${pkg} "
         done
     fi
 
@@ -81,8 +83,10 @@ apt_install() {
 
     show_msg "Installing the following packages using apt:"
     echo -e ${pkg_out[@]} | column -t -s "|" > /dev/tty
-    exit 0
-    sudo apt-get install $PKGS
+    if [ $VERBOSE == 'true' ]; then
+	    show_msg "sudo apt-get install ${PKGS[@]}"
+    fi
+    sudo apt-get install ${PKGS[@]}
 }
 
 snap_install() {
@@ -141,7 +145,7 @@ install_go() {
     wget -O xidel_0.9.8-1_amd64.deb https://sourceforge.net/projects/videlibri/files/Xidel/Xidel%200.9.8/xidel_0.9.8-1_amd64.deb/download 
     sudo dpkg -i xidel_0.9.8-1_amd64.deb
     GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
-    case a in $(uname -m)
+    case $(uname -m) in
         x86_64)     ARCH=amd64
                     ;;
         armv6l)     ARCH=armv6l
