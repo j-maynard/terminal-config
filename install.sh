@@ -193,7 +193,7 @@ if [[ $THEME_ONLY == 'false' ]]; then
     termsetup
 else
     which git > /dev/null
-    if [[ $? != 0]]; then
+    if [[ $? != 0 ]]; then
         show_msg "${red}This script requries ${bold}git${normal}${red} to run...  Exiting...${normal}"
         exit 1
     fi
