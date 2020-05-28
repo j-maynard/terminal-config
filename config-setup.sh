@@ -29,14 +29,14 @@ show_msg() {
 
 set_username() {
     if [ -z $SUDO_USER ]; then
-        $USERNAME=$USER
+        USERNAME=$USER
     else
-        $USERNAME=$SUDO_USER
+        USERNAME=$SUDO_USER
     fi
     if [ $USERNAME == "root" ]; then
-        $USER_PATH="/root"
+        USER_PATH="/root"
     else
-        $USER_PATH="/home/$USER"
+        USER_PATH="/home/$USER"
     fi
 }
 
