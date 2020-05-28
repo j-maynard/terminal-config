@@ -117,6 +117,7 @@ link_files() {
 
 configFiles=("emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "vimrc" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt")
 VERBOSE=false
+set_username
 TERMCONFIG="${USER_PATH}/.term-config"
 while [ "$1" != "" ]; do
     case $1 in
