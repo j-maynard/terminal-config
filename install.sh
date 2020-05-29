@@ -237,4 +237,5 @@ if [[ $THEME_ONLY == 'false' ]]; then
 fi
 
 unset GIT_REPO
+show_msg "${green}Install Script has finished running... You should probably reboot"
 cd $STARTPWD
