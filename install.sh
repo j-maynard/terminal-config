@@ -13,6 +13,19 @@ green="\e[32m"
 red="\e[31m"
 yellow="\e[93m"
 
+set_username() {
+    if [ -z $SUDO_USER ]; then
+        USERNAME=$USER
+    else
+        USERNAME=$SUDO_USER
+    fi
+    if [ $USERNAME == "root" ]; then
+        USER_PATH="/root"
+    else
+        USER_PATH="/home/$USER"
+    fi
+}
+
 export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/master"
 
 usage() {
@@ -140,19 +153,6 @@ termsetup() {
     esac
 }
 
-set_username() {
-    if [ -z $SUDO_USER ]; then
-        $USERNAME=$USER
-    else
-        $USERNAME=$SUDO_USER
-    fi
-    if [ $USERNAME == "root" ]; then
-        $USER_PATH="/root"
-    else
-        $USER_PATH="/home/$USER"
-    fi
-}
-
 THEME_ONLY=false
 COMMANDLINE_ONLY=false
 VERBOSE=false
@@ -189,6 +189,8 @@ if [ $VERBOSE == "false" ]; then
     exec > /dev/null 
 fi
 
+set_username
+
 if [[ $THEME_ONLY == 'false' ]]; then
     termsetup
 else
@@ -208,7 +210,7 @@ fi
 cd $USER_PATH
 if [[ -d "${USER_PATH}/terminal-config" ]]; then
     config_script "terminal-config"
-elif [[ -d "${USER_PATH}}/.term-config" ]]; then
+elif [[ -d "${USER_PATH}/.term-config" ]]; then
     config_script ".term-config"
 else
     show_msg "Terminal Config not present, retrrieving from github"
@@ -218,7 +220,8 @@ fi
 
 if [ $PRIVATE == "true" ]; then
     show_msg "Running private setup script..."
-    source <(gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)
+    show_msg "DEBUG: Running: source < (gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)"
+    eval "$(gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)"
     
     show_msg "Running git setup script..."
     ${USER_PATH}/.term-config/git-setup.sh
