@@ -194,22 +194,22 @@ VERBOSE=false
 PRIVATE=false
 while [ "$1" != "" ]; do
     case $1 in
-        -c | --commandline-only)    COMMANDLINE_ONLY=true
-                                    shift
-                                    ;;
-        -V | --verbose)             VERBOSE=true
-                                    shift
-                                    ;;
-        -v | --version)             version
-                                    exit 0
-                                    ;;
-        -h | --help)                usage
-                                    exit 0
-                                    ;;
-        * )                         echo -e "Unknown option $1...\n"
-                                    usage
-                                    exit 1
-                                    ;;
+        c | -c | --commandline-only)    COMMANDLINE_ONLY=true
+                                    	shift
+                                    	;;
+        v | -V | --verbose)             VERBOSE=true
+                                    	shift
+                                    	;;
+        v | -v | --version)             version
+                                    	exit 0
+                                    	;;
+        h | -h | --help)                usage
+                                    	exit 0
+                                    	;;
+        * )                         	echo -e "Unknown option $1...\n"
+                                    	usage
+                                    	exit 1
+                                    	;;
     esac
     shift
 done
