@@ -67,7 +67,10 @@ os_script() {
     OS=$2
     MODEL=$3
     if [ $COMMANDLINE_ONLY == 'true' ]; then 
-        ARGS='c'
+        ARGS='${ARGS} -c'
+    fi
+    if [ $VERBOSE == 'true' ]; then
+        ARGS="${ARGS} -V"
     fi
     show_msg "Getting OS/Distro setup script for '${OS}' from git"
     cd /tmp
