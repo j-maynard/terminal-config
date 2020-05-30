@@ -67,7 +67,7 @@ os_script() {
     OS=$2
     MODEL=$3
     if [ $COMMANDLINE_ONLY == 'true' ]; then 
-        ARGS='${ARGS} -c'
+        ARGS="${ARGS} -c"
     fi
     if [ $VERBOSE == 'true' ]; then
         ARGS="${ARGS} -V"
