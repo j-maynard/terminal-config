@@ -160,16 +160,12 @@ PRIVATE=false
 while [ "$1" != "" ]; do
     case $1 in
         t | -t | --theme-only)          THEME_ONLY=true
-                                        shift
                                         ;;
-        c | -x | --commandline-only)    COMMANDLINE_ONLY=true
-                                        shift
+        c | -c | --commandline-only)    COMMANDLINE_ONLY=true
                                         ;;
         p | -p | --private-script)      PRIVATE=true
-                                        shift
                                         ;;
         V | -V | --verbose)             VERBOSE=true
-                                        shift
                                         ;;
         v | -v | --version)             version
                                         exit
