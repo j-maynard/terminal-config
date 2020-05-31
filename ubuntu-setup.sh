@@ -56,7 +56,7 @@ apt_install() {
     apt_pkgs=("git" "curl" "zsh"  "python3.8-dev" "python3-pip"
     "build-essential" "jed" "htop" "links" "lynx" "tree" "tmux" "openjdk-11-jdk" "openjdk-8-jdk"
     "maven" "vim" "vim-nox"  "vim-scripts" "most" "ruby-dev" "scdaemon"
-    "pinentry-tty" "pinentry-curses" "libxml2-utils" "xidel")
+    "pinentry-tty" "pinentry-curses" "libxml2-utils")
 
     x_apt_pkgs=("idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1")
 
@@ -142,6 +142,8 @@ install_chrome() {
 }
 
 install_go() {
+    wget -O xidel_0.9.8-1_amd64.deb https://sourceforge.net/projects/videlibri/files/Xidel/Xidel%200.9.8/xidel_0.9.8-1_amd64.deb/download 
+    sudo dpkg -i xidel_0.9.8-1_amd64.deb
     GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
     case $(uname -m) in
         x86_64)     ARCH=amd64
