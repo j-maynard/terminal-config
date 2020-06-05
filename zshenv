@@ -11,6 +11,9 @@ if [[ -v WSLENV ]]; then
     if [[ "$TERM_PROG" == "winterm" ]]; then
         export NF_SAFE=true
         export POWERLINE_SAFE=true
+    elif [[ $WSLENV == "WT_SESSION::WT_PROFILE_ID" ]]; then
+        export NF_SAFE=true
+        export POWERLINE_SAFE=true
     else
         export NF_SAFE=false
         export POWERLINE_SAFE=false
