@@ -141,9 +141,31 @@ install_chrome() {
     fi
 }
 
-install_go() {
+install_xidel() {
     wget -O xidel_0.9.8-1_amd64.deb https://sourceforge.net/projects/videlibri/files/Xidel/Xidel%200.9.8/xidel_0.9.8-1_amd64.deb/download 
     sudo dpkg -i xidel_0.9.8-1_amd64.deb
+}
+
+install_lsd() {
+	LSDVER=$(curl -s https://github.com/Peltoche/lsd/tags.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
+	case $(uname -m) in
+        x86_64)     ARCH=amd64
+                    ;;
+        armv6l)     ARCH=armv6l
+                    ;;
+        *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return
+    esac
+    show_msg "Installing the latest version of LSD -> version: ${LSDVER}..."
+    wget -q "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
+    if [ ! -f "lsd_${LSDVER}_${ARCH}.deb" ]; then
+        show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
+        return
+    fi
+    sudo dpkg -i lsd_${LSDVER}_${ARCH}.deb
+}
+
+install_go() {
     GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
     case $(uname -m) in
         x86_64)     ARCH=amd64
@@ -247,6 +269,8 @@ sudo pip3 install powerline-status
 mkdir -p  ${USER_PATH}/.config/powerline
 cp -r /usr/local/lib/python3.8/dist-packages/powerline/config_files/* ${USER_PATH}/.config/powerline/
 
+install_xidel
+install_lsd
 install_go
 
 show_msg "Linking /usr/bin/python3 to /usr/bin/python..."
