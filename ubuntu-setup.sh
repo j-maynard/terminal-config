@@ -143,8 +143,9 @@ install_chrome() {
 }
 
 install_xidel() {
-    wget -O xidel_0.9.8-1_amd64.deb https://sourceforge.net/projects/videlibri/files/Xidel/Xidel%200.9.8/xidel_0.9.8-1_amd64.deb/download 
+    wget -q -O /tmp/xidel_0.9.8-1_amd64.deb https://sourceforge.net/projects/videlibri/files/Xidel/Xidel%200.9.8/xidel_0.9.8-1_amd64.deb/download 
     sudo dpkg -i xidel_0.9.8-1_amd64.deb
+    rm /tmp/xidel_0.9.8-1_amd64.deb
 }
 
 install_lsd() {
@@ -158,12 +159,13 @@ install_lsd() {
                     return
     esac
     show_msg "Installing the latest version of LSD -> version: ${LSDVER}..."
-    wget -q "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
+    wget -q -O /tmp/lsd_${LSDVER}_${ARCH}.deb "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
     if [ ! -f "lsd_${LSDVER}_${ARCH}.deb" ]; then
         show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
         return
     fi
-    sudo dpkg -i lsd_${LSDVER}_${ARCH}.deb
+    sudo dpkg -i /tmp/lsd_${LSDVER}_${ARCH}.deb
+    rm /tmp/lsd_${LSDVER}_${ARCH}.deb
 }
 
 install_go() {
@@ -201,6 +203,29 @@ install_go() {
     sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 }
 
+install_antibody() {
+	which antibody
+	if [ $? != 0 ]; then
+	    show_msg "Installing antibody..."
+	    curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
+	fi
+}
+
+change_shell() {
+	if [[ $(awk -F: '/${USERNAME}/ {print $7}' /etc/passwd) != "/bin/zsh" ]]; then
+	    show_msg "Changing shells to ZSH..."
+	    sudo chsh -s /bin/zsh $USERNAME
+	fi
+}
+
+install_powerline() {
+	show_msg "Installing powerline..."
+	sudo pip3 install setuptools
+	sudo pip3 install powerline-status
+	mkdir -p  ${USER_PATH}/.config/powerline
+	cp -r /usr/local/lib/python3.8/dist-packages/powerline/config_files/* ${USER_PATH}/.config/powerline/
+}
+
 fix_sddm() {
     if [[ -f "/usr/share/sddm/scripts/Xsetup" ]]; then
         show_msg "SDDM present"
@@ -211,15 +236,22 @@ fix_sddm() {
         fi
     fi
 }
+################################
+# Main Script body starts here #
+################################
 
+# Set default options
 COMMANDLINE_ONLY=false
 VERBOSE=false
 PRIVATE=false
+
+# Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
                                     	;;
         V | -V | --verbose)             VERBOSE=true
+					VARG="-V"
                                     	;;
         v | -v | --version)             version
                                     	exit 0
@@ -235,15 +267,21 @@ while [ "$1" != "" ]; do
     shift
 done
 
-set_username
-
+# Silence output
 if [ $VERBOSE == "false" ]; then
     echo "Silencing output"
     exec > /dev/null 
 fi
 
+set_username
 apt_update
 apt_install
+install_antibody
+change_shell
+install_powerline
+install_xidel
+install_lsd
+install_go
 
 if [[ $COMMANDLINE_ONLY == "false" ]]; then
     snap_install
@@ -251,35 +289,15 @@ if [[ $COMMANDLINE_ONLY == "false" ]]; then
     fix_sddm
 fi
 
-which antibody
-if [ $? != 0 ]; then
-    show_msg "Installing antibody..."
-    curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
-fi
-
-if [[ $(awk -F: '/${USERNAME}/ {print $7}' /etc/passwd) != "/bin/zsh" ]]; then
-    show_msg "Changing shells to ZSH... Please enter your passowrd!"
-    sudo chsh -s /bin/zsh $USERNAME
-fi
-
-show_msg "Installing powerline..."
-sudo pip3 install setuptools
-sudo pip3 install powerline-status
-mkdir -p  ${USER_PATH}/.config/powerline
-cp -r /usr/local/lib/python3.8/dist-packages/powerline/config_files/* ${USER_PATH}/.config/powerline/
-
-install_xidel
-install_lsd
-install_go
-
+# Post install tasks:
 show_msg "Linking /usr/bin/python3 to /usr/bin/python..."
 sudo ln -s /usr/bin/python3 /usr/bin/python
 
 show_msg "Running jenv/rbenv setup script..."
-curl -LSs "$GIT_REPO/linux-env-setup.sh" | bash
+curl -LSs "$GIT_REPO/linux-env-setup.sh" | bash -s - $VARG
 
 show_msg "Running console fonts setup script..."
-curl -LSs "$GIT_REPO/console-font-setup.sh" | bash
+curl -LSs "$GIT_REPO/console-font-setup.sh" | bash -s - $VARG
 
 cd $STARTPWD
 
