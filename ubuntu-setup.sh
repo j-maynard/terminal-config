@@ -324,8 +324,11 @@ while [ "$1" != "" ]; do
         w | -w | --wsl-user)            shift
                                         WSL_USER=$1
                                         ;;
+	m | -m | --model)		shift
+					# Not used for ubuntu.  Skipping
+					;;
         V | -V | --verbose)             VERBOSE=true
-					                    VARG="-V"
+					VARG="-V"
                                     	;;
         v | -v | --version)             version
                                     	exit 0
