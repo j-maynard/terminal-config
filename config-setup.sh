@@ -40,6 +40,70 @@ set_username() {
     fi
 }
 
+check_requirements() {
+    MSG="${red}Your system doesn't meet the following requirements:\n"
+
+    # Check to make sure the term-config directory is present
+    if [ ! -d $TERM_CONFIG ]; then
+        MSG="${MSG}\t* Terminal configuration directory is not present at: ${bold}${TERM_CONFIG}${normal}${red}\n"
+        FAIL=true
+    fi
+
+    # Make sure everything is installed
+    which antibody > /dev/null
+    if [ "$?" != 0 ]; then
+        MSG="${MSG}\t* ${bold}Antibody${normal}${red} is not installed\n"
+        FAIL=true
+    fi
+
+    which vim > /dev/null
+    if [ "$?" != 0 ]; then
+        MSG="${MSG}\t* ${bold}Vim${normal}${red} is not installed\n"
+        FAIL=true
+    fi
+
+    which git > /dev/null
+    if [ "$?" != 0 ]; then
+        MSG="${MSG}\t* ${bold}Git${normal}${red} is not installed\n"
+        FAIL=true
+    fi
+
+    which python > /dev/null
+    if [ "$?" != 0 ]; then
+        MSG="${MSG}\t* ${bold}Python${normal}${red} is not installed\n"
+        FAIL=true
+    fi
+
+    which zsh > /dev/null
+    if [ "$?" != 0 ]; then
+        MSG="${MSG}\t* ${bold}ZSH${normal}${red} is not installed\n"
+        FAIL=true
+    fi
+
+    if [ FAIL == 'true' ]; then
+        show_msg "${MSG}${normal}"
+        show_msg "You'll need to fix the requirements before running this script"
+        if [ $SHOW_ONLY == 'true' ]; then
+            exit 1
+        else
+            exit 0
+        fi
+    fi
+}
+
+disable_optional() {
+    # RBenv and Jenv should be present
+    # If they are missing then we disable their inits
+    if [ $(uname -a) == 'Linux' ]; then
+        if [ ! -d "${USER_PATH}/.jenv" ]; then
+            echo "06-java.zsh" >> "${TERM_CONFIG}/.optional.txt"
+        fi
+    fi
+    if [ ! -d "${USER_PATH}/.rbenv" ]; then
+        echo "07-ruby.zsh" >> "${TERM_CONFIG}/.optional.txt"
+    fi
+}
+
 remove_existing() {
   DOT_BACKUP="${USER_PATH}/dot-backup"
   if [ -d $DOT_BACKUP ]; then
@@ -115,8 +179,32 @@ link_files() {
   ln -s ${TERMCONFIG}/tmux/.tmux.conf ${USER_PATH}/.tmux.conf
 }
 
+vim_setup() {
+    show_msg "Installing vim.pathogen..."
+    mkdir -p ${TERM_CONFIG}/vim/autoload ${TERM_CONFIG}/vim/bundle
+    curl -LSso ${TERM_CONFIG}/vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+
+    show_msg "Install Vim plugins..."
+    if [ ! -d "${TERM_CONFIG}/vim/bundle/vim-sensible" ]; then
+    git clone -q https://github.com/tpope/vim-sensible.git "${TERM_CONFIG}/vim/bundle/vim-sensible"
+    fi
+
+    if [ ! -d "${TERM_CONFIG}/vim/bundle/git-gutter" ]; then
+    git clone -q git://github.com/airblade/vim-gitgutter.git "${TERM_CONFIG}/vim/bundle/git-gutter"
+    fi
+
+    if [ ! -d "${TERM_CONFIG}/vim/bundle/nerdtree" ]; then
+    git clone -q https://github.com/scrooloose/nerdtree.git "${TERM_CONFIG}/vim/bundle/nerdtree"
+    fi
+
+    if [ ! -d "${TERM_CONFIG}/vim/bundle/nerdtree-git-plugin" ]; then
+    git clone -q https://github.com/Xuyuanp/nerdtree-git-plugin.git "${TERM_CONFIG}/vim/bundle/nerdtree-git-plugin"
+    fi
+}
+
 configFiles=("emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "vimrc" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt")
 VERBOSE=false
+SHOW_ONLY=false
 set_username
 TERMCONFIG="${USER_PATH}/.term-config"
 while [ "$1" != "" ]; do
@@ -124,6 +212,9 @@ while [ "$1" != "" ]; do
         -c | --term-config)     shift
                                 TERMCONFIG=$1
                                 ;;
+        -r | --verbose)         SHOW_ONLY=true
+                                check_requirements
+                                exit 0
         -V | --verbose)         VERBOSE=true
                                 ;;
         -v | --version)         version
@@ -141,41 +232,10 @@ if [ $VERBOSE == "false" ]; then
     exec > /dev/null 
 fi
 
-# Move term-config in to the right place
-if [[ "${SCRIPTPATH}" != "${TERMCONFIG}" ]]; then
-    show_msg "Termal config directory is not in the right palce... Moving to ${TERMCONFIG}"
-    mv ${SCRIPTPATH} ${TERMCONFIG}
-fi
-
+check_requirements
 remove_existing
 link_files
-
-# make sure antibody is installed
-which antibody
-if [ "$?" != 0 ]; then
-    show_msg "Antibody is not installed.  Installing now..."
-    curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
-fi
-
-show_msg "Installing vim.pathogen..."
-mkdir -p ~/.vim/autoload ~/.vim/bundle
-curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
-
-show_msg "Install Vim plugins..."
-if [ ! -d "${USER_PATH}/.term-config/vim/bundle/vim-sensible" ]; then
-  git clone -q https://github.com/tpope/vim-sensible.git "${USER_PATH}/.term-config/vim/bundle/vim-sensible"
-fi
-
-if [ ! -d "${USER_PATH}/.term-config/vim/bundle/git-gutter" ]; then
-  git clone -q git://github.com/airblade/vim-gitgutter.git "${USER_PATH}/.term-config/vim/bundle/git-gutter"
-fi
-
-if [ ! -d "${USER_PATH}/.term-config/vim/bundle/nerdtree" ]; then
-  git clone -q https://github.com/scrooloose/nerdtree.git "${USER_PATH}/.term-config/vim/bundle/nerdtree"
-fi
-
-if [ ! -d "${USER_PATH}/.term-config/vim/bundle/nerdtree-git-plugin" ]; then
-  git clone -q https://github.com/Xuyuanp/nerdtree-git-plugin.git "${USER_PATH}/.term-config/vim/bundle/nerdtree-git-plugin"
-fi
+setup_vim
+disable_optional
 
 show_msg "Terminal Config setup run sucessfully."
