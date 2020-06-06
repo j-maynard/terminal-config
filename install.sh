@@ -179,7 +179,7 @@ setup_config() {
     
     elif [ ! -d "${USER_PATH}/.term-config" ]; then
         show_msg "Terminal Config not present, retrrieving from github"
-        git clone $GIT_QUIET https://github.com/j-maynard/terminal-config.git "${USER_PATH}.term-config"
+        git clone $GIT_QUIET https://github.com/j-maynard/terminal-config.git "${USER_PATH}/.term-config"
     fi
 
     show_msg "Running config script at '${USER_PATH}/.term-config/config-setup.sh'..."
