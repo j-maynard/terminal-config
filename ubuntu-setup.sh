@@ -295,11 +295,11 @@ EOF
 }
 
 install_con_fonts() {
-    if [ ! -v WSLENV ]; then
+    if [ -v WSLENV ]; then
         return
     fi
     show_msg "Running console fonts setup script..."
-    curl -LSs "$GIT_REPO/console-font-setup.sh" | bash -s - $VARG
+    curl -LSs "$GIT_REPO/console-font-setup.sh" | sudo bash -s - $VARG
 }
 
 shim_setup() {
