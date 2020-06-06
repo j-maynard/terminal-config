@@ -11,7 +11,7 @@ yellow="\e[93m"
 
 usage() {
     echo -e "Usage:"
-    echo -e "  -r  --requirements       Check for required tools and directories
+    echo -e "  -r  --requirements       Check for required tools and directories"
     echo -e "  -c  --term-config        Location of config files"
     echo -e "                           (Normally ~/.term-config)"
     echo -e "  -V  --verbose            Shows command output for debugging"
