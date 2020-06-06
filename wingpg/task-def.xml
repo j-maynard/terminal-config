@@ -4,7 +4,7 @@
     <Date>2020-06-06T19:03:12.4527957</Date>
     <Author>HOST\user</Author>
     <Description>Runs the Windows GPG Agent which is also used by WSL installations.</Description>
-    <URI>\GPG-Agent</URI>
+    <URI>\Start GPG-Agent</URI>
   </RegistrationInfo>
   <Triggers>
     <LogonTrigger>
@@ -15,7 +15,7 @@
   <Principals>
     <Principal id="Author">
       <UserId>S-1-5-21-2486215967-3346182620-902695816-1001</UserId>
-      <LogonType>InteractiveToken</LogonType>
+      <LogonType>S4U</LogonType>
       <RunLevel>LeastPrivilege</RunLevel>
     </Principal>
   </Principals>
@@ -27,8 +27,6 @@
     <StartWhenAvailable>false</StartWhenAvailable>
     <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
     <IdleSettings>
-      <Duration>PT10M</Duration>
-      <WaitTimeout>PT1H</WaitTimeout>
       <StopOnIdleEnd>true</StopOnIdleEnd>
       <RestartOnIdle>false</RestartOnIdle>
     </IdleSettings>
