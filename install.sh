@@ -16,13 +16,23 @@ yellow="\e[93m"
 set_username() {
     if [ -z $SUDO_USER ]; then
         USERNAME=$USER
+        WSL_USER=$USER
     else
         USERNAME=$SUDO_USER
     fi
     if [ $USERNAME == "root" ]; then
+        if [[ -v WSLENV && ! -v WSL_USER ]]; then
+            show_msg "WSL Username not set... Exiting!"
+            exec > /dev/tty
+            usage
+            exit 1
+        fi
         USER_PATH="/root"
     else
         USER_PATH="/home/$USER"
+    fi
+    if [ ! -v WSL_USER ]; then
+        WSL_USER=$USERNAME
     fi
 }
 
@@ -30,12 +40,15 @@ export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/mas
 
 usage() {
     echo -e "Usage:"
-    echo -e "  -t  --theme-only         Don't install anything just setup terminal"
-    echo -e "  -c  --commandline-only   Don't install GUI/X components"
-    echo -e "  -p  --private-script     Run private scripts (These are encrypted)"
-    echo -e "  -V  --verbose            Shows command output for debugging"
-    echo -e "  -v  --version            Shows version details"
-    echo -e "  -h  --help               Shows this usage message"
+    echo -e "  ${bold}${red}-w  --wsl-user [username]${normal}    Sets the Windows username which runs WSL.  This is used to find the windows"
+    echo -e "                               users home directory. If not specified it matches it to the linux username."
+    echo -e "                               If you run this script as root then you ${bold}MUST${normal} specify this."
+    echo -e "  ${bold}${red}-t  --theme-only${normal}         Don't install anything just setup terminal"
+    echo -e "  ${bold}${red}-c  --commandline-only${normal}   Don't install GUI/X components"
+    echo -e "  ${bold}${red}-p  --private-script${normal}     Run private scripts (These are encrypted)"
+    echo -e "  ${bold}${red}-V  --verbose${normal}            Shows command output for debugging"
+    echo -e "  ${bold}${red}-v  --version${normal}            Shows version details"
+    echo -e "  ${bold}${red}-h  --help${normal}               Shows this usage message"
 }
 
 version() {
@@ -66,40 +79,41 @@ os_script() {
     GET=$1
     OS=$2
     MODEL=$3
-    if [ $COMMANDLINE_ONLY == 'true' ]; then 
-        ARGS="${ARGS} -c"
-    fi
-    if [ $VERBOSE == 'true' ]; then
-        ARGS="${ARGS} -V"
-    fi
     show_msg "Getting OS/Distro setup script for '${OS}' from git"
     cd /tmp
     get_file $GET "${OS}-setup.sh" "$GIT_REPO/${OS}-setup.sh"
     chmod +x ${OS}-setup.sh
     exec > /dev/tty
     echo "Running OS/Distro setup script"
-    ./${OS}-setup.sh $MODEL $ARGS
+    ./${OS}-setup.sh $MODEL $VARG $CARG $WSLARG
     rm ${OS}-setup.sh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi
 }
 
-config_script() {
-    if [ $VERBOSE == "true" ]; then
-        ARGS=" -V"
+theme_only() {
+    if [ $THEME_ONLY == 'false' ]; then
+        return
     fi
-    CONFIG_SCRIPT_PATH=$1
-    show_msg "Running config script at ${CONFIG_SCRIPT_PATH}/config-setup.sh..."
-    exec > /dev/tty
-    cd $HOME
-    $HOME/$CONFIG_SCRIPT_PATH/config-setup.sh $ARGS
-    if [ $VERBOSE == "false" ]; then
-        exec > /dev/null
+    which git > /dev/null
+    if [[ $? != 0 ]]; then
+        show_msg "${red}This script requries ${bold}git${normal}${red} to run...  Exiting...${normal}"
+        exit 1
+    fi
+
+    which curl > /dev/null
+    if [[ $? != 0 ]]; then
+        show_msg "${red}This script requries ${bold}curl${normal}${red} to run...  Exiting...${normal}"
+        exit 1
     fi
 }
 
-termsetup() {
+setup_os() {
+    if [ $THEME_ONLY == 'true' ]; then
+        return
+    fi
+
     #Begin OS Detection
     which wget
     if [[ $? == 0 ]]; then
@@ -159,19 +173,118 @@ termsetup() {
     esac
 }
 
+setup_config() {
+    if [[ -d "${USER_PATH}/terminal-config" ]]; then
+        mv "${USER_PATH}/terminal-config" "${USER_PATH}/.term-config"
+    
+    elif [ ! -d "${USER_PATH}/.term-config" ]; then
+        show_msg "Terminal Config not present, retrrieving from github"
+        git clone $GIT_QUIET https://github.com/j-maynard/terminal-config.git "${USER_PATH}.term-config"
+    fi
+
+    show_msg "Running config script at '${USER_PATH}/.term-config/config-setup.sh'..."
+    
+    exec > /dev/tty
+    $USER_PATH/.term-config/config-setup.sh $VARG
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/null
+    fi
+}
+
+tmp_gpg_agent_conf() {
+    if [ -d "${USER_HOME}/.gnupg" ]; then
+        mv "${USER_HOME}/.gnupg" "${USER_HOME}/.gnupg.bak"
+    fi
+    mkdir -p "${USER_HOME}/.gnupg"
+    cat << EOF > "${USER_HOME}/.gnupg/gpg-agent.conf"
+pinentry-program "/usr/bin/pinentry-curses"
+default-cache-ttl 60
+max-cache-ttl 120
+EOF
+    chmod 700 ${USER_HOME}/.gnupg
+    sudo killall gpg-agent
+    /usr/bin/gpg-agent -q --daemon
+}
+
+private_setup() {
+    if [ $PRIVATE != "true" ]; then
+        return
+    fi
+
+    tmp_gpg_agent_conf
+    show_msg "Running private setup script..."
+    show_msg "DEBUG: Running: source < (gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)"
+    exec > /dev/tty
+    eval "$(gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)"
+    show_msg "Running git setup script..."
+    ${USER_PATH}/.term-config/git-setup.sh
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/null
+    fi
+}
+
+install_nerd_fonts() {
+    if [ $THEME_ONLY == 'true' ]; then
+        show_msg "${red}Please make sure you have Nerd Font installed on your system.${normal}"
+        return
+    fi
+    if [[ $COMMANDLINE_ONLY == "true" && ! -v WSLENV ]]; then
+        show_msg "${red}Please make sure you have Nerd Font installed on your system.${normal}"
+        return
+    fi
+
+    git clone $GIT_QUIET https://github.com/ryanoasis/nerd-fonts.git --depth=1 /tmp/fonts
+    cd /tmp/fonts
+    if [ -v WSLENV ]; then
+        for d in /mnt/c/Users/*; do
+            if [ -d "$d/AppData/Local/Microsoft/Windows/Fonts/" ]; then
+                ls $d/AppData/Local/Microsoft/Windows/Fonts/*Nerd* > /dev/null
+                if [ $? == 0 ]; then
+                    echo -e "${green}${bold}Nerd fonts have been found... Skipping installation...${normal}"
+                    return
+                fi
+            fi
+        done
+        cp -r /tmp/fonts/patched-fonts /mnt/c/temp
+        powershell.exe -ExecutionPolicy Bypass -File c:/temp/patched-fonts/install.ps1
+        rm -rf /mnt/c/temp/patched-fonts
+    else
+        show_msg "Install NerdFonts..."
+        sudo ./install.sh --install-to-system-path
+        cd $STARTPWD
+        rm -r /tmp/fonts
+    fi
+}
+
+################################
+# Main script body starts here #
+################################
+
+# Set default options
 THEME_ONLY=false
 COMMANDLINE_ONLY=false
 VERBOSE=false
 PRIVATE=false
+
+# Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
         t | -t | --theme-only)          THEME_ONLY=true
                                         ;;
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
+                                        CARG="-c"
+                                        ;;
+        w | -w | --wsl-user)            shift
+                                        if [[ $1 =~ ^-.* ]]; then
+                                            continue
+                                        fi
+                                        WSL_USER=$1
+                                        WSLARG="-w ${WSL_USER}"
                                         ;;
         p | -p | --private-script)      PRIVATE=true
                                         ;;
         V | -V | --verbose)             VERBOSE=true
+                                        VARG="-V"
                                         ;;
         v | -v | --version)             version
                                         exit
@@ -186,60 +299,18 @@ while [ "$1" != "" ]; do
     shift
 done
 
+# Silence output
 if [ $VERBOSE == "false" ]; then
     echo "Silencing output"
     exec > /dev/null 
 fi
 
 set_username
-
-if [[ $THEME_ONLY == 'false' ]]; then
-    termsetup
-else
-    which git > /dev/null
-    if [[ $? != 0 ]]; then
-        show_msg "${red}This script requries ${bold}git${normal}${red} to run...  Exiting...${normal}"
-        exit 1
-    fi
-
-    which curl > /dev/null
-    if [[ $? != 0 ]]; then
-        show_msg "${red}This script requries ${bold}curl${normal}${red} to run...  Exiting...${normal}"
-        exit 1
-    fi
-fi
-
-cd $USER_PATH
-if [[ -d "${USER_PATH}/terminal-config" ]]; then
-    config_script "terminal-config"
-elif [[ -d "${USER_PATH}/.term-config" ]]; then
-    config_script ".term-config"
-else
-    show_msg "Terminal Config not present, retrrieving from github"
-    git clone https://github.com/j-maynard/terminal-config.git
-    config_script "terminal-config"
-fi
-
-if [ $PRIVATE == "true" ]; then
-    show_msg "Running private setup script..."
-    show_msg "DEBUG: Running: source < (gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)"
-    eval "$(gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)"
-    
-    show_msg "Running git setup script..."
-    ${USER_PATH}/.term-config/git-setup.sh
-    if [ $VERBOSE == "false" ]; then
-        exec > /dev/null
-    fi
-fi
-
-if [[ $THEME_ONLY == 'false' ]]; then
-    show_msg "Install NerdFonts..."
-    git clone -q https://github.com/ryanoasis/nerd-fonts.git --depth=1 /tmp/fonts
-    cd /tmp/fonts
-    sudo ./install.sh --install-to-system-path
-    cd $STARTPWD
-    rm -r /tmp/fonts
-fi
+theme_only
+setup_os
+setup_config
+private_setup
+install_nerd_fonts
 
 unset GIT_REPO
 show_msg "${green}Install Script has finished running... You should probably reboot"
