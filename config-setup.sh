@@ -11,6 +11,7 @@ yellow="\e[93m"
 
 usage() {
     echo -e "Usage:"
+    echo -e "  -r  --requirements       Check for required tools and directories
     echo -e "  -c  --term-config        Location of config files"
     echo -e "                           (Normally ~/.term-config)"
     echo -e "  -V  --verbose            Shows command output for debugging"
@@ -212,9 +213,10 @@ while [ "$1" != "" ]; do
         -c | --term-config)     shift
                                 TERMCONFIG=$1
                                 ;;
-        -r | --verbose)         SHOW_ONLY=true
+        -r | --requirements)    SHOW_ONLY=true
                                 check_requirements
                                 exit 0
+                                ;;
         -V | --verbose)         VERBOSE=true
                                 ;;
         -v | --version)         version
