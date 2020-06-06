@@ -103,6 +103,7 @@ if [ $VERBOSE == "false" ]; then
     GIT_QUIET="-q"
 fi
 
+set_username
 install_rbenv
 install_jenv
 
