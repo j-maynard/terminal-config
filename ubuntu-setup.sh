@@ -18,22 +18,35 @@ yellow="\e[93m"
 set_username() {
     if [ -z $SUDO_USER ]; then
         USERNAME=$USER
+        WSL_USER=$USER
     else
         USERNAME=$SUDO_USER
     fi
     if [ $USERNAME == "root" ]; then
+        if [[ -v WSLENV && ! -v WSL_USER ]]; then
+            show_msg "WSL Username not set... Exiting!"
+            exec > /dev/tty
+            usage
+            exit 1
+        fi
         USER_PATH="/root"
     else
         USER_PATH="/home/$USER"
+    fi
+    if [ ! -v WSL_USER ]; then
+        WSL_USER=$USERNAME
     fi
 }
 
 usage() {
     echo -e "Usage:"
-    echo -e "  ${BOLD}${RED}-c  --commandline-only${NORMAL}	Install only commandline tools (no snaps, no chrome, etc...)"
-    echo -e "  ${BOLD}${RED}-V  --verbose${NORMAL}            Shows command output for debugging"
-    echo -e "  ${BOLD}${RED}-v  --version${NORMAL}            Shows version details and exit"
-    echo -e "  ${BOLD}${RED}-h  --help${NORMAL}               Shows this usage message and exit"
+    echo -e "  ${bold}${red}-c  --commandline-only${normal}       Install only commandline tools (no snaps, no chrome, etc...)"
+    echo -e "  ${bold}${red}-w  --wsl-user [username]${normal}    Sets the Windows username which runs WSL.  This is used to find the windows"
+    echo -e "                               users home directory. If not specified it matches it to the linux username."
+    echo -e "                               If you run this script as root then you ${bold}MUST${normal} specify this."
+    echo -e "  ${bold}${red}-V  --verbose${normal}                Shows command output for debugging"
+    echo -e "  ${bold}${red}-v  --version${normal}                Shows version details and exit"
+    echo -e "  ${bold}${red}-h  --help${normal}                   Shows this usage message and exit"
 }
 
 version() {
@@ -236,6 +249,48 @@ fix_sddm() {
         fi
     fi
 }
+
+setup_wsl() {
+    if [ ! -v WSLENV ]; then
+        return
+    fi
+    show_msg "WSL Environment variable present.  Setup WSL specific stuff..."
+    if [ ! -d "/mnt/c/Users/$WSL_USER" ]; then
+        show_msg "${red}Can't match username to directory.  Tried ${bold}'/mnt/c/Users/$WSL_USER'${normal}${red}... Have you set the wsl-user option?${normal}"
+        exec > /dev/tty
+        usage
+        show_msg "${red}Unable to continue.  ${bold}Exiting...${normal}"
+        exit 1
+    else
+        WSL_HOME="/mnt/c/Users/$WSL_USER"
+    fi
+    exec > /dev/tty
+    if [ ! -d "/mnt/c/Program Files (x86)/Gpg4win/bin" ]; then
+        echo -e "Please download and install WinGPG from "
+        read -p "Once this is done please press any key to continue..."
+    fi
+    if [ ! -d "/mnt/c/Program Files (x86)/Gpg4win/bin" ]; then
+        show_msg "Unable to complete WSL due to missing WinGPG"
+        return 1
+    fi
+    WINGPG_HOME="$WSL_HOME/AppData/Roaming/gnupg"
+    mkdir -p $WINGPG_HOME
+    wget -q -O "${WINGPG_HOME}/npiperelay.exe" https://github.com/NZSmartie/npiperelay/releases/download/v0.1/npiperelay.exe
+    cat << EOF > "${WINGPG_HOME}/gpg-agent.conf"
+enable-ssh-support
+enable-putty-support
+pinentry-program "C:\Program Files (x86)\Gpg4win\bin\pinentry-qt.exe"
+default-cache-ttl 60
+max-cache-ttl 120
+EOF
+    /mnt/c/Program\ Files\ \(x86\)/GnuPG/bin/gpg-connect-agent.exe /bye
+    HOST=$(h=$(hostname) && echo ${h^^})
+    curl -LSs https://raw.githubusercontent.com/j-maynard/terminal-config/master/wingpg/task-def.xml | sed "s|HOST|${HOST}|g" | sed "s|user|${WSL_USER}|g" > /tmp/Win-GPG-Agent.xml
+    CMD="powershell.exe -Command 'Register-ScheduledTask -TaskName \"Start GPG-Agent\" -Xml (get-content \\\\wsl$\\Ubuntu-20.04\\tmp\\Win-GPG-Agent.xml | out-string) -User ${HOST}\\${WSL_USER}'"
+    eval $CMD
+    powershell.exe -Command "Start-ScheduledTask -TaskName 'Start GPG-Agent'"
+}
+
 ################################
 # Main Script body starts here #
 ################################
@@ -250,8 +305,11 @@ while [ "$1" != "" ]; do
     case $1 in
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
                                     	;;
+        w | -w | --wsl-user)            shift
+                                        WSL_USER=$1
+                                        ;;
         V | -V | --verbose)             VERBOSE=true
-					VARG="-V"
+					                    VARG="-V"
                                     	;;
         v | -v | --version)             version
                                     	exit 0
@@ -282,6 +340,7 @@ install_powerline
 install_xidel
 install_lsd
 install_go
+setup_wsl
 
 if [[ $COMMANDLINE_ONLY == "false" ]]; then
     snap_install
