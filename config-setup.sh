@@ -95,7 +95,7 @@ check_requirements() {
 disable_optional() {
     # RBenv and Jenv should be present
     # If they are missing then we disable their inits
-    if [ $(uname -a) == 'Linux' ]; then
+    if [[ $(uname -a) == 'Linux' ]]; then
         if [ ! -d "${USER_PATH}/.jenv" ]; then
             echo "06-java.zsh" >> "${TERM_CONFIG}/.optional.txt"
         fi
@@ -180,7 +180,7 @@ link_files() {
   ln -s ${TERMCONFIG}/tmux/.tmux.conf ${USER_PATH}/.tmux.conf
 }
 
-vim_setup() {
+setup_vim() {
     show_msg "Installing vim.pathogen..."
     mkdir -p ${TERM_CONFIG}/vim/autoload ${TERM_CONFIG}/vim/bundle
     curl -LSso ${TERM_CONFIG}/vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
