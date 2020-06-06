@@ -37,6 +37,9 @@ while [ "$1" != "" ]; do
         -m | --model)           shift
                                 MODEL=$1
                                 ;;
+        -w | --wsl-user)        shift
+                                # Rasbian doesn't run in WSL.  Skipping...
+                                ;;
         -V | --verbose)         SILENT=""
                                 ;;
         -v | --version)         version
