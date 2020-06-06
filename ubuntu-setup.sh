@@ -218,10 +218,8 @@ PRIVATE=false
 while [ "$1" != "" ]; do
     case $1 in
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
-                                    	shift
                                     	;;
         V | -V | --verbose)             VERBOSE=true
-                                    	shift
                                     	;;
         v | -v | --version)             version
                                     	exit 0
