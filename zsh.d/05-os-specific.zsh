@@ -14,8 +14,11 @@ case $(uname) in
               fi
               ;;
               
-  Linux)      ;;
-  
+  Linux)      # Windows Subsystem for Linux requires some special care
+              if [ -v WSLENV ]; then
+                ${HOME}/.term-config/wingpg-connect.sh &
+              fi
+              
   *)          echo "Unknwon Environment"
               ;;
 esac
