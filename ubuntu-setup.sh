@@ -275,7 +275,9 @@ setup_wsl() {
     fi
     WINGPG_HOME="$WSL_HOME/AppData/Roaming/gnupg"
     mkdir -p $WINGPG_HOME
-    wget -q -O "${WINGPG_HOME}/npiperelay.exe" https://github.com/NZSmartie/npiperelay/releases/download/v0.1/npiperelay.exe
+    if [ ! -f "${WINGPG_HOME}/npiperelay.exe" ]; then
+        wget -q -O "${WINGPG_HOME}/npiperelay.exe" https://github.com/NZSmartie/npiperelay/releases/download/v0.1/npiperelay.exe
+    fi
     cat << EOF > "${WINGPG_HOME}/gpg-agent.conf"
 enable-ssh-support
 enable-putty-support
@@ -288,7 +290,21 @@ EOF
     curl -LSs https://raw.githubusercontent.com/j-maynard/terminal-config/master/wingpg/task-def.xml | sed "s|HOST|${HOST}|g" | sed "s|user|${WSL_USER}|g" > /tmp/Win-GPG-Agent.xml
     CMD="powershell.exe -Command 'Register-ScheduledTask -TaskName \"Start GPG-Agent\" -Xml (get-content \\\\wsl$\\Ubuntu-20.04\\tmp\\Win-GPG-Agent.xml | out-string) -User ${HOST}\\${WSL_USER}'"
     eval $CMD
+    rm /tmp/Win-GPG-Agent.xml
     powershell.exe -Command "Start-ScheduledTask -TaskName 'Start GPG-Agent'"
+}
+
+install_con_fonts() {
+    if [ ! -v WSLENV ]; then
+        return
+    fi
+    show_msg "Running console fonts setup script..."
+    curl -LSs "$GIT_REPO/console-font-setup.sh" | bash -s - $VARG
+}
+
+shim_setup() {
+    show_msg "Running jenv/rbenv setup script..."
+    curl -LSs "$GIT_REPO/shim-setup.sh" | bash -s - $VARG
 }
 
 ################################
@@ -341,6 +357,8 @@ install_xidel
 install_lsd
 install_go
 setup_wsl
+install_con_fonts
+shim_setup
 
 if [[ $COMMANDLINE_ONLY == "false" ]]; then
     snap_install
@@ -351,12 +369,6 @@ fi
 # Post install tasks:
 show_msg "Linking /usr/bin/python3 to /usr/bin/python..."
 sudo ln -s /usr/bin/python3 /usr/bin/python
-
-show_msg "Running jenv/rbenv setup script..."
-curl -LSs "$GIT_REPO/linux-env-setup.sh" | bash -s - $VARG
-
-show_msg "Running console fonts setup script..."
-curl -LSs "$GIT_REPO/console-font-setup.sh" | bash -s - $VARG
 
 cd $STARTPWD
 
