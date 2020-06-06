@@ -30,10 +30,10 @@ set_username() {
 
 usage() {
     echo -e "Usage:"
-    echo -e "  -c  --commandline-only	Install only commandline tools (no snaps, no chrome, etc...)
-    echo -e "  -V  --verbose            Shows command output for debugging"
-    echo -e "  -v  --version            Shows version details"
-    echo -e "  -h  --help               Shows this usage message"
+    echo -e "  ${BOLD}${RED}-c  --commandline-only${NORMAL}	Install only commandline tools (no snaps, no chrome, etc...)"
+    echo -e "  ${BOLD}${RED}-V  --verbose${NORMAL}            Shows command output for debugging"
+    echo -e "  ${BOLD}${RED}-v  --version${NORMAL}            Shows version details and exit"
+    echo -e "  ${BOLD}${RED}-h  --help${NORMAL}               Shows this usage message and exit"
 }
 
 version() {
