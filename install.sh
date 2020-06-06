@@ -86,11 +86,14 @@ os_script() {
 }
 
 config_script() {
+    if [ $VERBOSE == "true" ]; then
+        ARGS=" -V"
+    fi
     CONFIG_SCRIPT_PATH=$1
     show_msg "Running config script at ${CONFIG_SCRIPT_PATH}/config-setup.sh..."
     exec > /dev/tty
     cd $HOME
-    $HOME/$CONFIG_SCRIPT_PATH/config-setup.sh
+    $HOME/$CONFIG_SCRIPT_PATH/config-setup.sh $ARGS
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi
