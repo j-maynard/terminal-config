@@ -192,16 +192,16 @@ setup_config() {
 }
 
 tmp_gpg_agent_conf() {
-    if [ -d "${USER_HOME}/.gnupg" ]; then
-        mv "${USER_HOME}/.gnupg" "${USER_HOME}/.gnupg.bak"
+    if [ -d "${USER_PATH}/.gnupg" ]; then
+        mv "${USER_PATH}/.gnupg" "${USER_PATH}/.gnupg.bak"
     fi
-    mkdir -p "${USER_HOME}/.gnupg"
-    cat << EOF > "${USER_HOME}/.gnupg/gpg-agent.conf"
+    mkdir -p "${USER_PATH}/.gnupg"
+    cat << EOF > "${USER_PATH}/.gnupg/gpg-agent.conf"
 pinentry-program "/usr/bin/pinentry-curses"
 default-cache-ttl 60
 max-cache-ttl 120
 EOF
-    chmod 700 ${USER_HOME}/.gnupg
+    chmod 700 ${USER_PATH}/.gnupg
     sudo killall gpg-agent
     /usr/bin/gpg-agent -q --daemon
 }
