@@ -30,6 +30,7 @@ set_username() {
 
 usage() {
     echo -e "Usage:"
+    echo -e "  -c  --commandline-only	Install only commandline tools (no snaps, no chrome, etc...)
     echo -e "  -V  --verbose            Shows command output for debugging"
     echo -e "  -v  --version            Shows version details"
     echo -e "  -h  --help               Shows this usage message"
@@ -219,7 +220,7 @@ while [ "$1" != "" ]; do
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
                                     	shift
                                     	;;
-        v | -V | --verbose)             VERBOSE=true
+        V | -V | --verbose)             VERBOSE=true
                                     	shift
                                     	;;
         v | -v | --version)             version
