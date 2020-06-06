@@ -86,7 +86,7 @@ apt_install() {
     if [ $VERBOSE == 'true' ]; then
 	    show_msg "sudo apt-get install ${PKGS[@]}"
     fi
-    sudo apt-get install ${PKGS[@]}
+    sudo apt-get install -y ${PKGS[@]}
 }
 
 snap_install() {
