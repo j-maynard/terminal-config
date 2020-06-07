@@ -182,7 +182,7 @@ link_files() {
 
 setup_vim() {
     show_msg "Installing vim.pathogen..."
-    mkdir -p ${TERMCONFIG}/vim/autoload ${TERM_CONFIG}/vim/bundle
+    mkdir -p ${TERMCONFIG}/vim/autoload ${TERMCONFIG}/vim/bundle
     curl -LSso ${TERMCONFIG}/vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
     show_msg "Install Vim plugins..."
