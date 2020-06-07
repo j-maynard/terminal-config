@@ -183,6 +183,14 @@ install_lsd() {
 
 install_go() {
     GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
+    if [ -d /usr/local/go ]; then
+    	if [ -f /usr/local/go/bin/go ]; then
+		if [ $(/usr/local/go/bin/go version | cut -d' ' -f3) ==  $GOVER]; then
+			show_msg "${green}Latest Version of Go (${GOVER} is already installed.  Skipping go install..."
+			return
+		fi
+	fi
+    fi
     case $(uname -m) in
         x86_64)     ARCH=amd64
                     ;;
@@ -205,14 +213,10 @@ install_go() {
     if [[ -f "/usr/local/bin/go" ]]; then
         sudo rm /usr/local/bin/go
     fi
-    if [[ -f "/usr/local/bin/godoc" ]]; then
-        sudo rm /usr/local/bin/godoc
-    fi
     if [[ -f "/usr/local/bin/gofmt" ]]; then
         sudo rm /usr/local/bin/gofmt
     fi
     sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
-    sudo ln -s /usr/local/go/bin/godoc /usr/local/bin/godoc
     sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 }
 
@@ -255,6 +259,7 @@ setup_wsl() {
         return
     fi
     show_msg "WSL Environment variable present.  Setup WSL specific stuff..."
+    sudo apt-get install -y socat
     if [ ! -d "/mnt/c/Users/$WSL_USER" ]; then
         show_msg "${red}Can't match username to directory.  Tried ${bold}'/mnt/c/Users/$WSL_USER'${normal}${red}... Have you set the wsl-user option?${normal}"
         exec > /dev/tty
