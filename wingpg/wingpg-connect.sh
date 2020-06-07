@@ -7,7 +7,7 @@ USERNAME=Jamie
 WIN_GPGDIR="C:/Users/${USERNAME}/AppData/Roaming/gnupg"
 NPIPERELAY="/mnt/c/Users/${USERNAME}/AppData/Roaming/gnupg/npiperelay.exe"
 PIDFILE="${GPGDIR}/.gpg-agent-relay.pid"
-if [ -f "$(PIDFILE)" ]; then
+if [ -f "${PIDFILE}" ]; then
     OLDPID=$(cat "${PIDFILE}")
 fi
 
