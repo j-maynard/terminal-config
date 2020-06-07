@@ -1,6 +1,6 @@
 #!/bin/bash
 get_profile() {
-    if [[ "$1" =~ ^[0-9]+$ && ${#profile_names[@]}>=$1 && $1>0 ]]; then
+    if [[ "$1" =~ ^[0-9]+$ && ${#profile_names[@]}<=$1 && $1>0 ]]; then
         p_name=${profile_names[($1-1)]}
     else
         return 1
