@@ -43,12 +43,12 @@ usage() {
     echo -e "  ${bold}${red}-w  --wsl-user [username]${normal}    Sets the Windows username which runs WSL.  This is used to find the windows"
     echo -e "                               users home directory. If not specified it matches it to the linux username."
     echo -e "                               If you run this script as root then you ${bold}MUST${normal} specify this."
-    echo -e "  ${bold}${red}-t  --theme-only${normal}         Don't install anything just setup terminal"
-    echo -e "  ${bold}${red}-c  --commandline-only${normal}   Don't install GUI/X components"
-    echo -e "  ${bold}${red}-p  --private-script${normal}     Run private scripts (These are encrypted)"
-    echo -e "  ${bold}${red}-V  --verbose${normal}            Shows command output for debugging"
-    echo -e "  ${bold}${red}-v  --version${normal}            Shows version details"
-    echo -e "  ${bold}${red}-h  --help${normal}               Shows this usage message"
+    echo -e "  ${bold}${red}-t  --theme-only${normal}             Don't install anything just setup terminal"
+    echo -e "  ${bold}${red}-c  --commandline-only${normal}       Don't install GUI/X components"
+    echo -e "  ${bold}${red}-p  --private-script${normal}         Run private scripts (These are encrypted)"
+    echo -e "  ${bold}${red}-V  --verbose${normal}                Shows command output for debugging"
+    echo -e "  ${bold}${red}-v  --version${normal}                Shows version details"
+    echo -e "  ${bold}${red}-h  --help${normal}                   Shows this usage message"
 }
 
 version() {
