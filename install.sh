@@ -232,19 +232,20 @@ install_nerd_fonts() {
         show_msg "${red}Please make sure you have Nerd Font installed on your system.${normal}"
         return
     fi
-
-    git clone $GIT_QUIET https://github.com/ryanoasis/nerd-fonts.git --depth=1 /tmp/fonts
-    cd /tmp/fonts
     if [ -v WSLENV ]; then
         for d in /mnt/c/Users/*; do
-            if [ -d "$d/AppData/Local/Microsoft/Windows/Fonts/" ]; then
-                ls $d/AppData/Local/Microsoft/Windows/Fonts/*Nerd* > /dev/null
-                if [ $? == 0 ]; then
+            DIR="$d/AppData/Local/Microsoft/Windows/Fonts"
+            if [ -d $DIR ]; then
+               if ls ${DIR}/*Nerd* &> /dev/null; then 
                     echo -e "${green}${bold}Nerd fonts have been found... Skipping installation...${normal}"
                     return
                 fi
             fi
         done
+    fi
+    git clone $GIT_QUIET https://github.com/ryanoasis/nerd-fonts.git --depth=1 /tmp/fonts
+    cd /tmp/fonts
+    if [ -v WSLENV ]; then
         cp -r /tmp/fonts/patched-fonts /mnt/c/temp
         powershell.exe -ExecutionPolicy Bypass -File c:/temp/patched-fonts/install.ps1
         rm -rf /mnt/c/temp/patched-fonts
