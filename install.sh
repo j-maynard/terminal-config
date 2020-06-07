@@ -1,6 +1,5 @@
 #!/bin/bash
 # Stop on error
-set -e
 STARTPWD=$(pwd)
 
 SCRIPT=`realpath -s $0`
@@ -192,18 +191,17 @@ setup_config() {
 }
 
 tmp_gpg_agent_conf() {
-    if [ -d "${USER_PATH}/.gnupg" ]; then
-        mv "${USER_PATH}/.gnupg" "${USER_PATH}/.gnupg.bak"
+    if [ ! -d "${USER_PATH}/.gnupg" ]; then
+        mkdir -p "${USER_PATH}/.gnupg"
+        chmod 700 ${USER_PATH}/.gnupg
     fi
-    mkdir -p "${USER_PATH}/.gnupg"
     cat << EOF > "${USER_PATH}/.gnupg/gpg-agent.conf"
 pinentry-program "/usr/bin/pinentry-curses"
 default-cache-ttl 60
 max-cache-ttl 120
 EOF
-    chmod 700 ${USER_PATH}/.gnupg
     if ps -C gpg-agnet &> /dev/null; then
-        sudo killall gpg-agent
+        sudo killall -s 9 gpg-agent
     fi
     /usr/bin/gpg-agent -q --daemon
 }
