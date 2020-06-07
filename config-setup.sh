@@ -182,24 +182,24 @@ link_files() {
 
 setup_vim() {
     show_msg "Installing vim.pathogen..."
-    mkdir -p ${TERM_CONFIG}/vim/autoload ${TERM_CONFIG}/vim/bundle
-    curl -LSso ${TERM_CONFIG}/vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+    mkdir -p ${TERMCONFIG}/vim/autoload ${TERM_CONFIG}/vim/bundle
+    curl -LSso ${TERMCONFIG}/vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
     show_msg "Install Vim plugins..."
-    if [ ! -d "${TERM_CONFIG}/vim/bundle/vim-sensible" ]; then
-    git clone -q https://github.com/tpope/vim-sensible.git "${TERM_CONFIG}/vim/bundle/vim-sensible"
+    if [ ! -d "${TERMCONFIG}/vim/bundle/vim-sensible" ]; then
+        git clone -q https://github.com/tpope/vim-sensible.git "${TERMCONFIG}/vim/bundle/vim-sensible"
     fi
 
-    if [ ! -d "${TERM_CONFIG}/vim/bundle/git-gutter" ]; then
-    git clone -q git://github.com/airblade/vim-gitgutter.git "${TERM_CONFIG}/vim/bundle/git-gutter"
+    if [ ! -d "${TERMCONFIG}/vim/bundle/git-gutter" ]; then
+        git clone -q git://github.com/airblade/vim-gitgutter.git "${TERMCONFIG}/vim/bundle/git-gutter"
     fi
 
-    if [ ! -d "${TERM_CONFIG}/vim/bundle/nerdtree" ]; then
-    git clone -q https://github.com/scrooloose/nerdtree.git "${TERM_CONFIG}/vim/bundle/nerdtree"
+    if [ ! -d "${TERMCONFIG}/vim/bundle/nerdtree" ]; then
+        git clone -q https://github.com/scrooloose/nerdtree.git "${TERMCONFIG}/vim/bundle/nerdtree"
     fi
 
-    if [ ! -d "${TERM_CONFIG}/vim/bundle/nerdtree-git-plugin" ]; then
-    git clone -q https://github.com/Xuyuanp/nerdtree-git-plugin.git "${TERM_CONFIG}/vim/bundle/nerdtree-git-plugin"
+    if [ ! -d "${TERMCONFIG}/vim/bundle/nerdtree-git-plugin" ]; then
+        git clone -q https://github.com/Xuyuanp/nerdtree-git-plugin.git "${TERMCONFIG}/vim/bundle/nerdtree-git-plugin"
     fi
 }
 
