@@ -237,7 +237,7 @@ install_nerd_fonts() {
     if [ -v WSLENV ]; then
         for d in /mnt/c/Users/*; do
             DIR="$d/AppData/Local/Microsoft/Windows/Fonts"
-            if [ -d $DIR ]; then
+            if [ -d "${DIR}" ]; then
                if ls ${DIR}/*Nerd* &> /dev/null; then 
                     echo -e "${green}${bold}Nerd fonts have been found... Skipping installation...${normal}"
                     return
