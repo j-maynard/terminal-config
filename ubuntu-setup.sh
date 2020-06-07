@@ -271,7 +271,7 @@ setup_wsl() {
     fi
     exec > /dev/tty
     if [ ! -d "/mnt/c/Program Files (x86)/Gpg4win/bin" ]; then
-        echo -e "Please download and install WinGPG from "
+        echo -e "Please download and install WinGPG from https://www.gpg4win.org/thanks-for-download.html"
         read -p "Once this is done please press any key to continue..."
     fi
     if [ ! -d "/mnt/c/Program Files (x86)/Gpg4win/bin" ]; then
