@@ -202,7 +202,9 @@ default-cache-ttl 60
 max-cache-ttl 120
 EOF
     chmod 700 ${USER_PATH}/.gnupg
-    sudo killall gpg-agent
+    if ps -C gpg-agnet &> /dev/null; then
+        sudo killall gpg-agent
+    fi
     /usr/bin/gpg-agent -q --daemon
 }
 
