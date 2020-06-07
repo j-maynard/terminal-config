@@ -185,7 +185,7 @@ install_go() {
     GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
     if [ -d /usr/local/go ]; then
     	if [ -f /usr/local/go/bin/go ]; then
-		if [ $(/usr/local/go/bin/go version | cut -d' ' -f3) ==  $GOVER]; then
+		if [ $(/usr/local/go/bin/go version | cut -d' ' -f3) ==  $GOVER ]; then
 			show_msg "${green}Latest Version of Go (${GOVER} is already installed.  Skipping go install..."
 			return
 		fi
