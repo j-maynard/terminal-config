@@ -6,6 +6,10 @@ get_profile() {
         return 1
     fi
     echo ${p_name} is selected
+    if [ -v WSLENV ]; then
+        echo -e "Starting WinGPGP Connection script"
+        $SCRIPTPATH/wingpg/wingpg-connect.sh
+    fi
     source <(gpg -d -q ${SCRIPTPATH}/encrypted/git-${p_name}.gpg)        
 }
 
@@ -38,17 +42,6 @@ while true; do
     esac
 done
 
-# echo "Select a profile?"
-# select profile in ${profile_names[@]}; do
-#     case $profile in
-#         * ) echo $profile is selected
-#             source <(gpg -d -q ${SCRIPTPATH}/encrypted/git-$profile.gpg)
-#             if [ $? == 0 ]; then
-#                 break
-#             fi
-#             ;;
-#     esac
-# done
 git config --global user.name "${USERNAME}"
 git config --global user.email "${EMAIL}"
 git config --global user.signingkey ${SIGNING_KEY}
