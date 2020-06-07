@@ -8,7 +8,7 @@ get_profile() {
     echo ${p_name} is selected
     if [ -v WSLENV ]; then
         echo -e "Starting WinGPGP Connection script"
-        $SCRIPTPATH/wingpg/wingpg-connect.sh
+        $SCRIPTPATH/wingpg/wingpg-connect.sh &
     fi
     source <(gpg -d -q ${SCRIPTPATH}/encrypted/git-${p_name}.gpg)        
 }
