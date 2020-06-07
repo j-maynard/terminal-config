@@ -286,7 +286,7 @@ setup_wsl() {
     cat << EOF > "${WINGPG_HOME}/gpg-agent.conf"
 enable-ssh-support
 enable-putty-support
-pinentry-program "C:\Program Files (x86)\Gpg4win\bin\pinentry-qt.exe"
+pinentry-program "C:\Program Files (x86)\Gpg4win\bin\pinentry-w32.exe"
 default-cache-ttl 60
 max-cache-ttl 120
 EOF
