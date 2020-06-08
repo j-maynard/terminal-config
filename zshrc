@@ -1,7 +1,11 @@
 #
 # Source files
 #
-OPTIONAL=$(cat .optional.txt)
+
+if [ -f "${HOME}/.term-config/.optional" ]; then
+    OPTIONAL=$(cat .optional.txt)
+fi
+
 for f in "${HOME}"/.term-config/zsh.d/*.zsh; do
 	if [[ " ${OPTIONAL[@]} " =~ " ${f} " ]]; then
 		continue

@@ -56,7 +56,7 @@ install_rbenv() {
 }
 
 install_jenv() {
-  if [[ $(uname -a) != "Linux" ]]; then
+  if [[ $(uname) != "Linux" ]]; then
     return
   fi
   

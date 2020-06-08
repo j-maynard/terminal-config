@@ -18,7 +18,7 @@ case $(uname) in
               if [ -v WSLENV ]; then
                 ${HOME}/.term-config/wingpg-connect.sh &
               fi
-              
+              ;;
   *)          echo "Unknwon Environment"
               ;;
 esac
