@@ -31,3 +31,4 @@ else
         export POWERLINE_SAFE=true
     fi
 fi
+export TMUX_ATTACH=false
