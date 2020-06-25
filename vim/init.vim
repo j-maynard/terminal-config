@@ -1,8 +1,5 @@
 execute pathogen#infect()
 set rtp+=~/Development/powerline/bindings/vim
-python3 from powerline.vim import setup as powerline_setup
-python3 powerline_setup()
-python3 del powerline_setup
 set nocompatible
 "filetype plugin indent on
 filetype indent off
@@ -35,3 +32,4 @@ autocmd StdinReadPre * let s:std_in=1
 map <C-n> :NERDTreeToggle<CR>
 set clipboard=unnamed
 map <F8> :setl noai nocin nosi inde=<CR>
+let g:airline_powerline_fonts = 1

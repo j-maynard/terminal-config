@@ -45,22 +45,24 @@ check_requirements() {
     MSG="${red}Your system doesn't meet the following requirements:\n"
 
     # Check to make sure the term-config directory is present
-    if [ ! -d $TERM_CONFIG ]; then
-        MSG="${MSG}\t* Terminal configuration directory is not present at: ${bold}${TERM_CONFIG}${normal}${red}\n"
+    if [ ! -d $TERMCONFIG ]; then
+        MSG="${MSG}\t* Terminal configuration directory is not present at: ${bold}${TERMCONFIG}${normal}${red}\n"
         FAIL=true
     fi
 
-    # Make sure everything is installed
-    which antibody > /dev/null
-    if [ "$?" != 0 ]; then
+    # Make sure everything is installed    
+    if which antibody > /dev/null; then
         MSG="${MSG}\t* ${bold}Antibody${normal}${red} is not installed\n"
         FAIL=true
     fi
 
-    which vim > /dev/null
-    if [ "$?" != 0 ]; then
+    if which vim > /dev/null; then
         MSG="${MSG}\t* ${bold}Vim${normal}${red} is not installed\n"
         FAIL=true
+    fi
+
+    if which nvim > /dev/null; then
+        MSG="${MSG}\t* ${bold}Neovim${normal}${red} is not installed... maybe think about installing it?\n"
     fi
 
     which git > /dev/null
@@ -97,11 +99,11 @@ disable_optional() {
     # If they are missing then we disable their inits
     if [[ $(uname -a) == 'Linux' ]]; then
         if [ ! -d "${USER_PATH}/.jenv" ]; then
-            echo "06-java.zsh" >> "${TERM_CONFIG}/.optional.txt"
+            echo "06-java.zsh" >> "${TERMCONFIG}/.optional.txt"
         fi
     fi
     if [ ! -d "${USER_PATH}/.rbenv" ]; then
-        echo "07-ruby.zsh" >> "${TERM_CONFIG}/.optional.txt"
+        echo "07-ruby.zsh" >> "${TERMCONFIG}/.optional.txt"
     fi
 }
 
@@ -178,6 +180,7 @@ link_files() {
 
   # Edge Cases go here
   ln -s ${TERMCONFIG}/tmux/.tmux.conf ${USER_PATH}/.tmux.conf
+  ln -s ${TERMCONFIG}/vim/init.vim ${USER_PATH}/.vimrc
 }
 
 setup_vim() {
@@ -185,25 +188,18 @@ setup_vim() {
     mkdir -p ${TERMCONFIG}/vim/autoload ${TERMCONFIG}/vim/bundle
     curl -LSso ${TERMCONFIG}/vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
-    show_msg "Install Vim plugins..."
-    if [ ! -d "${TERMCONFIG}/vim/bundle/vim-sensible" ]; then
-        git clone -q https://github.com/tpope/vim-sensible.git "${TERMCONFIG}/vim/bundle/vim-sensible"
+    if which nvim > /dev/null; then
+        show_msg "Setting up shared Vim / Neovim config"
+        mkdir -p "${HOME}/.config"
+        ln -s "${TERMCONFIG}/vim" "${HOME}/.config/nvim"
     fi
 
-    if [ ! -d "${TERMCONFIG}/vim/bundle/git-gutter" ]; then
-        git clone -q git://github.com/airblade/vim-gitgutter.git "${TERMCONFIG}/vim/bundle/git-gutter"
-    fi
-
-    if [ ! -d "${TERMCONFIG}/vim/bundle/nerdtree" ]; then
-        git clone -q https://github.com/scrooloose/nerdtree.git "${TERMCONFIG}/vim/bundle/nerdtree"
-    fi
-
-    if [ ! -d "${TERMCONFIG}/vim/bundle/nerdtree-git-plugin" ]; then
-        git clone -q https://github.com/Xuyuanp/nerdtree-git-plugin.git "${TERMCONFIG}/vim/bundle/nerdtree-git-plugin"
-    fi
+    show_msg "Pulling git submodules..."
+    git -C ${TERMCONFIG} submodule init
+    git -C ${TERMCONFIG} submodule update --recursive --remote
 }
 
-configFiles=("emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "vimrc" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt")
+configFiles=("emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt")
 VERBOSE=false
 SHOW_ONLY=false
 set_username

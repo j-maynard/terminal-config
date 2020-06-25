@@ -44,6 +44,7 @@ usage() {
     echo -e "                               If you run this script as root then you ${bold}MUST${normal} specify this."
     echo -e "  ${bold}${red}-t  --theme-only${normal}             Don't install anything just setup terminal"
     echo -e "  ${bold}${red}-c  --commandline-only${normal}       Don't install GUI/X components"
+    echo -e "  ${bold}${red}-s  --streaming${normal}              Install OBS Studio and related components (Ubuntu Only)"
     echo -e "  ${bold}${red}-p  --private-script${normal}         Run private scripts (These are encrypted)"
     echo -e "  ${bold}${red}-V  --verbose${normal}                Shows command output for debugging"
     echo -e "  ${bold}${red}-v  --version${normal}                Shows version details"
@@ -83,8 +84,11 @@ os_script() {
     get_file $GET "${OS}-setup.sh" "$GIT_REPO/${OS}-setup.sh"
     chmod +x ${OS}-setup.sh
     exec > /dev/tty
+    if [[ $OS == "ubuntu" && $STREAMING == "true" ]]; then
+        SARGS="-s"
+    fi
     echo "Running OS/Distro setup script"
-    ./${OS}-setup.sh $MODEL $VARG $CARG $WSLARG
+    ./${OS}-setup.sh $MODEL $VARG $CARG $WSLARG $SARGS
     rm ${OS}-setup.sh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
@@ -266,6 +270,7 @@ THEME_ONLY=false
 COMMANDLINE_ONLY=false
 VERBOSE=false
 PRIVATE=false
+STREAMING=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
@@ -274,6 +279,8 @@ while [ "$1" != "" ]; do
                                         ;;
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
                                         CARG="-c"
+                                        ;;
+        s | -s | --streaming)           STREAMING=true
                                         ;;
         w | -w | --wsl-user)            shift
                                         if [[ $1 =~ ^-.* ]]; then

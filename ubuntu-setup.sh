@@ -67,18 +67,29 @@ apt_update() {
 apt_install() {
     show_msg "Installing from apt... "
 
-    apt_pkgs=("git" "curl" "zsh"  "python3.8-dev" "python3-pip"
-    "build-essential" "jed" "htop" "links" "lynx" "tree" "tmux" "openjdk-11-jdk" "openjdk-8-jdk"
-    "maven" "vim" "vim-nox"  "vim-scripts" "most" "ruby-dev" "scdaemon"
-    "pinentry-tty" "pinentry-curses" "libxml2-utils")
+    apt_pkgs=( "git" "curl" "zsh"  "python3.8-dev" "python3-pip" 
+        "build-essential" "jed" "htop" "links" "lynx" "tree" "tmux" 
+        "openjdk-11-jdk" "openjdk-8-jdk" "maven" "vim" "vim-nox"
+        "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
+        "pinentry-curses" "libxml2-utils" "apt-transport-https"
+	"neovim" )
 
-    x_apt_pkgs=("idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1")
+    x_apt_pkgs=( "idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
+        "flatpak" "gnome-keyring" "neovim" )
+    
+    streaming_apt_pkgs=( "ffmpeg" "v4l2loopback-dkms" "v4l2loopback-utils" )
 
     for pkg in ${apt_pkgs[@]}; do
 	PKGS="${PKGS} ${pkg} "
     done
     if [[ $COMMANDLINE_ONLY == "false" ]]; then
         for pkg in ${x_apt_pkgs[@]}; do
+            PKGS="${PKGS} ${pkg} "
+        done
+    fi
+
+    if [[ $WORKSTATION == "true" ]]; then
+        for pkg in ${streaming_apt_pkgs[@]}; do
             PKGS="${PKGS} ${pkg} "
         done
     fi
@@ -101,6 +112,67 @@ apt_install() {
 	    show_msg "sudo apt-get install ${PKGS[@]}"
     fi
     sudo apt-get install -y ${PKGS[@]}
+}
+
+setup_openrazer() {
+    if lsusb |grep 1532 > /dev/null 2>&1; then
+        show_msg "Razer Hardware Detected... Installing OpenRazer..."
+        sudo add-apt-repository -y ppa:openrazer/stable
+        sudo apt-get install openrazer-meta
+
+        if [[ $COMMANDLINE_ONLY == "false" ]]; then
+            echo 'deb http://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/hardware-razer.list
+            curl -Ss https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key |  sudo apt-key add -
+            sudo add-apt-repository -y ppa:polychromatic/stable
+            sudo apt-get update
+            polychromatic razergenie
+        fi
+    fi
+}
+
+install_kvantum() {
+    if which plasmashell > /dev/null; then
+        sudo add-apt-repository -y ppa:papirus/papirus
+        sudo apt update
+        sudo apt install -y qt5-style-kvantum qt5-style-kvantum-themes
+    fi
+}
+
+setup_obs() {
+    sudo add-apt-repository -y ppa:obsproject/obs-studio
+    sudo apt install obs-studio
+    sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
+    echo 'install v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' > /etc/modprobe.d/v4l2loopback.conf
+    wget -q -O /tmp/obs-v4l2sink.deb https://github.com/CatxFish/obs-v4l2sink/releases/download/0.1.0/obs-v4l2sink.deb
+    sudo dpkg -i /tmp/obs-v4l2sink.deb
+}
+
+setup_flatpak() {
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    sudo flatpak install flathub org.gtk.Gtk3theme.Breeze-Dark
+    sudo flatpak install geary
+}
+
+install_docker() {
+    show_msg "Installing Docker Community Edition..."
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    sudo apt-get install docker-ce docker-ce-cli containerd.io
+    sudo docker run hello-world
+    if [ $? ]; then
+        show_msg "Docker installed successfully"
+    fi
+    usermod -a -G docker $USERNAME
+}
+
+install_virtualbox() {
+    show_msg "Installing Oracle Virtual Box..."
+    dist=$(lsb_release -c | cut -d':' -f 2 | tr -d '[:space:]')
+    echo "deb [arch=amd64] https://download.virtualbox.org/virtualbox/debian $dist contrib" | sudo tee -a /etc/apt/sources.list
+    curl -Ss https://www.virtualbox.org/download/oracle_vbox_2016.asc | sudo apt-key add -
+    sudo apt-get update
+    pkg=$(apt-cache search virtualbox | grep Oracle |sort -r |head -n1 |cut -d ' ' -f1)
+    sudo apt-get install -y $pkg
 }
 
 snap_install() {
@@ -150,74 +222,107 @@ install_chrome() {
             show_msg "${red}Failed to download Google Chrome... ${normal}${green}Skipping install...${normal}"
             return
         fi
-        sudo dpkg -i google-chrome-stable_current_amd64.deb 
-        rm google-chrome-stable_current_amd64.deb 
+        sudo dpkg -i google-chrome-stable_current_amd64.deb
+        if [ $? == 0 ]; then
+            rm google-chrome-stable_current_amd64.deb
+        else
+            show_msg "Failed to install chrome"
+        fi
+    fi
+}
+
+install_discord() {
+    if ! which discord; then
+        show_msg "Installing Discord (Latest)..."
+        wget -O /tnp/discord.deb https://discord.com/api/download?platform=linux&format=deb
+        sudo dpkg -i /tmp/discord.deb
+        if [ $? == 0 ]; then
+            rm /tmp/discord.deb
+        else
+            show_msg "Failed to install discord"
+        fi
     fi
 }
 
 install_xidel() {
-    wget -q -O /tmp/xidel_0.9.8-1_amd64.deb https://sourceforge.net/projects/videlibri/files/Xidel/Xidel%200.9.8/xidel_0.9.8-1_amd64.deb/download 
-    sudo dpkg -i xidel_0.9.8-1_amd64.deb
-    rm /tmp/xidel_0.9.8-1_amd64.deb
+    if ! which xidel; then
+        wget -q -O /tmp/xidel_0.9.8-1_amd64.deb https://sourceforge.net/projects/videlibri/files/Xidel/Xidel%200.9.8/xidel_0.9.8-1_amd64.deb/download 
+        sudo dpkg -i xidel_0.9.8-1_amd64.deb
+        rm /tmp/xidel_0.9.8-1_amd64.deb
+        if [ $? == 0 ]; then
+            rm /tmp/xidel_0.9.8-1_amd64.deb
+        else
+            show_msg "Failed to install xidel"
+        fi
+    fi
 }
 
 install_lsd() {
-	LSDVER=$(curl -s https://github.com/Peltoche/lsd/tags.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
-	case $(uname -m) in
-        x86_64)     ARCH=amd64
-                    ;;
-        armv6l)     ARCH=armv6l
-                    ;;
-        *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
-                    return
-    esac
-    show_msg "Installing the latest version of LSD -> version: ${LSDVER}..."
-    wget -q -O /tmp/lsd_${LSDVER}_${ARCH}.deb "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
-    if [ ! -f "lsd_${LSDVER}_${ARCH}.deb" ]; then
-        show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
-        return
+    install_xidel
+    if which xidel; then
+        LSDVER=$(curl -s https://github.com/Peltoche/lsd/tags.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
+        case $(uname -m) in
+            x86_64)     ARCH=amd64
+                        ;;
+            armv6l)     ARCH=armv6l
+                        ;;
+            *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                        return
+        esac
+        show_msg "Installing the latest version of LSD -> version: ${LSDVER}..."
+        wget -q -O /tmp/lsd_${LSDVER}_${ARCH}.deb "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
+        if [ ! -f "lsd_${LSDVER}_${ARCH}.deb" ]; then
+            show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
+            return
+        fi
+        sudo dpkg -i /tmp/lsd_${LSDVER}_${ARCH}.deb
+        if which lsd; then
+            rm /tmp/lsd_${LSDVER}_${ARCH}.deb
+        else
+            show_msg "Failed to install ls replacement lsd"
     fi
-    sudo dpkg -i /tmp/lsd_${LSDVER}_${ARCH}.deb
-    rm /tmp/lsd_${LSDVER}_${ARCH}.deb
 }
 
 install_go() {
-    GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
-    if [ -d /usr/local/go ]; then
-    	if [ -f /usr/local/go/bin/go ]; then
-		if [ $(/usr/local/go/bin/go version | cut -d' ' -f3) ==  $GOVER ]; then
-			show_msg "${green}Latest Version of Go (${GOVER} is already installed.  Skipping go install..."
-			return
-		fi
-	fi
+    install_xidel
+    if which xidel; then
+        GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
+        if [ -d /usr/local/go ]; then
+            if [ -f /usr/local/go/bin/go ]; then
+            if [ $(/usr/local/go/bin/go version | cut -d' ' -f3) ==  $GOVER ]; then
+                show_msg "${green}Latest Version of Go (${GOVER} is already installed.  Skipping go install..."
+                return
+            fi
+        fi
+        fi
+        case $(uname -m) in
+            x86_64)     ARCH=amd64
+                        ;;
+            armv6l)     ARCH=armv6l
+                        ;;
+            *)          show_msg "${red}Can't identify Arch to match to a Go download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                        return
+        esac
+        show_msg "Installing the latest version of Go -> version: ${GOVER}..."
+        wget -q https://dl.google.com/go/${GOVER}.linux-${ARCH}.tar.gz
+        if [ ! -f "${GOVER}.linux-${ARCH}.tar.gz" ]; then
+            show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
+            return
+        fi
+        if [ -d "/usr/local/go" ]; then
+            sudo rm -rf /usr/local/go
+        fi
+        sudo tar -zxf /tmp/${GOVER}.linux-amd64.tar.gz --directory /usr/local/
+        rm ${GOVER}.linux-amd64.tar.gz
+        if [[ -f "/usr/local/bin/go" ]]; then
+            sudo rm /usr/local/bin/go
+        fi
+        if [[ -f "/usr/local/bin/gofmt" ]]; then
+            sudo rm /usr/local/bin/gofmt
+        fi
+        sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
+        sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
     fi
-    case $(uname -m) in
-        x86_64)     ARCH=amd64
-                    ;;
-        armv6l)     ARCH=armv6l
-                    ;;
-        *)          show_msg "${red}Can't identify Arch to match to a Go download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
-                    return
-    esac
-    show_msg "Installing the latest version of Go -> version: ${GOVER}..."
-    wget -q https://dl.google.com/go/${GOVER}.linux-${ARCH}.tar.gz
-    if [ ! -f "${GOVER}.linux-${ARCH}.tar.gz" ]; then
-        show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
-        return
-    fi
-    if [ -d "/usr/local/go" ]; then
-        sudo rm -rf /usr/local/go
-    fi
-    sudo tar -zxvf /tmp/${GOVER}.linux-amd64.tar.gz --directory /usr/local/
-    rm ${GOVER}.linux-amd64.tar.gz
-    if [[ -f "/usr/local/bin/go" ]]; then
-        sudo rm /usr/local/bin/go
-    fi
-    if [[ -f "/usr/local/bin/gofmt" ]]; then
-        sudo rm /usr/local/bin/gofmt
-    fi
-    sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
-    sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 }
 
 install_antibody() {
@@ -233,14 +338,6 @@ change_shell() {
 	    show_msg "Changing shells to ZSH..."
 	    sudo chsh -s /bin/zsh $USERNAME
 	fi
-}
-
-install_powerline() {
-	show_msg "Installing powerline..."
-	sudo pip3 install setuptools
-	sudo pip3 install powerline-status
-	mkdir -p  ${USER_PATH}/.config/powerline
-	cp -r /usr/local/lib/python3.8/dist-packages/powerline/config_files/* ${USER_PATH}/.config/powerline/
 }
 
 fix_sddm() {
@@ -307,7 +404,7 @@ install_con_fonts() {
     curl -LSs "$GIT_REPO/console-font-setup.sh" | sudo bash -s - $VARG
 }
 
-shim_setup() {
+setup_shims() {
     show_msg "Running jenv/rbenv setup script..."
     curl -LSs "$GIT_REPO/shim-setup.sh" | bash -s - $VARG
 }
@@ -318,6 +415,7 @@ shim_setup() {
 
 # Set default options
 COMMANDLINE_ONLY=false
+STREAMING=false
 VERBOSE=false
 PRIVATE=false
 
@@ -329,11 +427,13 @@ while [ "$1" != "" ]; do
         w | -w | --wsl-user)            shift
                                         WSL_USER=$1
                                         ;;
-	m | -m | --model)		shift
-					# Not used for ubuntu.  Skipping
-					;;
+	    m | -m | --model)		        shift
+					                    # Not used for ubuntu.  Skipping
+					                    ;;
+        s | -S | --streaming)           STREAMING=true
+                                        ;;
         V | -V | --verbose)             VERBOSE=true
-					VARG="-V"
+					                    VARG="-V"
                                     	;;
         v | -v | --version)             version
                                     	exit 0
@@ -360,18 +460,24 @@ apt_update
 apt_install
 install_antibody
 change_shell
-install_powerline
-install_xidel
 install_lsd
 install_go
 setup_wsl
 install_con_fonts
-shim_setup
+setup_shims
 
 if [[ $COMMANDLINE_ONLY == "false" ]]; then
     snap_install
+    setup_flatpak
     install_chrome
+    install_discord
+    install_kvantum
     fix_sddm
+fi
+
+setup_openrazer
+if [[ $STREAMING == "true" ]]; then
+    setup_obs
 fi
 
 # Post install tasks:
@@ -380,6 +486,5 @@ sudo ln -s /usr/bin/python3 /usr/bin/python
 
 cd $STARTPWD
 
-show_msg "Update the fonts for your terminal and then restart your shell to fnish"
-show_msg "I recommnd actually restarting your whole system at this point"
+show_msg "Ubuntu Setup Script has finished installing..."
 exit 0

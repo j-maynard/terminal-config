@@ -15,6 +15,7 @@ case $(uname) in
               ;;
               
   Linux)      # Windows Subsystem for Linux requires some special care
+              export PATH="${HOME}/.local/bin:${PATH}"
               if [ -v WSLENV ]; then
                 ${HOME}/.term-config/wingpg-connect.sh &
               fi
