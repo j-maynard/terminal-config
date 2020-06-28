@@ -27,10 +27,6 @@ function assessSession() {
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-if [[ $TMUX_ATTACH == "false" ]]; then
-   return 
-fi
-
 case $(uname) in
     Darwin)
         MOTD="bash $SCRIPT_DIR/macmotd/motd.sh"
@@ -94,14 +90,12 @@ do
   LOOPRUN=1
 done
 
-if [[ TMUX_ATTACH != "false" ]]; then
-    if [[ "$SESSION" = "n" ]]; then
-        exec $TMUX_CMD new-session "$MOTD && zsh"
-        exit 0
-    elif [[ "$SESSION" = "x" ]]; then
-        exit 666
-    else
-        exec $TMUX_CMD a -t $SESSION
-    exit 0
-    fi
+if [[ "$SESSION" = "n" ]]; then
+  exec $TMUX_CMD new-session "$MOTD && zsh"
+  exit 0
+elif [[ "$SESSION" = "x" ]]; then
+  exit 666
+else
+  exec $TMUX_CMD a -t $SESSION
+  exit 0
 fi

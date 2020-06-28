@@ -40,6 +40,7 @@ set_username() {
 
 usage() {
     echo -e "Usage:"
+    echo -e "  ${bold}${red}-s  --streaming${normal}              Install OBS studio as well as v4l2loopback for steaming"
     echo -e "  ${bold}${red}-c  --commandline-only${normal}       Install only commandline tools (no snaps, no chrome, etc...)"
     echo -e "  ${bold}${red}-w  --wsl-user [username]${normal}    Sets the Windows username which runs WSL.  This is used to find the windows"
     echo -e "                               users home directory. If not specified it matches it to the linux username."
@@ -88,7 +89,7 @@ apt_install() {
         done
     fi
 
-    if [[ $WORKSTATION == "true" ]]; then
+    if [[ $STREAMING == "true" ]]; then
         for pkg in ${streaming_apt_pkgs[@]}; do
             PKGS="${PKGS} ${pkg} "
         done
@@ -133,16 +134,16 @@ setup_openrazer() {
 install_kvantum() {
     if which plasmashell > /dev/null; then
         sudo add-apt-repository -y ppa:papirus/papirus
-        sudo apt update
-        sudo apt install -y qt5-style-kvantum qt5-style-kvantum-themes
+        sudo apt-get update
+        sudo apt-get install -y qt5-style-kvantum qt5-style-kvantum-themes
     fi
 }
 
 setup_obs() {
     sudo add-apt-repository -y ppa:obsproject/obs-studio
-    sudo apt install obs-studio
+    sudo apt-get install obs-studio
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
-    echo 'install v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' > /etc/modprobe.d/v4l2loopback.conf
+    echo 'install v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
     wget -q -O /tmp/obs-v4l2sink.deb https://github.com/CatxFish/obs-v4l2sink/releases/download/0.1.0/obs-v4l2sink.deb
     sudo dpkg -i /tmp/obs-v4l2sink.deb
 }
@@ -193,7 +194,7 @@ snap_install() {
     fi
     which spotify > /dev/null
     if [ $? != 0 ]; then
-        sudo snap install spotify --classic
+        sudo snap install spotify
     fi
     which code > /dev/null
     if [ $? != 0 ]; then
@@ -234,7 +235,7 @@ install_chrome() {
 install_discord() {
     if ! which discord; then
         show_msg "Installing Discord (Latest)..."
-        wget -O /tnp/discord.deb https://discord.com/api/download?platform=linux&format=deb
+        wget -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
         sudo dpkg -i /tmp/discord.deb
         if [ $? == 0 ]; then
             rm /tmp/discord.deb
@@ -247,13 +248,10 @@ install_discord() {
 install_xidel() {
     if ! which xidel; then
         wget -q -O /tmp/xidel_0.9.8-1_amd64.deb https://sourceforge.net/projects/videlibri/files/Xidel/Xidel%200.9.8/xidel_0.9.8-1_amd64.deb/download 
-        sudo dpkg -i xidel_0.9.8-1_amd64.deb
-        rm /tmp/xidel_0.9.8-1_amd64.deb
-        if [ $? == 0 ]; then
-            rm /tmp/xidel_0.9.8-1_amd64.deb
-        else
+        if ! sudo dpkg -i xidel_0.9.8-1_amd64.deb; then
             show_msg "Failed to install xidel"
         fi
+        rm /tmp/xidel_0.9.8-1_amd64.deb
     fi
 }
 
@@ -280,13 +278,22 @@ install_lsd() {
             rm /tmp/lsd_${LSDVER}_${ARCH}.deb
         else
             show_msg "Failed to install ls replacement lsd"
+	fi
     fi
 }
 
 install_go() {
     install_xidel
     if which xidel; then
-        GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
+	COUNT=1
+        while true; do
+		GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se "//feed/entry[$COUNT]/link/@href" - | grep -o '[^/]*$')
+		if [[ $GOVER = *beta* ]]; then
+			COUNT=$((COUNT+1))
+		else
+			break
+		fi
+	done
         if [ -d /usr/local/go ]; then
             if [ -f /usr/local/go/bin/go ]; then
             if [ $(/usr/local/go/bin/go version | cut -d' ' -f3) ==  $GOVER ]; then
@@ -351,10 +358,38 @@ fix_sddm() {
     fi
 }
 
+fix-update-grub() {
+	# Install Grub Theme
+	# TODO Make own GRUB theme for the Razer Blade
+	t=/tmp/grub2-theme2
+	git clone $GITQUIET https://github.com/vinceliuice/grub2-themes.git $t
+	sudo $t/install.sh -b -v -w -4 > /dev/null 2>&1
+	sudo $t/install.sh -b -s -4 > /dev/null 2>&1
+	sudo $t/install.sh -b -l -4 > /dev/null 2>&1
+	sudo $t/install.sh -b -t -4 > /dev/null 2>&1
+	rm -rf $t
+	# As there is no accurate way to detect Kubuntu from Ubuntu
+	# We look for plasmashell instead and then assume its Kubuntu.
+	if plasmashell --version >/dev/null 2>&1; then
+		cat | sudo tee - /usr/sbin/update-grub << EOF
+if plasmashell --version >/dev/null 2>&1; then
+        echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2
+        C=/boot/grub/grub.cfg
+        chmod +w $C
+        sed -i 's/ubuntu/kubuntu/' $C
+        sed -i 's/Ubuntu/Kubuntu/' $C
+        chmod -w $C
+fi
+EOF
+		sudo update-grub > /dev/null 2>&1
+	fi
+}
+
 setup_wsl() {
     if [ ! -v WSLENV ]; then
         return
-    fi
+    fi 
+    WSL=true
     show_msg "WSL Environment variable present.  Setup WSL specific stuff..."
     sudo apt-get install -y socat
     if [ ! -d "/mnt/c/Users/$WSL_USER" ]; then
@@ -418,6 +453,7 @@ COMMANDLINE_ONLY=false
 STREAMING=false
 VERBOSE=false
 PRIVATE=false
+WSL=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
@@ -427,13 +463,13 @@ while [ "$1" != "" ]; do
         w | -w | --wsl-user)            shift
                                         WSL_USER=$1
                                         ;;
-	    m | -m | --model)		        shift
-					                    # Not used for ubuntu.  Skipping
-					                    ;;
-        s | -S | --streaming)           STREAMING=true
+	m | -m | --model)		shift
+					# Not used for ubuntu.  Skipping
+					;;
+        s | -s | --streaming)           STREAMING=true
                                         ;;
         V | -V | --verbose)             VERBOSE=true
-					                    VARG="-V"
+					VARG="-V"
                                     	;;
         v | -v | --version)             version
                                     	exit 0
@@ -452,6 +488,7 @@ done
 # Silence output
 if [ $VERBOSE == "false" ]; then
     echo "Silencing output"
+    GITQUITET="-q"
     exec > /dev/null 
 fi
 
@@ -466,7 +503,7 @@ setup_wsl
 install_con_fonts
 setup_shims
 
-if [[ $COMMANDLINE_ONLY == "false" ]]; then
+if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     snap_install
     setup_flatpak
     install_chrome
@@ -479,6 +516,7 @@ setup_openrazer
 if [[ $STREAMING == "true" ]]; then
     setup_obs
 fi
+fix-update-grub
 
 # Post install tasks:
 show_msg "Linking /usr/bin/python3 to /usr/bin/python..."

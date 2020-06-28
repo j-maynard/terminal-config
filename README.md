@@ -8,3 +8,13 @@ script.  It also contains setup scripts to install programs I use on MacOS
 and Ubuntu... These are under development and should be merged in to one 
 super setup script at some point.
 
+# Quick Full installation on ubuntu
+
+Grab the installer script, make it executable and then run it:
+
+```
+wget -O /tmp/install.sh https://raw.githubusercontent.com/j-maynard/terminal-config/master/install.sh
+chmod +x /tmp/install.sh
+/tmp/install.sh --help
+```
+

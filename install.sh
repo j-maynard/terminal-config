@@ -66,7 +66,7 @@ get_file() {
     URL=$3
     echo $1 $2 $3
     if [[ $APP == "wget" ]]; then
-        wget -q $URL
+        wget -q -O $FILE $URL
     elif [[ $APP == "curl" ]]; then
         curl -LSso $FILE $URL
     else
@@ -81,7 +81,7 @@ os_script() {
     MODEL=$3
     show_msg "Getting OS/Distro setup script for '${OS}' from git"
     cd /tmp
-    get_file $GET "${OS}-setup.sh" "$GIT_REPO/${OS}-setup.sh"
+    get_file $GET "${OS}-setup.sh" "$GIT_REPO/${OS}-setup.sh?$(date +%s)"
     chmod +x ${OS}-setup.sh
     exec > /dev/tty
     if [[ $OS == "ubuntu" && $STREAMING == "true" ]]; then
