@@ -188,25 +188,24 @@ snap_install() {
         exec > /dev/tty
     fi
 
-    which slack > /dev/null
-    if [ $? != 0 ]; then
+    if which slack > /dev/null; then
         sudo snap install slack --classic
     fi
-    which spotify > /dev/null
-    if [ $? != 0 ]; then
+    
+    if which spotify > /dev/null; then
         sudo snap install spotify
     fi
-    which code > /dev/null
-    if [ $? != 0 ]; then
-        sudo snap install code --classic
-    fi
-    which insomnia > /dev/null
-    if [ $? != 0 ]; then
+    
+    if which insomnia > /dev/null; then
         sudo snap install insomnia
     fi
-    which yq > /dev/null
-    if [ $? != 0 ]; then
+    
+    if which yq > /dev/null; then
         sudo snap install yq
+    fi
+
+    if which discord > /dev/null; then
+	sudo snap install discord
     fi
 
     if [ $VERBOSE == "false" ]; then
@@ -233,6 +232,7 @@ install_chrome() {
 }
 
 install_discord() {
+    show_msg "Skipping Discord DEB install, for now use the snap package..."
     if ! which discord; then
         show_msg "Installing Discord (Latest)..."
         wget -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
@@ -371,7 +371,7 @@ fix-update-grub() {
 	# As there is no accurate way to detect Kubuntu from Ubuntu
 	# We look for plasmashell instead and then assume its Kubuntu.
 	if plasmashell --version >/dev/null 2>&1; then
-		cat | sudo tee - /usr/sbin/update-grub << EOF
+		cat | sudo tee -a - /usr/sbin/update-grub << EOF
 if plasmashell --version >/dev/null 2>&1; then
         echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2
         C=/boot/grub/grub.cfg
