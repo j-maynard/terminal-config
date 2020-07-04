@@ -11,6 +11,7 @@ yellow="\e[93m"
 
 usage() {
     echo -e "Usage:"
+    echo -e "  -R  --root-install	Install for root user using sudo"
     echo -e "  -r  --requirements       Check for required tools and directories"
     echo -e "  -c  --term-config        Location of config files"
     echo -e "                           (Normally ~/.term-config)"
@@ -35,10 +36,11 @@ set_username() {
         USERNAME=$SUDO_USER
     fi
     if [ $USERNAME == "root" ]; then
-        USER_PATH="/root"
+	USER_PATH="/root"
     else
         USER_PATH="/home/$USER"
     fi
+    show_msg "User path is now set to '$USER_PATH'"
 }
 
 check_requirements() {
@@ -208,7 +210,15 @@ while [ "$1" != "" ]; do
     case $1 in
         -c | --term-config)     shift
                                 TERMCONFIG=$1
+				C=true
                                 ;;
+	-R | --root-user)	USER=root
+				SUDO_USER=root
+				set_username
+				if [ -z $C ]; then
+					TERMCONFIG="${USER_PATH}/.term-config"
+				fi
+				;;
         -r | --requirements)    SHOW_ONLY=true
                                 check_requirements
                                 exit 0
@@ -230,6 +240,7 @@ if [ $VERBOSE == "false" ]; then
     exec > /dev/null 
 fi
 
+set_username
 check_requirements
 remove_existing
 link_files
