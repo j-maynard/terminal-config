@@ -1,4 +1,5 @@
 *.swp
+.optional.txt
 vim/autoload/
 mutt/cache/
 mutt/gmail/

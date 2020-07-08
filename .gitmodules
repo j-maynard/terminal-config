@@ -14,3 +14,10 @@
 	path = vim/bundle/sensible
 	url = https://github.com/tpope/vim-sensible.git
 	branch = master
+[submodule "vim/bundle/tmuxline.vim"]
+	path = vim/bundle/tmuxline.vim
+	url = https://github.com/edkolev/tmuxline.vim
+	branch = master
+[submodule ".tmux"]
+	path = tmux
+	url = https://github.com/gpakosz/.tmux.git

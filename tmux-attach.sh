@@ -52,9 +52,9 @@ esac
 
 if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
     if [[ "$(cat $SCRIPT_DIR/tmux_integration)" == "false" ]]; then
-        TMUX_CMD="tmux"
+        TMUX_CMD="tmux -s $USER"
     else
-        TMUX_CMD="tmux -CC"
+        TMUX_CMD="tmux -CC -s $USER"
     fi
     ITERM2=TRUE
 else

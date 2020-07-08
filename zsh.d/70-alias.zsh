@@ -9,3 +9,4 @@ fi
  if [[ -v WSLENV ]]; then
     alias wingpg='${HOME}/.term-config/wingpg-connect.sh &'
 fi
+alias genairlinetmuxconf='nvim -c "+:Tmuxline" "+TmuxlineSnapshot ~/.term-config/tmux-airline.conf" "+q"'
