@@ -31,9 +31,10 @@ set_username() {
 
 usage() {
     echo -e "Usage:"
-    echo -e "  ${bold}${red}-V  --verbose${normal}                Shows command output for debugging"
-    echo -e "  ${bold}${red}-v  --version${normal}                Shows version details and exit"
-    echo -e "  ${bold}${red}-h  --help${normal}                   Shows this usage message and exit"
+    echo -e "  ${bold}${red}-R  --run-as-root${normal}          If running as root in a sudo shell this fixes the home path"
+    echo -e "  ${bold}${red}-V  --verbose${normal}              Shows command output for debugging"
+    echo -e "  ${bold}${red}-v  --version${normal}              Shows version details and exit"
+    echo -e "  ${bold}${red}-h  --help${normal}                 Shows this usage message and exit"
 }
 
 version() {
@@ -79,19 +80,23 @@ VERBOSE=false
 # Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
-        V | -V | --verbose)           VERBOSE=true
-					                            VARG="-V"
-                                    	;;
-        v | -v | --version)           version
-                                    	exit 0
-                                    	;;
-        h | -h | --help)              usage
-                                    	exit 0
-                                    	;;
-        * )                         	echo -e "Unknown option $1...\n"
-                                    	usage
-                                    	exit 1
-                                    	;;
+        R | -R | --run-as-root)     USER=root
+                                    SUDO_USER=root
+                                    set_username
+                                    ;;
+        V | -V | --verbose)         VERBOSE=true
+				    VARG="-V"
+                                    ;;
+        v | -v | --version)         version
+                                    exit 0
+                                    ;;
+        h | -h | --help)            usage
+                                    exit 0
+                                    ;;
+        * )                         echo -e "Unknown option $1...\n"
+                                    usage
+                                    exit 1
+                                    ;;
     esac
     shift
 done

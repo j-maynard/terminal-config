@@ -2,17 +2,21 @@
 	path = vim/bundle/gitgutter
 	url = git://github.com/airblade/vim-gitgutter.git
 	branch = master
+[submodule "vim/bundle/git-gutter"]
+	path = vim/bundle/git-gutter
+	url = git://github.com/airblade/vim-gitgutter.git
+	branch = master
 [submodule "vim/bundle/nerdtree"]
 	path = vim/bundle/nerdtree
-	url = https://github.com/Xuyuanp/nerdtree-git-plugin.git
+	url = git://github.com/Xuyuanp/nerdtree-git-plugin.git
 	branch = master
 [submodule "vim/bundle/airline"]
 	path = vim/bundle/airline
-	url = https://github.com/vim-airline/vim-airline
+	url = git://github.com/vim-airline/vim-airline.git
 	branch = master
 [submodule "vim/bundle/sensible"]
 	path = vim/bundle/sensible
-	url = https://github.com/tpope/vim-sensible.git
+	url = git://github.com/tpope/vim-sensible.git
 	branch = master
 [submodule "vim/bundle/tmuxline.vim"]
 	path = vim/bundle/tmuxline.vim
