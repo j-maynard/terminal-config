@@ -66,14 +66,14 @@ fi
 tmux ls &> /dev/null
 # If this exits with 1, no sessions are running, start a new one
 if [[ "$?" == "1" ]]; then
-  exec $TMUX_CMD new-session "$MOTD && zsh"
+  exec $TMUX_CMD new-session "echo && $MOTD && zsh"
   exit 0
 fi
 
 TMUX_SESSIONS=($(tmux ls -F '#{session_name}, #{session_attached}' |grep -v ', 1' |cut -d, -f1))
 #If no sessions are available to attach to just create a new one
 if [[ ${#TMUX_SESSIONS[@]} == "0" ]]; then
-  exec $TMUX_CMD new-session "$MOTD && zsh"
+  exec $TMUX_CMD new-session "echo && $MOTD && zsh"
   exit 0
 fi
 echo "TMUX sessions are availble to attach to:"
@@ -91,7 +91,7 @@ do
 done
 
 if [[ "$SESSION" = "n" ]]; then
-  exec $TMUX_CMD new-session "$MOTD && zsh"
+  exec $TMUX_CMD new-session "echo && $MOTD && zsh"
   exit 0
 elif [[ "$SESSION" = "x" ]]; then
   exit 666
