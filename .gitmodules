@@ -1,7 +1,3 @@
-[submodule "vim/bundle/gitgutter"]
-	path = vim/bundle/gitgutter
-	url = git://github.com/airblade/vim-gitgutter.git
-	branch = master
 [submodule "vim/bundle/git-gutter"]
 	path = vim/bundle/git-gutter
 	url = git://github.com/airblade/vim-gitgutter.git
