@@ -22,6 +22,6 @@
 	path = vim/bundle/tmuxline.vim
 	url = https://github.com/edkolev/tmuxline.vim
 	branch = master
-[submodule ".tmux"]
+[submodule "tmux"]
 	path = tmux
 	url = https://github.com/gpakosz/.tmux.git
