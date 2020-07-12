@@ -431,12 +431,8 @@ default-cache-ttl 60
 max-cache-ttl 120
 EOF
     /mnt/c/Program\ Files\ \(x86\)/GnuPG/bin/gpg-connect-agent.exe /bye
-    HOST=$(h=$(hostname) && echo ${h^^})
-    curl -LSs https://raw.githubusercontent.com/j-maynard/terminal-config/master/wingpg/task-def.xml | sed "s|HOST|${HOST}|g" | sed "s|user|${WSL_USER}|g" > /tmp/Win-GPG-Agent.xml
-    CMD="powershell.exe -Command 'Register-ScheduledTask -TaskName \"Start GPG-Agent\" -Xml (get-content \\\\wsl$\\Ubuntu-20.04\\tmp\\Win-GPG-Agent.xml | out-string) -User ${HOST}\\${WSL_USER}'"
-    eval $CMD
-    rm /tmp/Win-GPG-Agent.xml
-    powershell.exe -Command "Start-ScheduledTask -TaskName 'Start GPG-Agent'"
+    curl -LSs https://raw.githubusercontent.com/j-maynard/terminal-config/master/wingpg/create-gpg-agent-lnk.ps1 | sed "s|\$USER=|\$USER=${WSL_USER}|g" > /mnt/c/temp/create-gpg-agent-lnk.ps1
+    powershell.exe -ExecutionPolicy Bypass c:\\temp\\create-gpg-agent-lnk.ps1
 }
 
 install_con_fonts() {
