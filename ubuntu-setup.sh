@@ -379,17 +379,20 @@ fix_sddm() {
 fix-update-grub() {
 	# Install Grub Theme
 	# TODO Make own GRUB theme for the Razer Blade
+	if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
+		UHD_FLAG='- 4'
+	fi
 	t=/tmp/grub2-theme2
 	git clone $GITQUIET https://github.com/vinceliuice/grub2-themes.git $t
-	sudo $t/install.sh -b -v -w -4 > /dev/null 2>&1
-	sudo $t/install.sh -b -s -4 > /dev/null 2>&1
-	sudo $t/install.sh -b -l -4 > /dev/null 2>&1
-	sudo $t/install.sh -b -t -4 > /dev/null 2>&1
+	sudo $t/install.sh -b -v -w ${UHD_FLAG} > /dev/null 2>&1
+	sudo $t/install.sh -b -s ${UHD_FLAG} > /dev/null 2>&1
+	sudo $t/install.sh -b -l ${UHD_FLAG} > /dev/null 2>&1
+	sudo $t/install.sh -b -t ${UHD_FLAG} > /dev/null 2>&1
 	rm -rf $t
 	# As there is no accurate way to detect Kubuntu from Ubuntu
 	# We look for plasmashell instead and then assume its Kubuntu.
 	if plasmashell --version >/dev/null 2>&1; then
-		cat | sudo tee -a - /usr/sbin/update-grub << EOF
+		cat << EOF | sudo tee -a - /usr/sbin/update-grub
 if plasmashell --version >/dev/null 2>&1; then
         echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2
         C=/boot/grub/grub.cfg
