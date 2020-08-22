@@ -125,8 +125,7 @@ setup_openrazer() {
             echo 'deb http://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/hardware-razer.list
             curl -Ss https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key |  sudo apt-key add -
             sudo add-apt-repository -y ppa:polychromatic/stable
-            sudo apt-get update
-            polychromatic razergenie
+            sudo apt-get update polychromatic razergenie
         fi
     fi
 }
