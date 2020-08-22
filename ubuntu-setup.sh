@@ -150,7 +150,7 @@ setup_obs() {
 setup_flatpak() {
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     sudo flatpak install flathub org.gtk.Gtk3theme.Breeze-Dark
-    sudo flatpak install geary
+    sudo flatpak install flathub org.gnome.Geary
 }
 
 install_docker() {
