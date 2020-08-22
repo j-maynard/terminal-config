@@ -76,7 +76,8 @@ apt_install() {
 	"neovim" )
 
     x_apt_pkgs=( "idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
-        "flatpak" "gnome-keyring" "neovim" )
+        "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
+	"gtk2-engines-pixbuf" )
     
     streaming_apt_pkgs=( "ffmpeg" "v4l2loopback-dkms" "v4l2loopback-utils" )
 
@@ -151,6 +152,20 @@ setup_flatpak() {
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     sudo flatpak install flathub org.gtk.Gtk3theme.Breeze-Dark
     sudo flatpak install flathub org.gnome.Geary
+    sudo flatpak install flathub org.gtk.Gtk3theme.Materia-dark-compact
+
+}
+
+instal_layan() {
+    cd /tmp
+    git -q https://github.com/vinceliuice/Layan-gtk-theme.git
+    cd Layan-gtk-theme
+    /tmp/Layan-gtk-theme/install.sh
+    if [ $? ]; then
+    	echo "Layan GTK Theme successfully installed"
+	cd /tmp
+	rm -rf /tmp/Layan-gtk-theme
+    fi
 }
 
 install_docker() {
@@ -300,7 +315,7 @@ install_go() {
         if [ -d /usr/local/go ]; then
             if [ -f /usr/local/go/bin/go ]; then
             if [ $(/usr/local/go/bin/go version | cut -d' ' -f3) ==  $GOVER ]; then
-                show_msg "${green}Latest Version of Go (${GOVER} is already installed.  Skipping go install..."
+                show_msg "${green}Latest Version of Go (${GOVER} is already installed.${normal}  Skipping go install..."
                 return
             fi
         fi
