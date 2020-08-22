@@ -245,7 +245,7 @@ install_discord() {
         show_msg "Installing Discord (Latest)..."
         wget -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
         sudo dpkg -i /tmp/discord.deb
-	sudo apt-get update –fix-missing
+	sudo apt-get -y --fix-broken install
         if [ $? == 0 ]; then
             rm /tmp/discord.deb
         else
