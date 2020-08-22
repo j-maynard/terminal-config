@@ -212,10 +212,6 @@ snap_install() {
         sudo snap install yq
     fi
 
-    if which discord > /dev/null; then
-	sudo snap install discord
-    fi
-
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null 
     fi
@@ -240,13 +236,12 @@ install_chrome() {
 }
 
 install_discord() {
-    show_msg "Skipping Discord DEB install, for now use the snap package..."
     if ! which discord; then
         show_msg "Installing Discord (Latest)..."
         wget -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
         sudo dpkg -i /tmp/discord.deb
 	sudo apt-get -y --fix-broken install
-        if [ $? == 0 ]; then
+        if ! which discord > /dev/null 2&>1; then
             rm /tmp/discord.deb
         else
             show_msg "Failed to install discord"
