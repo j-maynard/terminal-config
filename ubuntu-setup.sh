@@ -156,7 +156,7 @@ setup_flatpak() {
 
 }
 
-instal_layan() {
+install_layan() {
     cd /tmp
     git -q https://github.com/vinceliuice/Layan-gtk-theme.git
     cd Layan-gtk-theme
@@ -523,6 +523,7 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     install_chrome
     install_discord
     install_kvantum
+    install_layan
     fix_sddm
 fi
 
