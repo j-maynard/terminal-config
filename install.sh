@@ -159,13 +159,13 @@ setup_os() {
     
     case $OS in
         Linux)      case $DISTRO in
-                        Ubuntu | Neon)  os_script $GET "ubuntu"
-                                        ;;
-                        Raspbian)       os_script $GET "raspbian" $MODEL
-                                        ;;
-                        *)              show_msg "Unknown Linux distribution.  Consider writing an OS/Distro install script.  Exiting..."
-                                        exit 1
-                                        ;;
+                        *buntu | Neon)    os_script $GET "ubuntu"
+                                                    ;;
+                        Raspbian)                   os_script $GET "raspbian" $MODEL
+                                                    ;;
+                        *)                          show_msg "Unknown Linux distribution.  Consider writing an OS/Distro install script.  Exiting..."
+                                                    exit 1
+                                                    ;;
                     esac
                     ;;
         Darwin)     os_script $GET "mac"
