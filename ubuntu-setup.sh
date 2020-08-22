@@ -349,7 +349,7 @@ install_go() {
         sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
     fi
 }
-git -q https://github.com/vinceliuice/Layan-gtk-theme.git
+
 install_antibody() {
 	which antibody
 	if [ $? != 0 ]; then
