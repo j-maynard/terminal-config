@@ -257,7 +257,7 @@ install_nerd_fonts() {
         show_msg "Install NerdFonts..."
         sudo ./install.sh --install-to-system-path
         cd $STARTPWD
-        rm -r /tmp/fonts
+        rm -rf /tmp/fonts
     fi
 }
 
