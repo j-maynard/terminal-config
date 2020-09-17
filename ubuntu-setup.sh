@@ -142,8 +142,8 @@ install_kvantum() {
 setup_obs() {
     sudo add-apt-repository -y ppa:obsproject/obs-studio
     sudo apt-get install obs-studio
-    sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
-    echo 'install v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
+    echo 'v4l2loopback' | sudo tee -a /etc/modules 
+    echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
     wget -q -O /tmp/obs-v4l2sink.deb https://github.com/CatxFish/obs-v4l2sink/releases/download/0.1.0/obs-v4l2sink.deb
     sudo dpkg -i /tmp/obs-v4l2sink.deb
 }
