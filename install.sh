@@ -159,7 +159,7 @@ setup_os() {
     
     case $OS in
         Linux)      case $DISTRO in
-                        Ubuntu | Neon)  os_script $GET "ubuntu"
+                        *buntu | Neon)  os_script $GET "ubuntu"
                                         ;;
                         Raspbian)       os_script $GET "raspbian" $MODEL
                                         ;;

@@ -73,7 +73,7 @@ apt_install() {
         "openjdk-11-jdk" "openjdk-8-jdk" "maven" "vim" "vim-nox"
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
         "pinentry-curses" "libxml2-utils" "apt-transport-https"
-	"neovim" )
+	"neovim" "libgconf-2-4" "libappindicator1" "libc++1" )
 
     x_apt_pkgs=( "idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" )
@@ -119,14 +119,15 @@ setup_openrazer() {
     if lsusb |grep 1532 > /dev/null 2>&1; then
         show_msg "Razer Hardware Detected... Installing OpenRazer..."
         sudo add-apt-repository -y ppa:openrazer/stable
-        sudo apt-get install openrazer-meta
+        sudo apt-get install -y openrazer-meta
 
         if [[ $COMMANDLINE_ONLY == "false" ]]; then
             echo 'deb http://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/hardware-razer.list
-            curl -Ss https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key |  sudo apt-key add -
+            curl -LSso polychromatic.key https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key
+            sudo apt-key add /tmp/polychromatic.key
             sudo add-apt-repository -y ppa:polychromatic/stable
             sudo apt-get update
-            polychromatic razergenie
+            polychromatic -y razergenie
         fi
     fi
 }
@@ -143,9 +144,40 @@ setup_obs() {
     sudo add-apt-repository -y ppa:obsproject/obs-studio
     sudo apt-get install obs-studio
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
-    echo 'install v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
+    echo 'option v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
     wget -q -O /tmp/obs-v4l2sink.deb https://github.com/CatxFish/obs-v4l2sink/releases/download/0.1.0/obs-v4l2sink.deb
     sudo dpkg -i /tmp/obs-v4l2sink.deb
+    if lsusb |grep 0fd9:006d > /dev/null; then
+        setup_streamdeck
+    else
+        show_msg "If this system will be used with streamdeck you'll"
+        show_msg "need to run the streamdeck setup script"
+    fi
+}
+
+setup_streamdeck() {
+    show_msg "Installing streamdeck libraries..."
+    sudo apt install qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
+    show_msg "Adding udev rules and reloading"
+    sudo usermod -a -G plugdev `whoami`
+
+    sudo tee /etc/udev/rules.d/99-streamdeck.rules << EOF
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", MODE:="666", GROUP="plugdev"
+EOF
+
+    sudo udevadm control --reload-rules
+
+    show_msg "Unplug and replug in device for the new udev rules to take effect"
+    show_msg "Installing streamdeck_ui..."
+    pip3 install --user streamdeck_ui
+    if [ $? == 0 ]; then
+        show_msg "StreamDeck-UI Installed"
+    else
+        show_msg "Something went wrong installing StreamDeck-Ui"
+    fi
 }
 
 setup_flatpak() {
@@ -178,14 +210,14 @@ install_virtualbox() {
 
 snap_install() {
     show_msg "Installing the following packages from snap:"
+    show_msg "Authy"
     show_msg "Insomnia"
     show_msg "Slack"
     show_msg "Spotify"
-    show_msg "Visual Studio Code"
     show_msg "yq"
 
-    if [ $VERBOSE == "true" ]; then
-        exec > /dev/tty
+    if which authy > /dev/null; then
+        sudo snap install authy --beta
     fi
 
     if which slack > /dev/null; then
@@ -202,14 +234,6 @@ snap_install() {
     
     if which yq > /dev/null; then
         sudo snap install yq
-    fi
-
-    if which discord > /dev/null; then
-	sudo snap install discord
-    fi
-
-    if [ $VERBOSE == "false" ]; then
-        exec > /dev/null 
     fi
 }
 
@@ -237,7 +261,8 @@ install_discord() {
         show_msg "Installing Discord (Latest)..."
         wget -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
         sudo dpkg -i /tmp/discord.deb
-        if [ $? == 0 ]; then
+        #sudo apt-get --fix-broken install
+        if which discord >/dev/null; then
             rm /tmp/discord.deb
         else
             show_msg "Failed to install discord"
@@ -363,22 +388,28 @@ fix-update-grub() {
 	# TODO Make own GRUB theme for the Razer Blade
 	t=/tmp/grub2-theme2
 	git clone $GITQUIET https://github.com/vinceliuice/grub2-themes.git $t
-	sudo $t/install.sh -b -v -w -4 > /dev/null 2>&1
-	sudo $t/install.sh -b -s -4 > /dev/null 2>&1
-	sudo $t/install.sh -b -l -4 > /dev/null 2>&1
-	sudo $t/install.sh -b -t -4 > /dev/null 2>&1
+        if xrandr |grep eDP-1-1 > /dev/null; then
+            R4K='-4'
+        fi
+	sudo $t/install.sh -b -v -w $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -s $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -l $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -t $R4K > /dev/null 2>&1
 	rm -rf $t
 	# As there is no accurate way to detect Kubuntu from Ubuntu
 	# We look for plasmashell instead and then assume its Kubuntu.
 	if plasmashell --version >/dev/null 2>&1; then
-		cat | sudo tee -a - /usr/sbin/update-grub << EOF
-if plasmashell --version >/dev/null 2>&1; then
-        echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2
-        C=/boot/grub/grub.cfg
-        chmod +w $C
-        sed -i 's/ubuntu/kubuntu/' $C
-        sed -i 's/Ubuntu/Kubuntu/' $C
-        chmod -w $C
+		cat | sudo tee - /usr/sbin/update-grub << EOF
+#!/bin/sh                                                               
+set -e                                                                  
+grub-mkconfig -o /boot/grub/grub.cfg "$@"                          
+if plasmashell --version >/dev/null 2>&1; then                          
+        echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2 
+        C=/boot/grub/grub.cfg                                           
+        chmod +w                                                        
+        sed -i 's/ubuntu/kubuntu/'                                      
+        sed -i 's/Ubuntu/Kubuntu/'                                      
+        chmod -w                                                        
 fi
 EOF
 		sudo update-grub > /dev/null 2>&1
@@ -502,6 +533,7 @@ install_go
 setup_wsl
 install_con_fonts
 setup_shims
+install_docker
 
 if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     snap_install
