@@ -31,3 +31,5 @@ else
         export POWERLINE_SAFE=true
     fi
 fi
+# Uncomment to stop TMUX from running at startup
+# export RUN=false

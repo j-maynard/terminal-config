@@ -76,7 +76,8 @@ apt_install() {
 	"neovim" "libgconf-2-4" "libappindicator1" "libc++1" )
 
     x_apt_pkgs=( "idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
-        "flatpak" "gnome-keyring" "neovim" )
+        "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
+	"gtk2-engines-pixbuf" )
     
     streaming_apt_pkgs=( "ffmpeg" "v4l2loopback-dkms" "v4l2loopback-utils" )
 
@@ -122,12 +123,15 @@ setup_openrazer() {
         sudo apt-get install -y openrazer-meta
 
         if [[ $COMMANDLINE_ONLY == "false" ]]; then
+            # Add RazerGenie Repo
             echo 'deb http://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/hardware-razer.list
-            curl -LSso polychromatic.key https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key
-            sudo apt-key add /tmp/polychromatic.key
+            curl -LSso /tmp/razergenie.key https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key
+            sudo apt-key add /tmp/razergenie.key
+            # Add Polychromatic Repo
             sudo add-apt-repository -y ppa:polychromatic/stable
+            # Install Both
             sudo apt-get update
-            polychromatic -y razergenie
+            sudo apt-get install -y polychromatic razergenie
         fi
     fi
 }
@@ -144,7 +148,8 @@ setup_obs() {
     sudo add-apt-repository -y ppa:obsproject/obs-studio
     sudo apt-get install obs-studio
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
-    echo 'option v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
+    echo 'v4l2loopback' | sudo tee -a /etc/modules 
+    echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
     wget -q -O /tmp/obs-v4l2sink.deb https://github.com/CatxFish/obs-v4l2sink/releases/download/0.1.0/obs-v4l2sink.deb
     sudo dpkg -i /tmp/obs-v4l2sink.deb
     if lsusb |grep 0fd9:006d > /dev/null; then
@@ -183,7 +188,21 @@ EOF
 setup_flatpak() {
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     sudo flatpak install flathub org.gtk.Gtk3theme.Breeze-Dark
-    sudo flatpak install geary
+    sudo flatpak install flathub org.gnome.Geary
+    sudo flatpak install flathub org.gtk.Gtk3theme.Materia-dark-compact
+
+}
+
+install_layan() {
+    cd /tmp
+    git clone ${GITQUITET} https://github.com/vinceliuice/Layan-gtk-theme.git
+    cd Layan-gtk-theme
+    /tmp/Layan-gtk-theme/install.sh
+    if [ $? ]; then
+    	echo "Layan GTK Theme successfully installed"
+	cd /tmp
+	rm -rf /tmp/Layan-gtk-theme
+    fi
 }
 
 install_docker() {
@@ -196,6 +215,14 @@ install_docker() {
         show_msg "Docker installed successfully"
     fi
     usermod -a -G docker $USERNAME
+    show_msg "Installing docker-compose..."
+    sudo curl -L "https://github.com/docker/compose/releases/download/1.26.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+    if which docker-compose > /dev/null; then
+        show_msg "Docker Compose installed successfully..."
+    else
+        show_msg "Docker Compose install failed... You may need to add /usr/local/bin to your path"
+    fi
 }
 
 install_virtualbox() {
@@ -256,15 +283,14 @@ install_chrome() {
 }
 
 install_discord() {
-    show_msg "Skipping Discord DEB install, for now use the snap package..."
     if ! which discord; then
         show_msg "Installing Discord (Latest)..."
         wget -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
         sudo dpkg -i /tmp/discord.deb
-        #sudo apt-get --fix-broken install
         if which discord >/dev/null; then
             rm /tmp/discord.deb
         else
+            sudo apt-get --fix-broken install
             show_msg "Failed to install discord"
         fi
     fi
@@ -322,7 +348,7 @@ install_go() {
         if [ -d /usr/local/go ]; then
             if [ -f /usr/local/go/bin/go ]; then
             if [ $(/usr/local/go/bin/go version | cut -d' ' -f3) ==  $GOVER ]; then
-                show_msg "${green}Latest Version of Go (${GOVER} is already installed.  Skipping go install..."
+                show_msg "${green}Latest Version of Go (${GOVER} is already installed.${normal}  Skipping go install..."
                 return
             fi
         fi
@@ -386,6 +412,9 @@ fix_sddm() {
 fix-update-grub() {
 	# Install Grub Theme
 	# TODO Make own GRUB theme for the Razer Blade
+	if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
+		UHD_FLAG='- 4'
+	fi
 	t=/tmp/grub2-theme2
 	git clone $GITQUIET https://github.com/vinceliuice/grub2-themes.git $t
         if xrandr |grep eDP-1-1 > /dev/null; then
@@ -454,12 +483,8 @@ default-cache-ttl 60
 max-cache-ttl 120
 EOF
     /mnt/c/Program\ Files\ \(x86\)/GnuPG/bin/gpg-connect-agent.exe /bye
-    HOST=$(h=$(hostname) && echo ${h^^})
-    curl -LSs https://raw.githubusercontent.com/j-maynard/terminal-config/master/wingpg/task-def.xml | sed "s|HOST|${HOST}|g" | sed "s|user|${WSL_USER}|g" > /tmp/Win-GPG-Agent.xml
-    CMD="powershell.exe -Command 'Register-ScheduledTask -TaskName \"Start GPG-Agent\" -Xml (get-content \\\\wsl$\\Ubuntu-20.04\\tmp\\Win-GPG-Agent.xml | out-string) -User ${HOST}\\${WSL_USER}'"
-    eval $CMD
-    rm /tmp/Win-GPG-Agent.xml
-    powershell.exe -Command "Start-ScheduledTask -TaskName 'Start GPG-Agent'"
+    curl -LSs https://raw.githubusercontent.com/j-maynard/terminal-config/master/wingpg/create-gpg-agent-lnk.ps1 | sed "s|\$USER=|\$USER=${WSL_USER}|g" > /mnt/c/temp/create-gpg-agent-lnk.ps1
+    powershell.exe -ExecutionPolicy Bypass c:\\temp\\create-gpg-agent-lnk.ps1
 }
 
 install_con_fonts() {
@@ -541,6 +566,7 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     install_chrome
     install_discord
     install_kvantum
+    install_layan
     fix_sddm
 fi
 

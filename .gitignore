@@ -1,4 +1,5 @@
 *.swp
+.optional.txt
 vim/autoload/
 mutt/cache/
 mutt/gmail/
@@ -7,3 +8,5 @@ mutt/gmail-passwords.txt
 encrypted/*.sh
 encrypted/*.txt
 tmux.env
+.optional.txt
+ wingpg/socat-gpg.pid

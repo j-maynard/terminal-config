@@ -1,3 +1,6 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =1
-let g:netrw_dirhist_1='/Users/jamesmaynard/.vim/colors'
+let g:netrw_dirhistcnt =4
+let g:netrw_dirhist_4='/home/jamesmaynard/Development/Verify/verify-stub-idp/stub-idp'
+let g:netrw_dirhist_3='/home/jamesmaynard/Development/Verify/ida-hub-acceptance-tests'
+let g:netrw_dirhist_2='/home'
+let g:netrw_dirhist_1='/home/jamesmaynard/.term-config'

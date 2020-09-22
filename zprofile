@@ -13,7 +13,6 @@ if [[ -z $RUN ]]; then
 fi
 
 if ! [[ -z "$TMUX" ]]; then
-  echo "We're in a tmux session... don't run script again"
   RUN=false
   TERM_DETECT=1
 fi
@@ -63,3 +62,4 @@ if [[ $RUN == 'true' ]]; then
     echo "TMUX Session not attached"
   fi
 fi
+
