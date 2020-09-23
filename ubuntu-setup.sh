@@ -78,6 +78,8 @@ apt_install() {
     x_apt_pkgs=( "idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
 	"gtk2-engines-pixbuf" )
+
+    kde_pkgs( "latte" "umbrello" "kdegames" )
     
     streaming_apt_pkgs=( "ffmpeg" "v4l2loopback-dkms" "v4l2loopback-utils" )
 
@@ -88,6 +90,11 @@ apt_install() {
         for pkg in ${x_apt_pkgs[@]}; do
             PKGS="${PKGS} ${pkg} "
         done
+        if plasmashell --version >/dev/null 2>&1; then
+            for pkg in ${kde_pkgs[@]}; do
+                PKGS="${PKG} ${pkg} "
+            done
+        fi
     fi
 
     if [[ $STREAMING == "true" ]]; then
@@ -146,7 +153,7 @@ install_kvantum() {
 
 setup_obs() {
     sudo add-apt-repository -y ppa:obsproject/obs-studio
-    sudo apt-get install obs-studio
+    sudo apt-get install -y obs-studio
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
     echo 'v4l2loopback' | sudo tee -a /etc/modules 
     echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
@@ -162,7 +169,7 @@ setup_obs() {
 
 setup_streamdeck() {
     show_msg "Installing streamdeck libraries..."
-    sudo apt install qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
+    sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
     show_msg "Adding udev rules and reloading"
     sudo usermod -a -G plugdev `whoami`
 
@@ -192,7 +199,7 @@ install_inkscape() {
 }
 
 install_1password() {
-    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FEF9748469ADBE15DA7CA80AC2D62742012EA22
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FEF9748469ADBE15DA7CA80AC2D62742012EA22 > /dev/null 2>&1
     sudo add-apt-repository 'deb [arch=amd64] https://onepassword.s3.amazonaws.com/linux/debian edge main'
     sudo apt-get install -y 1password
 }
@@ -203,7 +210,7 @@ setup_flatpak() {
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
     sudo flatpak install -y flathub org.gnome.Geary
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Materia-dark-compact
-
+    sudo flatpak install -y flathub org.kde.kontact
 }
 
 install_layan() {
@@ -220,14 +227,14 @@ install_layan() {
 
 install_docker() {
     show_msg "Installing Docker Community Edition..."
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    curl -fsSLo /tmp/docker.key https://download.docker.com/linux/ubuntu/gpg
+    sudo apt-key add /tmp/docker.key && rm /tmp/docker.key
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    sudo apt-get install docker-ce docker-ce-cli containerd.io
-    sudo docker run hello-world
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
     if [ $? ]; then
         show_msg "Docker installed successfully"
     fi
-    usermod -a -G docker $USERNAME
+    sudo usermod -a -G docker $USERNAME
     show_msg "Installing docker-compose..."
     sudo curl -L "https://github.com/docker/compose/releases/download/1.26.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
@@ -304,7 +311,12 @@ install_discord() {
             rm /tmp/discord.deb
         else
             sudo apt-get --fix-broken install
-            show_msg "Failed to install discord"
+            if which discord >/dev/null; then
+                rm /tmp/discord.deb
+                show_msg "Discord installed successfully"
+            else
+                show_msg "Failed to install discord"
+            fi
         fi
     fi
 }
