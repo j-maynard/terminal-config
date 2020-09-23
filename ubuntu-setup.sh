@@ -68,7 +68,7 @@ apt_update() {
 pkcon_update() {
     show_msg "Updating the system..."
     sudo apt-get update
-    sudo pkcon update -y
+    sudo pkcon update -y --allow-downgrades
 }
 
 apt_install() {

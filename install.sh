@@ -88,7 +88,7 @@ os_script() {
         SARGS="-s"
     fi
     echo "Running OS/Distro setup script"
-    ./${OS}-setup.sh $MODEL $VARG $CARG $WSLARG $SARGS
+    ./${OS}-setup.sh $MODEL $VARG $CARG $WSLARG $SARGS $NEON_FLAG
     rm ${OS}-setup.sh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
@@ -159,7 +159,10 @@ setup_os() {
     
     case $OS in
         Linux)      case $DISTRO in
-                        *buntu | Neon)  os_script $GET "ubuntu"
+                        *buntu)         os_script $GET "ubuntu"
+                                        ;;
+                        KDE | Neon)     NEON_FLAG=-n
+                                        os_script $GET "ubuntu"
                                         ;;
                         Raspbian)       os_script $GET "raspbian" $MODEL
                                         ;;
