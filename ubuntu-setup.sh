@@ -73,13 +73,14 @@ apt_install() {
         "openjdk-11-jdk" "openjdk-8-jdk" "maven" "vim" "vim-nox"
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
         "pinentry-curses" "libxml2-utils" "apt-transport-https"
-	"neovim" "libgconf-2-4" "libappindicator1" "libc++1" )
+	"neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav" )
 
     x_apt_pkgs=( "idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
 	"gtk2-engines-pixbuf" )
 
-    kde_pkgs( "latte" "umbrello" "kdegames" )
+    kde_pkgs( "kmail" "latte-dock" "umbrello" "kdegames" "kaddressbook"
+        "akonadi-backend-postgresql" "akonadi-backend-sqlite" "kleopatra")
     
     streaming_apt_pkgs=( "ffmpeg" "v4l2loopback-dkms" "v4l2loopback-utils" )
 
@@ -152,6 +153,7 @@ install_kvantum() {
 }
 
 setup_obs() {
+    sudo ubuntu-drivers autoinstall
     sudo add-apt-repository -y ppa:obsproject/obs-studio
     sudo apt-get install -y obs-studio
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
@@ -165,6 +167,8 @@ setup_obs() {
         show_msg "If this system will be used with streamdeck you'll"
         show_msg "need to run the streamdeck setup script"
     fi
+    install_steam
+    install_minecraft
 }
 
 setup_streamdeck() {
@@ -190,6 +194,17 @@ EOF
     else
         show_msg "Something went wrong installing StreamDeck-Ui"
     fi
+}
+
+install_stream() {
+    sudo apt-get install -y zenity zenity-common
+    wget -O /tmp/steam.deb https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb
+    sudo dpkg -i /tmp/steam.deb
+}
+
+install_minecraft() {
+    wget -O /tmp/minecraft.deb https://launcher.mojang.com/download/Minecraft.deb
+    sudo dpkg -i /tmp/minecraft.deb
 }
 
 install_inkscape() {
@@ -457,10 +472,10 @@ grub-mkconfig -o /boot/grub/grub.cfg "\$@"
 if plasmashell --version >/dev/null 2>&1; then                          
         echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2 
         C=/boot/grub/grub.cfg                                           
-        chmod +w                                                        
-        sed -i 's/ubuntu/kubuntu/'                                      
-        sed -i 's/Ubuntu/Kubuntu/'                                      
-        chmod -w                                                        
+        chmod +w \$C 
+        sed -i 's/ubuntu/kubuntu/' \$C
+        sed -i 's/Ubuntu/Kubuntu/' \$C
+        chmod -w \$C
 fi
 EOF
 	fi
