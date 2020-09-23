@@ -65,6 +65,12 @@ apt_update() {
     sudo apt-get upgrade -y
 }
 
+pkcon_update() {
+    show_msg "Updating the system..."
+    sudo apt-get update
+    sudo pkcon update -y
+}
+
 apt_install() {
     show_msg "Installing from apt... "
 
@@ -79,7 +85,9 @@ apt_install() {
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
 	"gtk2-engines-pixbuf" )
 
-    kde_pkgs( "kmail" "latte-dock" "umbrello" "kdegames" "kaddressbook"
+    neon_pkgs=( "openjdk-11-jdk" "default-jdk" "wget" "fonts-liberation" )
+
+    kde_pkgs=( "kmail" "latte-dock" "umbrello" "kdegames" "kaddressbook"
         "akonadi-backend-postgresql" "akonadi-backend-sqlite" "kleopatra")
     
     streaming_apt_pkgs=( "ffmpeg" "v4l2loopback-dkms" "v4l2loopback-utils" )
@@ -93,7 +101,12 @@ apt_install() {
         done
         if plasmashell --version >/dev/null 2>&1; then
             for pkg in ${kde_pkgs[@]}; do
-                PKGS="${PKG} ${pkg} "
+                PKGS="${PKGS} ${pkg} "
+            done
+        fi
+        if [[ $NEON == "true" ]]; then
+            for pkg in ${neon_pkgs[@]}; do
+                PKGS="${PKGS} ${pkg} "
             done
         fi
     fi
@@ -196,7 +209,7 @@ EOF
     fi
 }
 
-install_stream() {
+install_steam() {
     sudo apt-get install -y zenity zenity-common
     wget -O /tmp/steam.deb https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb
     sudo dpkg -i /tmp/steam.deb
@@ -546,10 +559,13 @@ STREAMING=false
 VERBOSE=false
 PRIVATE=false
 WSL=false
+NEON=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
+        n | -n | --neon)                NEON=true
+                                        ;;
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
                                     	;;
         w | -w | --wsl-user)            shift
@@ -585,7 +601,13 @@ if [ $VERBOSE == "false" ]; then
 fi
 
 set_username
-apt_update
+
+if [[ $NEON == "false" ]]; then
+    pkcon_update
+else
+    apt_update
+fi
+
 apt_install
 install_antibody
 change_shell
