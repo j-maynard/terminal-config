@@ -185,11 +185,24 @@ EOF
     fi
 }
 
+install_inkscape() {
+    sudo add-apt-repository -y ppa:inkscape.dev/stable
+    sudo apt-get update
+    sudo apt-get install -y inkscape
+}
+
+install_1password() {
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FEF9748469ADBE15DA7CA80AC2D62742012EA22
+    sudo add-apt-repository 'deb [arch=amd64] https://onepassword.s3.amazonaws.com/linux/debian edge main'
+    sudo apt-get install -y 1password
+}
+
 setup_flatpak() {
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    sudo flatpak install flathub org.gtk.Gtk3theme.Breeze-Dark
-    sudo flatpak install flathub org.gnome.Geary
-    sudo flatpak install flathub org.gtk.Gtk3theme.Materia-dark-compact
+    sudo flatpak install -y flathub org.gnome.Platform//3.38
+    sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
+    sudo flatpak install -y flathub org.gnome.Geary
+    sudo flatpak install -y flathub org.gtk.Gtk3theme.Materia-dark-compact
 
 }
 
@@ -243,23 +256,23 @@ snap_install() {
     show_msg "Spotify"
     show_msg "yq"
 
-    if which authy > /dev/null; then
+    if ! which authy > /dev/null; then
         sudo snap install authy --beta
     fi
 
-    if which slack > /dev/null; then
+    if ! which slack > /dev/null; then
         sudo snap install slack --classic
     fi
     
-    if which spotify > /dev/null; then
+    if ! which spotify > /dev/null; then
         sudo snap install spotify
     fi
     
-    if which insomnia > /dev/null; then
+    if ! which insomnia > /dev/null; then
         sudo snap install insomnia
     fi
     
-    if which yq > /dev/null; then
+    if ! which yq > /dev/null; then
         sudo snap install yq
     fi
 }
@@ -412,11 +425,8 @@ fix_sddm() {
 fix-update-grub() {
 	# Install Grub Theme
 	# TODO Make own GRUB theme for the Razer Blade
-	if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
-		UHD_FLAG='- 4'
-	fi
 	t=/tmp/grub2-theme2
-	git clone $GITQUIET https://github.com/vinceliuice/grub2-themes.git $t
+	git clone ${GITQUITET} https://github.com/vinceliuice/grub2-themes.git $t
         if xrandr |grep eDP-1-1 > /dev/null; then
             R4K='-4'
         fi
@@ -428,10 +438,10 @@ fix-update-grub() {
 	# As there is no accurate way to detect Kubuntu from Ubuntu
 	# We look for plasmashell instead and then assume its Kubuntu.
 	if plasmashell --version >/dev/null 2>&1; then
-		cat | sudo tee - /usr/sbin/update-grub << EOF
+		cat << EOF | sudo tee - /usr/sbin/update-grub
 #!/bin/sh                                                               
 set -e                                                                  
-grub-mkconfig -o /boot/grub/grub.cfg "$@"                          
+grub-mkconfig -o /boot/grub/grub.cfg "\$@"                          
 if plasmashell --version >/dev/null 2>&1; then                          
         echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2 
         C=/boot/grub/grub.cfg                                           
@@ -441,7 +451,6 @@ if plasmashell --version >/dev/null 2>&1; then
         chmod -w                                                        
 fi
 EOF
-		sudo update-grub > /dev/null 2>&1
 	fi
 }
 
@@ -564,6 +573,8 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     snap_install
     setup_flatpak
     install_chrome
+    install_1password
+    install_inkscape
     install_discord
     install_kvantum
     install_layan
