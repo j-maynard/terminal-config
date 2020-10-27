@@ -65,6 +65,12 @@ apt_update() {
     sudo apt-get upgrade -y
 }
 
+pkcon_update() {
+    show_msg "Updating the system..."
+    sudo apt-get update
+    sudo pkcon update -y --allow-downgrades
+}
+
 apt_install() {
     show_msg "Installing from apt... "
 
@@ -73,11 +79,16 @@ apt_install() {
         "openjdk-11-jdk" "openjdk-8-jdk" "maven" "vim" "vim-nox"
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
         "pinentry-curses" "libxml2-utils" "apt-transport-https"
-	"neovim" )
+	"neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav" )
 
     x_apt_pkgs=( "idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
 	"gtk2-engines-pixbuf" )
+
+    neon_pkgs=( "openjdk-11-jdk" "default-jdk" "wget" "fonts-liberation" )
+
+    kde_pkgs=( "kmail" "latte-dock" "umbrello" "kdegames" "kaddressbook"
+        "akonadi-backend-postgresql" "akonadi-backend-sqlite" "kleopatra")
     
     streaming_apt_pkgs=( "ffmpeg" "v4l2loopback-dkms" "v4l2loopback-utils" )
 
@@ -88,6 +99,16 @@ apt_install() {
         for pkg in ${x_apt_pkgs[@]}; do
             PKGS="${PKGS} ${pkg} "
         done
+        if plasmashell --version >/dev/null 2>&1; then
+            for pkg in ${kde_pkgs[@]}; do
+                PKGS="${PKGS} ${pkg} "
+            done
+        fi
+        if [[ $NEON == "true" ]]; then
+            for pkg in ${neon_pkgs[@]}; do
+                PKGS="${PKGS} ${pkg} "
+            done
+        fi
     fi
 
     if [[ $STREAMING == "true" ]]; then
@@ -123,10 +144,15 @@ setup_openrazer() {
         sudo apt-get install -y openrazer-meta
 
         if [[ $COMMANDLINE_ONLY == "false" ]]; then
+            # Add RazerGenie Repo
             echo 'deb http://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/hardware-razer.list
-            curl -Ss https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key |  sudo apt-key add -
+            curl -LSso /tmp/razergenie.key https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key
+            sudo apt-key add /tmp/razergenie.key
+            # Add Polychromatic Repo
             sudo add-apt-repository -y ppa:polychromatic/stable
-            sudo apt-get update polychromatic razergenie
+            # Install Both
+            sudo apt-get update
+            sudo apt-get install -y polychromatic razergenie
         fi
     fi
 }
@@ -140,19 +166,79 @@ install_kvantum() {
 }
 
 setup_obs() {
+    sudo ubuntu-drivers autoinstall
     sudo add-apt-repository -y ppa:obsproject/obs-studio
     sudo apt-get install -y obs-studio
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
-    echo 'install v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
+    echo 'v4l2loopback' | sudo tee -a /etc/modules 
+    echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
     wget -q -O /tmp/obs-v4l2sink.deb https://github.com/CatxFish/obs-v4l2sink/releases/download/0.1.0/obs-v4l2sink.deb
     sudo dpkg -i /tmp/obs-v4l2sink.deb
+    if lsusb |grep 0fd9:006d > /dev/null; then
+        setup_streamdeck
+    else
+        show_msg "If this system will be used with streamdeck you'll"
+        show_msg "need to run the streamdeck setup script"
+    fi
+    install_steam
+    install_minecraft
+}
+
+setup_streamdeck() {
+    show_msg "Installing streamdeck libraries..."
+    sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
+    show_msg "Adding udev rules and reloading"
+    sudo usermod -a -G plugdev `whoami`
+
+    sudo tee /etc/udev/rules.d/99-streamdeck.rules << EOF
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", MODE:="666", GROUP="plugdev"
+EOF
+
+    sudo udevadm control --reload-rules
+
+    show_msg "Unplug and replug in device for the new udev rules to take effect"
+    show_msg "Installing streamdeck_ui..."
+    pip3 install --user streamdeck_ui
+    if [ $? == 0 ]; then
+        show_msg "StreamDeck-UI Installed"
+    else
+        show_msg "Something went wrong installing StreamDeck-Ui"
+    fi
+}
+
+install_steam() {
+    sudo apt-get install -y zenity zenity-common
+    wget -O /tmp/steam.deb https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb
+    sudo dpkg -i /tmp/steam.deb
+}
+
+install_minecraft() {
+    wget -O /tmp/minecraft.deb https://launcher.mojang.com/download/Minecraft.deb
+    sudo dpkg -i /tmp/minecraft.deb
+}
+
+install_inkscape() {
+    sudo add-apt-repository -y ppa:inkscape.dev/stable
+    sudo apt-get update
+    sudo apt-get install -y inkscape
+}
+
+install_1password() {
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FEF9748469ADBE15DA7CA80AC2D62742012EA22 > /dev/null 2>&1
+    sudo add-apt-repository 'deb [arch=amd64] https://onepassword.s3.amazonaws.com/linux/debian edge main'
+    sudo apt-get install -y 1password
 }
 
 setup_flatpak() {
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    sudo flatpak install -y flathub org.gnome.Platform//3.38
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
     sudo flatpak install -y flathub org.gnome.Geary
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Materia-dark-compact
+    sudo flatpak install -y flathub org.kde.kontact
 }
 
 install_layan() {
@@ -169,14 +255,14 @@ install_layan() {
 
 install_docker() {
     show_msg "Installing Docker Community Edition..."
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    curl -fsSLo /tmp/docker.key https://download.docker.com/linux/ubuntu/gpg
+    sudo apt-key add /tmp/docker.key && rm /tmp/docker.key
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-    sudo docker run hello-world
     if [ $? ]; then
         show_msg "Docker installed successfully"
     fi
-    usermod -a -G docker $USERNAME
+    sudo usermod -a -G docker $USERNAME
     show_msg "Installing docker-compose..."
     sudo curl -L "https://github.com/docker/compose/releases/download/1.26.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
@@ -199,15 +285,15 @@ install_virtualbox() {
 
 snap_install() {
     show_msg "Installing the following packages from snap:"
+    show_msg "Authy"
     show_msg "Insomnia"
     show_msg "Slack"
     show_msg "Spotify"
-    show_msg "Authy"
     show_msg "ncspot"
     show_msg "yq"
 
-    if [ $VERBOSE == "true" ]; then
-        exec > /dev/tty
+    if ! which authy > /dev/null; then
+        sudo snap install authy --beta
     fi
 
     if ! which slack > /dev/null; then
@@ -232,10 +318,6 @@ snap_install() {
     
     if ! which yq > /dev/null; then
         sudo snap install yq
-    fi
-
-    if [ $VERBOSE == "false" ]; then
-        exec > /dev/null 
     fi
 }
 
@@ -274,10 +356,16 @@ install_discord() {
         sudo apt install libappindicator1 libc++1 
         wget -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
         sudo dpkg -i /tmp/discord.deb
-        if ! which discord > /dev/null 2&>1; then
+        if which discord >/dev/null; then
             rm /tmp/discord.deb
         else
-            show_msg "Failed to install discord"
+            sudo apt-get --fix-broken install
+            if which discord >/dev/null; then
+                rm /tmp/discord.deb
+                show_msg "Discord installed successfully"
+            else
+                show_msg "Failed to install discord"
+            fi
         fi
     fi
 }
@@ -397,32 +485,33 @@ fix_sddm() {
 
 fix-update-grub() {
 	# Install Grub Theme
-	# TODO Make own GRUB theme for the Razer Blade
-	if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
-		UHD_FLAG='-4'
-	fi
+	# TODO Make own GRUB theme for the Razer Blade	
 	t=/tmp/grub2-theme2
-	git clone $GITQUIET https://github.com/vinceliuice/grub2-themes.git $t
-	sudo $t/install.sh -b -v -w ${UHD_FLAG} > /dev/null 2>&1
-	sudo $t/install.sh -b -s ${UHD_FLAG} > /dev/null 2>&1
-	sudo $t/install.sh -b -l ${UHD_FLAG} > /dev/null 2>&1
-	sudo $t/install.sh -b -t ${UHD_FLAG} > /dev/null 2>&1
+	git clone ${GITQUITET} https://github.com/vinceliuice/grub2-themes.git $t
+        if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
+            R4K='-4'
+        fi
+	sudo $t/install.sh -b -v -w $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -s $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -l $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -t $R4K > /dev/null 2>&1
 	rm -rf $t
-	if [[ "${XDG_CONFIG_DIRS}" =~ .*"plasma".* ]]; then
+	# As there is no accurate way to detect Kubuntu from Ubuntu
+	# We look for plasmashell instead and then assume its Kubuntu.
+	if plasmashell --version >/dev/null 2>&1; then
 		cat << EOF | sudo tee - /usr/sbin/update-grub
-#!/bin/sh
-set -e
-grub-mkconfig -o /boot/grub/grub.cfg "\$@"
-if which plasmashell > /dev/null; then
-        echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2
-        C=/boot/grub/grub.cfg
-        chmod +w \$C
+#!/bin/sh                                                               
+set -e                                                                  
+grub-mkconfig -o /boot/grub/grub.cfg "\$@"                          
+if plasmashell --version >/dev/null 2>&1; then                          
+        echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2 
+        C=/boot/grub/grub.cfg                                           
+        chmod +w \$C 
         sed -i 's/ubuntu/kubuntu/' \$C
         sed -i 's/Ubuntu/Kubuntu/' \$C
         chmod -w \$C
 fi
 EOF
-		sudo update-grub > /dev/null 2>&1
 	fi
 }
 
@@ -491,10 +580,13 @@ STREAMING=false
 VERBOSE=false
 PRIVATE=false
 WSL=false
+NEON=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
+        n | -n | --neon)                NEON=true
+                                        ;;
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
                                     	;;
         w | -w | --wsl-user)            shift
@@ -530,7 +622,13 @@ if [ $VERBOSE == "false" ]; then
 fi
 
 set_username
-apt_update
+
+if [[ $NEON == "false" ]]; then
+    pkcon_update
+else
+    apt_update
+fi
+
 apt_install
 install_antibody
 change_shell
@@ -539,11 +637,14 @@ install_go
 setup_wsl
 install_con_fonts
 setup_shims
+install_docker
 
 if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     snap_install
     setup_flatpak
     install_chrome
+    install_1password
+    install_inkscape
     install_discord
     install_kvantum
     install_layan

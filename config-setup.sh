@@ -201,7 +201,7 @@ setup_vim() {
     git -C ${TERMCONFIG} submodule update --recursive --remote
 }
 
-configFiles=("emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt")
+configFiles=("streamdeck_ui.json" "emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt")
 VERBOSE=false
 SHOW_ONLY=false
 set_username
