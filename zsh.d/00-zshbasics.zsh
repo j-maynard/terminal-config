@@ -24,3 +24,5 @@ zstyle :compinstall filename '/Users/jamie/.zshrc'
 
 autoload -Uz compinit
 compinit
+PATH=${HOME}/.bin:$PATH
+fpath=(~/.zsh/completion $fpath)

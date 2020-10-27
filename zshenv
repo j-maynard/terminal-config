@@ -33,3 +33,7 @@ else
 fi
 # Uncomment to stop TMUX from running at startup
 # export RUN=false
+
+# HiDPI Settings for GTK Apps
+GDK_DPI_SCALE=1.75
+GDK_SCALE=1.75

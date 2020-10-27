@@ -120,7 +120,7 @@ setup_openrazer() {
     if lsusb |grep 1532 > /dev/null 2>&1; then
         show_msg "Razer Hardware Detected... Installing OpenRazer..."
         sudo add-apt-repository -y ppa:openrazer/stable
-        sudo apt-get install openrazer-meta
+        sudo apt-get install -y openrazer-meta
 
         if [[ $COMMANDLINE_ONLY == "false" ]]; then
             echo 'deb http://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/hardware-razer.list
@@ -141,7 +141,7 @@ install_kvantum() {
 
 setup_obs() {
     sudo add-apt-repository -y ppa:obsproject/obs-studio
-    sudo apt-get install obs-studio
+    sudo apt-get install -y obs-studio
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
     echo 'install v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
     wget -q -O /tmp/obs-v4l2sink.deb https://github.com/CatxFish/obs-v4l2sink/releases/download/0.1.0/obs-v4l2sink.deb
@@ -150,10 +150,9 @@ setup_obs() {
 
 setup_flatpak() {
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    sudo flatpak install flathub org.gtk.Gtk3theme.Breeze-Dark
-    sudo flatpak install flathub org.gnome.Geary
-    sudo flatpak install flathub org.gtk.Gtk3theme.Materia-dark-compact
-
+    sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
+    sudo flatpak install -y flathub org.gnome.Geary
+    sudo flatpak install -y flathub org.gtk.Gtk3theme.Materia-dark-compact
 }
 
 install_layan() {
@@ -172,7 +171,7 @@ install_docker() {
     show_msg "Installing Docker Community Edition..."
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    sudo apt-get install docker-ce docker-ce-cli containerd.io
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
     sudo docker run hello-world
     if [ $? ]; then
         show_msg "Docker installed successfully"
@@ -203,26 +202,35 @@ snap_install() {
     show_msg "Insomnia"
     show_msg "Slack"
     show_msg "Spotify"
-    show_msg "Visual Studio Code"
+    show_msg "Authy"
+    show_msg "ncspot"
     show_msg "yq"
 
     if [ $VERBOSE == "true" ]; then
         exec > /dev/tty
     fi
 
-    if which slack > /dev/null; then
+    if ! which slack > /dev/null; then
         sudo snap install slack --classic
     fi
     
-    if which spotify > /dev/null; then
+    if ! which spotify > /dev/null; then
         sudo snap install spotify
     fi
     
-    if which insomnia > /dev/null; then
+    if ! which insomnia > /dev/null; then
         sudo snap install insomnia
     fi
+
+    if ! which authy > /dev/null; then
+        sudo snap install authy --beta
+    fi
+
+    if ! which ncspot > /dev/null; then
+        sudo snap install ncspot
+    fi
     
-    if which yq > /dev/null; then
+    if ! which yq > /dev/null; then
         sudo snap install yq
     fi
 
@@ -232,8 +240,7 @@ snap_install() {
 }
 
 install_chrome() {
-    which google-chrome
-    if [ $? != 0 ]; then
+    if ! which google-chrome > /dev/null; then
         show_msg "Installing Google Chrome (Latest)..."
         wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
         if [ ! -f "google-chrome-stable_current_amd64.deb" ]; then
@@ -249,12 +256,24 @@ install_chrome() {
     fi
 }
 
+install 1password() {
+    if ! which 1password > /dev/null; then
+        show_msg "Installing 1password (Beta)..."
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FEF9748469ADBE15DA7CA80AC2D62742012EA22
+        sudo add-apt-repository 'deb [arch=amd64] https://onepassword.s3.amazonaws.com/linux/debian edge main'
+        sudo apt install 1password
+        if [ $? != 0 ]; then
+            show_msg "Failed to install 1password"
+        fi
+    fi 
+}
+
 install_discord() {
     if ! which discord; then
         show_msg "Installing Discord (Latest)..."
+        sudo apt install libappindicator1 libc++1 
         wget -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
         sudo dpkg -i /tmp/discord.deb
-	sudo apt-get -y --fix-broken install
         if ! which discord > /dev/null 2&>1; then
             rm /tmp/discord.deb
         else
@@ -380,7 +399,7 @@ fix-update-grub() {
 	# Install Grub Theme
 	# TODO Make own GRUB theme for the Razer Blade
 	if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
-		UHD_FLAG='- 4'
+		UHD_FLAG='-4'
 	fi
 	t=/tmp/grub2-theme2
 	git clone $GITQUIET https://github.com/vinceliuice/grub2-themes.git $t
@@ -389,17 +408,18 @@ fix-update-grub() {
 	sudo $t/install.sh -b -l ${UHD_FLAG} > /dev/null 2>&1
 	sudo $t/install.sh -b -t ${UHD_FLAG} > /dev/null 2>&1
 	rm -rf $t
-	# As there is no accurate way to detect Kubuntu from Ubuntu
-	# We look for plasmashell instead and then assume its Kubuntu.
-	if plasmashell --version >/dev/null 2>&1; then
-		cat << EOF | sudo tee -a - /usr/sbin/update-grub
-if plasmashell --version >/dev/null 2>&1; then
+	if [[ "${XDG_CONFIG_DIRS}" =~ .*"plasma".* ]]; then
+		cat << EOF | sudo tee - /usr/sbin/update-grub
+#!/bin/sh
+set -e
+grub-mkconfig -o /boot/grub/grub.cfg "\$@"
+if which plasmashell > /dev/null; then
         echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2
         C=/boot/grub/grub.cfg
-        chmod +w $C
-        sed -i 's/ubuntu/kubuntu/' $C
-        sed -i 's/Ubuntu/Kubuntu/' $C
-        chmod -w $C
+        chmod +w \$C
+        sed -i 's/ubuntu/kubuntu/' \$C
+        sed -i 's/Ubuntu/Kubuntu/' \$C
+        chmod -w \$C
 fi
 EOF
 		sudo update-grub > /dev/null 2>&1

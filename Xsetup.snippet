@@ -9,3 +9,7 @@ do
 	fi
 	lastDisplay=$display
 done
+
+if xrandr | fgrep '*' |grep 2160; then
+        xrandr --dpi 192
+fi
