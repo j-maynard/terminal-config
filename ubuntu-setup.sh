@@ -83,7 +83,7 @@ apt_install() {
 
     x_apt_pkgs=( "idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
-	"gtk2-engines-pixbuf" )
+	"gtk2-engines-pixbuf" "lm-sensors" "nvme-cli" "conky-all" )
 
     neon_pkgs=( "openjdk-11-jdk" "default-jdk" "wget" "fonts-liberation" )
 
@@ -109,6 +109,8 @@ apt_install() {
                 PKGS="${PKGS} ${pkg} "
             done
         fi
+	sudo usermod -a -G disk `whoami`
+	sudo usermod -a -G users `whoami`
     fi
 
     if [[ $STREAMING == "true" ]]; then
@@ -285,10 +287,10 @@ install_virtualbox() {
 
 snap_install() {
     show_msg "Installing the following packages from snap:"
+    show_msg "1Password"
     show_msg "Authy"
     show_msg "Insomnia"
     show_msg "Slack"
-    show_msg "Spotify"
     show_msg "ncspot"
     show_msg "yq"
 
@@ -298,10 +300,6 @@ snap_install() {
 
     if ! which slack > /dev/null; then
         sudo snap install slack --classic
-    fi
-    
-    if ! which spotify > /dev/null; then
-        sudo snap install spotify
     fi
     
     if ! which insomnia > /dev/null; then
@@ -318,6 +316,10 @@ snap_install() {
     
     if ! which yq > /dev/null; then
         sudo snap install yq
+    fi
+
+    if ! which 1password > /dev/null; then
+	sudo snap install 1password --edge
     fi
 }
 
@@ -338,7 +340,19 @@ install_chrome() {
     fi
 }
 
-install 1password() {
+install_spotify() {
+    show_msg "Installing Spotify Client..."
+    if ! which spotify > /dev/null; then
+        curl -sS https://download.spotify.com/debian/pubkey_0D811D58.gpg | sudo apt-key add - 
+        echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
+        sudo apt-get update && sudo apt-get install spotify-client
+        if [[ $4K == "true" ]]; then
+            sed "s/Exec=spotify %U/Exec=spotify --force-device-scale-factor=1.75 %U/" /usr/local/share/applications/spotify.desktop | sudo tee /usr/local/share/applications/spotify.desktop
+        fi
+    fi
+}
+
+install_1password() {
     if ! which 1password > /dev/null; then
         show_msg "Installing 1password (Beta)..."
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FEF9748469ADBE15DA7CA80AC2D62742012EA22
@@ -570,6 +584,40 @@ setup_shims() {
     curl -LSs "$GIT_REPO/shim-setup.sh" | bash -s - $VARG
 }
 
+install_nerd_fonts() {
+    if [ $THEME_ONLY == 'true' ]; then
+        show_msg "${red}Please make sure you have Nerd Font installed on your system.${normal}"
+        return
+    fi
+    if [[ $COMMANDLINE_ONLY == "true" && ! -v WSLENV ]]; then
+        show_msg "${red}Please make sure you have Nerd Font installed on your system.${normal}"
+        return
+    fi
+    if [ -v WSLENV ]; then
+        for d in /mnt/c/Users/*; do
+            DIR="$d/AppData/Local/Microsoft/Windows/Fonts"
+            if [ -d "${DIR}" ]; then
+               if ls ${DIR}/*Nerd* &> /dev/null; then 
+                    echo -e "${green}${bold}Nerd fonts have been found... Skipping installation...${normal}"
+                    return
+                fi
+            fi
+        done
+    fi
+    git clone $GIT_QUIET https://github.com/ryanoasis/nerd-fonts.git --depth=1 /tmp/fonts
+    cd /tmp/fonts
+    if [ -v WSLENV ]; then
+        cp -r /tmp/fonts/patched-fonts /mnt/c/temp
+        powershell.exe -ExecutionPolicy Bypass -File c:/temp/patched-fonts/install.ps1
+        rm -rf /mnt/c/temp/patched-fonts
+    else
+        show_msg "Install NerdFonts..."
+        sudo ./install.sh --install-to-system-path
+        cd $STARTPWD
+        rm -rf /tmp/fonts
+    fi
+}
+
 ################################
 # Main Script body starts here #
 ################################
@@ -643,7 +691,7 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     snap_install
     setup_flatpak
     install_chrome
-    install_1password
+    #install_1password
     install_inkscape
     install_discord
     install_kvantum
@@ -656,6 +704,10 @@ if [[ $STREAMING == "true" ]]; then
     setup_obs
 fi
 fix-update-grub
+
+if [[ $COMMANDLINE_ONLY == "false" ]]; then
+    install_nerd_fonts
+fi
 
 # Post install tasks:
 show_msg "Linking /usr/bin/python3 to /usr/bin/python..."
