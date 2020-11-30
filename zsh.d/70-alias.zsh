@@ -10,3 +10,25 @@ fi
     alias wingpg='${HOME}/.term-config/wingpg-connect.sh &'
 fi
 alias genairlinetmuxconf='nvim -c "+:Tmuxline" "+TmuxlineSnapshot ~/.term-config/tmux-airline.conf" "+q"'
+
+## get rid of command not found ##
+alias cd..='cd ..'
+ 
+## a quick way to get out of current directory ##
+alias ..='cd ..'
+alias ...='cd ../../../'
+alias ....='cd ../../../../'
+alias .....='cd ../../../../'
+alias .4='cd ../../../../'
+alias .5='cd ../../../../..'
+
+## Go Home
+alias home="cd ${HOME}"
+
+alias untar='tar -zxvf '
+alias wget='wget -c '
+alias getpass="openssl rand -base64 20"
+alias sha='shasum -a 256 '
+alias www='python -m SimpleHTTPServer 8000'
+alias c='clear'
+
