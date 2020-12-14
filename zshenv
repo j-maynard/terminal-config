@@ -4,6 +4,7 @@ export TERMCONF=$HOME/.term-config
 export ITERM_INT=false
 export GPG_TTY=$(tty)
 export GPG_KEY=9073DEB608346BA4
+export GNUPGHOME=${HOME}/.gnupg
 export NERD_FONT=true
 export NF=true
 export POWERLINE_SAFE=true
@@ -37,3 +38,4 @@ fi
 # HiDPI Settings for GTK Apps
 GDK_DPI_SCALE=1.75
 GDK_SCALE=1.75
+
