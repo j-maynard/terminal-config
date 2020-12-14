@@ -10,3 +10,4 @@ encrypted/*.txt
 tmux.env
 .optional.txt
  wingpg/socat-gpg.pid
+ zshenv
