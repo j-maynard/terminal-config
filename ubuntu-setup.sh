@@ -240,7 +240,6 @@ setup_flatpak() {
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
     sudo flatpak install -y flathub org.gnome.Geary
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Materia-dark-compact
-    sudo flatpak install -y flathub org.kde.kontact
 }
 
 install_layan() {
@@ -294,14 +293,6 @@ snap_install() {
     show_msg "ncspot"
     show_msg "yq"
 
-    if ! which authy > /dev/null; then
-        sudo snap install authy --beta
-    fi
-
-    if ! which slack > /dev/null; then
-        sudo snap install slack --classic
-    fi
-    
     if ! which insomnia > /dev/null; then
         sudo snap install insomnia
     fi
@@ -316,10 +307,6 @@ snap_install() {
     
     if ! which yq > /dev/null; then
         sudo snap install yq
-    fi
-
-    if ! which 1password > /dev/null; then
-	sudo snap install 1password --edge
     fi
 }
 
@@ -585,7 +572,7 @@ setup_shims() {
 }
 
 install_nerd_fonts() {
-    if [ $THEME_ONLY == 'true' ]; then
+    if [[ $THEME_ONLY == 'true' ]]; then
         show_msg "${red}Please make sure you have Nerd Font installed on your system.${normal}"
         return
     fi
