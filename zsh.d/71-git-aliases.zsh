@@ -5,6 +5,7 @@ if [[ $? -eq 0 ]]; then
     alias ga='git add'
     alias gc='git commit'
     alias commit='git commit'
+    alias recommit='git recommit'
     alias gr='git rm --cache'
     alias gi='git init'
     alias clone='git clone'
@@ -19,4 +20,5 @@ if [[ $? -eq 0 ]]; then
     alias checkout='git checkout'
     alias force-push='git commit --amend --no-edit && git push -f'
     alias fp='force-push'
+    alias push-new='git push --set-upstream origin $(git branch --show-current)'
 fi
