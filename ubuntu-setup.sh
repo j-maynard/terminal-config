@@ -62,13 +62,21 @@ show_msg() {
 apt_update() {
     show_msg "Updating the system..."
     sudo apt-get update
+    if [ $VERBOSE == "false" ]; thenexec > /dev/tty                                                         
     sudo apt-get upgrade -y
+    if [ $VERBOSE == "false" ]; then 
+        exec > /dev/null
+    fi
 }
 
 pkcon_update() {
     show_msg "Updating the system..."
     sudo apt-get update
+    exec > /dev/tty
     sudo pkcon update -y --allow-downgrades
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/null
+    fi
 }
 
 apt_install() {
@@ -136,7 +144,11 @@ apt_install() {
     if [ $VERBOSE == 'true' ]; then
 	    show_msg "sudo apt-get install ${PKGS[@]}"
     fi
+    exec > /dev/tty
     sudo apt-get install -y ${PKGS[@]}
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/null
+    fi
 }
 
 setup_openrazer() {
@@ -168,7 +180,11 @@ install_kvantum() {
 }
 
 setup_obs() {
+    exec > /dev/tty
     sudo ubuntu-drivers autoinstall
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/null
+    fi
     sudo add-apt-repository -y ppa:obsproject/obs-studio
     sudo apt-get install -y obs-studio
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
@@ -286,10 +302,8 @@ install_virtualbox() {
 
 snap_install() {
     show_msg "Installing the following packages from snap:"
-    show_msg "1Password"
     show_msg "Authy"
     show_msg "Insomnia"
-    show_msg "Slack"
     show_msg "ncspot"
     show_msg "yq"
 
@@ -653,6 +667,7 @@ done
 if [ $VERBOSE == "false" ]; then
     echo "Silencing output"
     GITQUITET="-q"
+    exec > /dev/tty
     exec > /dev/null 
 fi
 
@@ -678,7 +693,7 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     snap_install
     setup_flatpak
     install_chrome
-    #install_1password
+    install_1password
     install_inkscape
     install_discord
     install_kvantum
