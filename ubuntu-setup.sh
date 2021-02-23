@@ -62,13 +62,26 @@ show_msg() {
 apt_update() {
     show_msg "Updating the system..."
     sudo apt-get update
+    
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/tty
+    fi
+
     sudo apt-get upgrade -y
+    
+    if [ $VERBOSE == "false" ]; then 
+        exec > /dev/null
+    fi
 }
 
 pkcon_update() {
     show_msg "Updating the system..."
     sudo apt-get update
+    exec > /dev/tty
     sudo pkcon update -y --allow-downgrades
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/null
+    fi
 }
 
 apt_install() {
@@ -136,7 +149,11 @@ apt_install() {
     if [ $VERBOSE == 'true' ]; then
 	    show_msg "sudo apt-get install ${PKGS[@]}"
     fi
+    exec > /dev/tty
     sudo apt-get install -y ${PKGS[@]}
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/null
+    fi
 }
 
 setup_openrazer() {
@@ -168,7 +185,11 @@ install_kvantum() {
 }
 
 setup_obs() {
+    exec > /dev/tty
     sudo ubuntu-drivers autoinstall
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/null
+    fi
     sudo add-apt-repository -y ppa:obsproject/obs-studio
     sudo apt-get install -y obs-studio
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
@@ -240,7 +261,6 @@ setup_flatpak() {
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
     sudo flatpak install -y flathub org.gnome.Geary
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Materia-dark-compact
-    sudo flatpak install -y flathub org.kde.kontact
 }
 
 install_layan() {
@@ -287,21 +307,11 @@ install_virtualbox() {
 
 snap_install() {
     show_msg "Installing the following packages from snap:"
-    show_msg "1Password"
     show_msg "Authy"
     show_msg "Insomnia"
-    show_msg "Slack"
     show_msg "ncspot"
     show_msg "yq"
 
-    if ! which authy > /dev/null; then
-        sudo snap install authy --beta
-    fi
-
-    if ! which slack > /dev/null; then
-        sudo snap install slack --classic
-    fi
-    
     if ! which insomnia > /dev/null; then
         sudo snap install insomnia
     fi
@@ -316,10 +326,6 @@ snap_install() {
     
     if ! which yq > /dev/null; then
         sudo snap install yq
-    fi
-
-    if ! which 1password > /dev/null; then
-	sudo snap install 1password --edge
     fi
 }
 
@@ -585,7 +591,7 @@ setup_shims() {
 }
 
 install_nerd_fonts() {
-    if [ $THEME_ONLY == 'true' ]; then
+    if [[ $THEME_ONLY == 'true' ]]; then
         show_msg "${red}Please make sure you have Nerd Font installed on your system.${normal}"
         return
     fi
@@ -666,6 +672,7 @@ done
 if [ $VERBOSE == "false" ]; then
     echo "Silencing output"
     GITQUITET="-q"
+    exec > /dev/tty
     exec > /dev/null 
 fi
 
@@ -691,7 +698,7 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     snap_install
     setup_flatpak
     install_chrome
-    #install_1password
+    install_1password
     install_inkscape
     install_discord
     install_kvantum
