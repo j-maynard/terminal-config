@@ -62,8 +62,13 @@ show_msg() {
 apt_update() {
     show_msg "Updating the system..."
     sudo apt-get update
-    if [ $VERBOSE == "false" ]; thenexec > /dev/tty                                                         
+    
+    if [ $VERBOSE == "false" ]; then
+        exec > /dev/tty
+    fi
+
     sudo apt-get upgrade -y
+    
     if [ $VERBOSE == "false" ]; then 
         exec > /dev/null
     fi
