@@ -1,5 +1,9 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhistcnt =4
+let g:netrw_dirhistcnt =8
+let g:netrw_dirhist_8='/home/jamiemaynard/Development/Verify/verify-local-startup/data/stub-fed-config/idps'
+let g:netrw_dirhist_7='/home/jamiemaynard/Development/Verify/verify-local-startup/data/stub-fed-config'
+let g:netrw_dirhist_6='/home/jamiemaynard/Development/Verify/verify-local-startup/data'
+let g:netrw_dirhist_5='/home/jamiemaynard/Development/Verify/verify-local-startup'
 let g:netrw_dirhist_4='/home/jamesmaynard/Development/Verify/verify-stub-idp/stub-idp'
 let g:netrw_dirhist_3='/home/jamesmaynard/Development/Verify/ida-hub-acceptance-tests'
 let g:netrw_dirhist_2='/home'
