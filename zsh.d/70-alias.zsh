@@ -36,3 +36,7 @@ alias c='clear'
 ## GDS Aliases
 alias vpn='gds vpn'
 
+## Replace cat with bat
+alias cat='bat'
+alias cata='bat -A'
+alias catp='bat -p'
