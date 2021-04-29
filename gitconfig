@@ -1,7 +1,4 @@
 [user]
-	name = 
-	email = 
-	signingkey = 
 [commit]
 	gpgsign = true
 [alias]
