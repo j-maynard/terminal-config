@@ -87,16 +87,16 @@ pkcon_update() {
 apt_install() {
     show_msg "Installing from apt... "
 
-    apt_pkgs=( "git" "curl" "zsh"  "python3.8-dev" "python3-pip" 
+    apt_pkgs=( "git" "curl" "zsh"  "python3.10-dev" "python3-pip" 
         "build-essential" "jed" "htop" "links" "lynx" "tree" "tmux" 
-        "openjdk-11-jdk" "openjdk-8-jdk" "maven" "vim" "vim-nox"
+        "openjdk-11-jdk" "maven" "vim" "vim-nox"
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
         "pinentry-curses" "libxml2-utils" "apt-transport-https"
-	"neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav" )
+	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav" )
 
-    x_apt_pkgs=( "idle-python3.8" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
+    x_apt_pkgs=( "idle-python3.10" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
-	"gtk2-engines-pixbuf" "lm-sensors" "nvme-cli" "conky-all" )
+	    "gtk2-engines-pixbuf" "lm-sensors" "nvme-cli" "conky-all" )
 
     neon_pkgs=( "openjdk-11-jdk" "default-jdk" "wget" "fonts-liberation" )
 
@@ -250,29 +250,37 @@ install_inkscape() {
 }
 
 install_1password() {
-    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FEF9748469ADBE15DA7CA80AC2D62742012EA22 > /dev/null 2>&1
-    sudo add-apt-repository 'deb [arch=amd64] https://onepassword.s3.amazonaws.com/linux/debian edge main'
-    sudo apt-get install -y 1password
+    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo apt-key add -
+    echo 'deb [arch=amd64] https://downloads.1password.com/linux/debian/amd64 beta main' | sudo tee /etc/apt/sources.list.d/1password-beta.list
+    sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
+    curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol
+    sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
+    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+    sudo apt update && sudo apt-get install -y 1password
 }
 
 setup_flatpak() {
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    sudo flatpak install -y flathub org.gnome.Platform//3.38
+    sudo flatpak install -y flathub org.gnome.Platform//40
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
     sudo flatpak install -y flathub org.gnome.Geary
-    sudo flatpak install -y flathub org.gtk.Gtk3theme.Materia-dark-compact
 }
 
-install_layan() {
+install_qogir_theme() {
+    gsettings set org.gnome.desktop.wm.preferences button-layout appmenu:minimize,maximize,close
     cd /tmp
-    git clone ${GITQUITET} https://github.com/vinceliuice/Layan-gtk-theme.git
-    cd Layan-gtk-theme
-    /tmp/Layan-gtk-theme/install.sh
-    if [ $? ]; then
-    	echo "Layan GTK Theme successfully installed"
-	cd /tmp
-	rm -rf /tmp/Layan-gtk-theme
-    fi
+    git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-kde.git
+    sudo /tmp/Qogir-kde/install.sh
+    git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-theme
+    sudo /tmp/Qogir-theme/install.sh
+    git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-icon-theme.git
+    sudo /tmp/Qogir-icon-theme/install.sh
+    sudo snap connect [other snap]:gtk-3-themes qogir-themes:gtk-3-themes
+    sudo snap connect [other snap]:icon-themes qogir-themes:icon-themes
+    for i in $(snap connections | grep gtk-common-themes:gtk-3-themes | awk '{print $2}'); do sudo snap connect $i orchis-themes:gtk-3-themes; done
+    for i in $(snap connections | grep gtk-common-themes:icon-themes | awk '{print $2}'); do sudo snap connect $i qogir-themes:icon-themes; done
+    ./install.sh -l ubuntu
+    flatpak install flathub org.gtk.Gtk3theme.Qogir-ubuntu-dark
 }
 
 install_docker() {
@@ -308,24 +316,9 @@ install_virtualbox() {
 snap_install() {
     show_msg "Installing the following packages from snap:"
     show_msg "Authy"
-    show_msg "Insomnia"
-    show_msg "ncspot"
-    show_msg "yq"
-
-    if ! which insomnia > /dev/null; then
-        sudo snap install insomnia
-    fi
 
     if ! which authy > /dev/null; then
         sudo snap install authy --beta
-    fi
-
-    if ! which ncspot > /dev/null; then
-        sudo snap install ncspot
-    fi
-    
-    if ! which yq > /dev/null; then
-        sudo snap install yq
     fi
 }
 
@@ -400,81 +393,157 @@ install_xidel() {
     fi
 }
 
+install_feedparser() {
+    if [[ $FEEDPASER == "false" ]]; then
+        pip install feedparser > /dev/null 2>&1
+        export FEEDPASER=true
+    fi
+}
+
+get_version() {
+    echo -e "import feedparser\nd=feedparser.parse('$1')\nprint(d.entries[0].title)\n" | python3 -
+}
+
+install_yq() {
+    install_feedparser
+    YQVER=$(get_version https://github.com/mikefarah/yq/releases.atom | cut -d ' ' -f 1)
+    case $(uname -m) in
+        x86_64)     ARCH=amd64
+                    ;;
+        *)          echo "${red}yq only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return
+    esac
+    show_msg "Installing the latest version of yq -> version: ${YQVER}..."
+    wget -q -O /tmp/yq_linux_amd64.tar.gz "https://github.com/mikefarah/yq/releases/download/${YQVER}/yq_linux_amd64.tar.gz"
+    if [ ! -f "yq_linux_amd64.tar.gz" ]; then
+        show_msg "${red}Failed to download yq... ${normal}${green}Skipping install...${normal}"
+        return
+    fi
+    tar -zxf yq_linux_amd64.tar.gz
+    sudo mv yq_linux_amd64 /usr/local/bin/yq
+    if which yq > /dev/null; then
+        rm yq_linux_amd64.tar.gz
+    else
+        show_msg "Failed to install ncspot Spotify Client"
+    fi
+}
+
+install_bat() {
+    install_feedparser
+    BATVER=$(get_version https://github.com/sharkdp/bat/releases.atom |cut -d 'v' -f 2)
+    case $(uname -m) in
+        x86_64)     ARCH=amd64
+                    ;;
+        arm64)      ARCH=arm64
+                    ;;
+        armhf)      ARCH=armhf
+                    ;;
+        *)          echo "${red}Can't identify Arch to match to an bat download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return
+    esac
+    show_msg "Installing the latest version of bat -> version: ${BATVER}..."
+
+    wget -q -O /tmp/bat_${BATVER}_${ARCH}.deb "https://github.com/sharkdp/bat/releases/download/v${BATVER}/bat_${BATVER}_${ARCH}.deb"
+    if [ ! -f "/tmp/bat_${BATVER}_${ARCH}.deb" ]; then
+        show_msg "${red}Failed to download bat... ${normal}${green}Skipping install...${normal}"
+        return
+    fi
+    sudo dpkg -i /tmp/bat_${BATVER}_${ARCH}.deb > /dev/null 2&>1
+    if which bat > /dev/null; then
+        rm /tmp/bat_${BATVER}_${ARCH}.deb
+    else
+        show_msg "Failed to install bat the cat clone with wings"
+    fi
+}
+
+install_ncspot() {
+    install_feedparser
+    SPOTVER=$(get_version https://github.com/hrkfdn/ncspot/releases.atom)
+    case $(uname -m) in
+        x86_64)     ARCH=amd64
+                    ;;
+        *)          echo "${red}ncspot only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return
+    esac
+    show_msg "Installing the latest version of nvspot -> version: ${SPOTVER}..."
+    wget -q -O /tmp/ncspot-${SPOTVER}-linux.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/${SPOTVER}/ncspot-${SPOTVER}-linux.tar.gz"
+    if [ ! -f "/tmp/ncspot-${SPOTVER}-linux.tar.gz" ]; then
+        show_msg "${red}Failed to download ncspot... ${normal}${green}Skipping install...${normal}"
+        return
+    fi
+    tar -zxf /tmp/ncspot-${SPOTVER}-linux.tar.gz
+    sudo mv /tmp/ncspot /usr/local/bin
+    if which ncspot > /dev/null; then
+        rm ncspot-${SPOTVER}-linux.tar.gz
+    else
+        show_msg "Failed to install ncspot Spotify Client"
+    fi
+}
+
 install_lsd() {
-    install_xidel
-    if which xidel; then
-        LSDVER=$(curl -s https://github.com/Peltoche/lsd/tags.atom | xidel -se '//feed/entry[1]/title' - | cut -d' ' -f2)
-        case $(uname -m) in
-            x86_64)     ARCH=amd64
-                        ;;
-            armv6l)     ARCH=armv6l
-                        ;;
-            *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
-                        return
-        esac
-        show_msg "Installing the latest version of LSD -> version: ${LSDVER}..."
-        wget -q -O /tmp/lsd_${LSDVER}_${ARCH}.deb "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
-        if [ ! -f "lsd_${LSDVER}_${ARCH}.deb" ]; then
-            show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
-            return
-        fi
-        sudo dpkg -i /tmp/lsd_${LSDVER}_${ARCH}.deb
-        if which lsd; then
-            rm /tmp/lsd_${LSDVER}_${ARCH}.deb
-        else
-            show_msg "Failed to install ls replacement lsd"
-	fi
+    install_feedparser
+    LSDVER=$(get_version https://github.com/Peltoche/lsd/tags.atom)
+    case $(uname -m) in
+        x86_64)     ARCH=amd64
+                    ;;
+        armv6l)     ARCH=armv6l
+                    ;;
+        *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return
+    esac
+    show_msg "Installing the latest version of LSD -> version: ${LSDVER}..."
+    wget -q -O /tmp/lsd_${LSDVER}_${ARCH}.deb "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
+    if [ ! -f "lsd_${LSDVER}_${ARCH}.deb" ]; then
+        show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
+        return
+    fi
+    sudo dpkg -i /tmp/lsd_${LSDVER}_${ARCH}.deb
+    if which lsd; then
+        rm /tmp/lsd_${LSDVER}_${ARCH}.deb
+    else
+        show_msg "Failed to install ls replacement lsd"
     fi
 }
 
 install_go() {
-    install_xidel
-    if which xidel; then
-	COUNT=1
-        while true; do
-		GOVER=$(curl -s https://github.com/golang/go/releases.atom | xidel -se "//feed/entry[$COUNT]/link/@href" - | grep -o '[^/]*$')
-		if [[ $GOVER = *beta* ]]; then
-			COUNT=$((COUNT+1))
-		else
-			break
-		fi
-	done
-        if [ -d /usr/local/go ]; then
-            if [ -f /usr/local/go/bin/go ]; then
+    install_feedparser
+    GOVER=$(get_version https://github.com/golang/go/releases.atom |cut -d ' ' -f 2)
+    if [ -d /usr/local/go ]; then
+        if [ -f /usr/local/go/bin/go ]; then
             if [ $(/usr/local/go/bin/go version | cut -d' ' -f3) ==  $GOVER ]; then
                 show_msg "${green}Latest Version of Go (${GOVER} is already installed.${normal}  Skipping go install..."
                 return
             fi
         fi
-        fi
-        case $(uname -m) in
-            x86_64)     ARCH=amd64
-                        ;;
-            armv6l)     ARCH=armv6l
-                        ;;
-            *)          show_msg "${red}Can't identify Arch to match to a Go download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
-                        return
-        esac
-        show_msg "Installing the latest version of Go -> version: ${GOVER}..."
-        wget -q https://dl.google.com/go/${GOVER}.linux-${ARCH}.tar.gz
-        if [ ! -f "${GOVER}.linux-${ARCH}.tar.gz" ]; then
-            show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
-            return
-        fi
-        if [ -d "/usr/local/go" ]; then
-            sudo rm -rf /usr/local/go
-        fi
-        sudo tar -zxf /tmp/${GOVER}.linux-amd64.tar.gz --directory /usr/local/
-        rm ${GOVER}.linux-amd64.tar.gz
-        if [[ -f "/usr/local/bin/go" ]]; then
-            sudo rm /usr/local/bin/go
-        fi
-        if [[ -f "/usr/local/bin/gofmt" ]]; then
-            sudo rm /usr/local/bin/gofmt
-        fi
-        sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
-        sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
     fi
+
+    case $(uname -m) in
+        x86_64)     ARCH=amd64
+                    ;;
+        armv6l)     ARCH=armv6l
+                    ;;
+        *)          show_msg "${red}Can't identify Arch to match to a Go download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return
+    esac
+    show_msg "Installing the latest version of Go -> version: ${GOVER}..."
+    wget -q -O /tmp/${GOVER}.linux-${ARCH}.tar.gz https://dl.google.com/go/${GOVER}.linux-${ARCH}.tar.gz
+    if [ ! -f "/tmp/${GOVER}.linux-${ARCH}.tar.gz" ]; then
+        show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
+        return
+    fi
+    if [ -d "/usr/local/go" ]; then
+        sudo rm -rf /usr/local/go
+    fi
+    sudo tar -zxf /tmp/${GOVER}.linux-amd64.tar.gz --directory /usr/local/
+    rm ${GOVER}.linux-amd64.tar.gz
+    if [[ -f "/usr/local/bin/go" ]]; then
+        sudo rm /usr/local/bin/go
+    fi
+    if [[ -f "/usr/local/bin/gofmt" ]]; then
+        sudo rm /usr/local/bin/gofmt
+    fi
+    sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
+    sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 }
 
 install_antibody() {
@@ -503,11 +572,17 @@ fix_sddm() {
     fi
 }
 
+install_nvidia_modules_to_initramfs() {
+    if lspci |grep NVIDIA > /dev/null; then
+        echo -e "nvidia\nnvidia_modeset\nnvidia_uvm\nnvidia_drm" | sudo tee -a /etc/initramfs-tools/modules
+    fi
+}
+
 fix-update-grub() {
 	# Install Grub Theme
 	# TODO Make own GRUB theme for the Razer Blade	
 	t=/tmp/grub2-theme2
-	git clone ${GITQUITET} https://github.com/vinceliuice/grub2-themes.git $t
+	git clone ${GIT_QUIET} https://github.com/vinceliuice/grub2-themes.git $t
         if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
             R4K='-4'
         fi
@@ -635,6 +710,7 @@ VERBOSE=false
 PRIVATE=false
 WSL=false
 NEON=false
+FEEDPASER=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
@@ -671,7 +747,7 @@ done
 # Silence output
 if [ $VERBOSE == "false" ]; then
     echo "Silencing output"
-    GITQUITET="-q"
+    GIT_QUIET="-q"
     exec > /dev/tty
     exec > /dev/null 
 fi
@@ -693,6 +769,11 @@ setup_wsl
 install_con_fonts
 setup_shims
 install_docker
+install_feedparser
+install_yq
+install_bat
+install_xidel
+install_ncspot
 
 if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     snap_install
@@ -702,14 +783,16 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     install_inkscape
     install_discord
     install_kvantum
-    install_layan
+    install_qogir_theme
     fix_sddm
 fi
 
-setup_openrazer
+# Disabled while I wait for better support for the BlackWidow and Naga pro
+#setup_openrazer
 if [[ $STREAMING == "true" ]]; then
     setup_obs
 fi
+install_nvidia_modules_to_initramfs
 fix-update-grub
 
 if [[ $COMMANDLINE_ONLY == "false" ]]; then
