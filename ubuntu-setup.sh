@@ -305,8 +305,8 @@ install_vscode() {
 install_docker() {
     show_msg "Installing Docker Community Edition..."
     curl -fsSLo /tmp/docker.key https://download.docker.com/linux/ubuntu/gpg
-    sudo apt-key add /tmp/docker.key && rm /tmp/docker.key
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    sudo apt-key add -y /tmp/docker.key && rm /tmp/docker.key
+    sudo add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io
     if [ $? ]; then
         show_msg "Docker installed successfully"
@@ -326,7 +326,7 @@ install_libreoffice() {
     sudo apt-get remove -y --purge libreoffice*
     sudo apt-get clean -y
     sudo apt-get autoremove -y
-    sudo add-apt-repository ppa:libreoffice/ppa
+    sudo add-apt-repository -y ppa:libreoffice/ppa
     sudo apt-get update
     sudo apt-get install -y libreoffice
 }
@@ -398,7 +398,7 @@ install_1password() {
     if ! which 1password > /dev/null; then
         show_msg "Installing 1password (Beta)..."
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FEF9748469ADBE15DA7CA80AC2D62742012EA22
-        sudo add-apt-repository 'deb [arch=amd64] https://onepassword.s3.amazonaws.com/linux/debian edge main'
+        sudo add-apt-repository -y 'deb [arch=amd64] https://onepassword.s3.amazonaws.com/linux/debian edge main'
         sudo apt-get install -y 1password
         if [ $? != 0 ]; then
             show_msg "Failed to install 1password"
@@ -408,7 +408,7 @@ install_1password() {
 
 install_typora() {
     wget -qO - https://typora.io/linux/public-key.asc | sudo apt-key add -
-    sudo add-apt-repository 'deb https://typora.io/linux ./'
+    sudo add-apt-repository -y 'deb https://typora.io/linux ./'
     sudo apt-get update
     sudo apt-get install -y typora
 }
