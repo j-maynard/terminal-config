@@ -5,7 +5,7 @@ SCRIPT=`realpath -s $0`
 SCRIPTPATH=`dirname $SCRIPT`
 
 if [ -z $GIT_REPO ]; then
-    GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/master"
+    GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/main"
 fi
 
 # Define colors and styles
@@ -92,13 +92,14 @@ apt_install() {
         "openjdk-11-jdk" "maven" "vim" "vim-nox"
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
         "pinentry-curses" "libxml2-utils" "apt-transport-https"
-	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav" )
+	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav"
+        "openjdk-11-jdk" "default-jdk" )
 
     x_apt_pkgs=( "idle-python3.10" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
-	    "gtk2-engines-pixbuf" "lm-sensors" "nvme-cli" "conky-all" )
+	    "gtk2-engines-pixbuf" "lm-sensors" "nvme-cli" "conky-all" "gdebi-core" )
 
-    neon_pkgs=( "openjdk-11-jdk" "default-jdk" "wget" "fonts-liberation" )
+    neon_pkgs=( "wget" "fonts-liberation" )
 
     kde_pkgs=( "kmail" "latte-dock" "umbrello" "kdegames" "kaddressbook"
         "akonadi-backend-postgresql" "akonadi-backend-sqlite" "kleopatra")
@@ -283,6 +284,24 @@ install_qogir_theme() {
     flatpak install flathub org.gtk.Gtk3theme.Qogir-ubuntu-dark
 }
 
+install_vscode() {
+    case $(uname -m) in
+        x86_64)     ARCH=x64
+                    ;;
+        *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return
+    esac
+    cd /tmp
+    wget "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-${ARCH}"
+    mv /tmp/"download?build=stable&os=linux-deb-${ARCH}" vscode.deb
+    sudo dpkg -i /tmp/vscode.deb
+    if which code >/dev/null; then
+        rm vscode.deb
+    else
+        echo "Unable to install Visual Studio Code"
+    fi
+}
+
 install_docker() {
     show_msg "Installing Docker Community Edition..."
     curl -fsSLo /tmp/docker.key https://download.docker.com/linux/ubuntu/gpg
@@ -303,6 +322,15 @@ install_docker() {
     fi
 }
 
+install_libreoffice() {
+    sudo apt-get remove -y --purge libreoffice*
+    sudo apt-get clean -y
+    sudo apt-get autoremove -y
+    sudo add-apt-repository ppa:libreoffice/ppa
+    sudo apt-get update
+    sudo apt-get install -y libreoffice
+}
+
 install_virtualbox() {
     show_msg "Installing Oracle Virtual Box..."
     dist=$(lsb_release -c | cut -d':' -f 2 | tr -d '[:space:]')
@@ -313,12 +341,20 @@ install_virtualbox() {
     sudo apt-get install -y $pkg
 }
 
-snap_install() {
+install_snaps() {
     show_msg "Installing the following packages from snap:"
     show_msg "Authy"
+    show_msg "Journey"
+    show_msg "Todoist"
 
     if ! which authy > /dev/null; then
         sudo snap install authy --beta
+    fi
+    if ! which todoist > /dev/null; then
+        sudo snap install todoist
+    fi
+    if ! which journey > /dev/null; then
+        sudo snap install journey
     fi
 }
 
@@ -339,6 +375,13 @@ install_chrome() {
     fi
 }
 
+install_github_desktop() {
+    wget -qO - https://packagecloud.io/shiftkey/desktop/gpgkey | sudo tee /etc/apt/trusted.gpg.d/shiftkey-desktop.asc > /dev/null
+    sudo sh -c 'echo "deb [arch=amd64] https://packagecloud.io/shiftkey/desktop/any/ any main" > /etc/apt/sources.list.d/packagecloud-shiftky-desktop.list'
+    sudo apt-get update
+    sudo apt-get install -y github-desktop
+}
+
 install_spotify() {
     show_msg "Installing Spotify Client..."
     if ! which spotify > /dev/null; then
@@ -356,11 +399,18 @@ install_1password() {
         show_msg "Installing 1password (Beta)..."
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FEF9748469ADBE15DA7CA80AC2D62742012EA22
         sudo add-apt-repository 'deb [arch=amd64] https://onepassword.s3.amazonaws.com/linux/debian edge main'
-        sudo apt install 1password
+        sudo apt-get install -y 1password
         if [ $? != 0 ]; then
             show_msg "Failed to install 1password"
         fi
     fi 
+}
+
+install_typora() {
+    wget -qO - https://typora.io/linux/public-key.asc | sudo apt-key add -
+    sudo add-apt-repository 'deb https://typora.io/linux ./'
+    sudo apt-get update
+    sudo apt-get install -y typora
 }
 
 install_discord() {
@@ -776,13 +826,18 @@ install_xidel
 install_ncspot
 
 if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
-    snap_install
+    install_snaps
     setup_flatpak
     install_chrome
     install_1password
     install_inkscape
     install_discord
+    install_vscode
+    install_github_desktop
     install_kvantum
+    install_virtualbox
+    install_typora
+    install_libreoffice
     install_qogir_theme
     fix_sddm
 fi
