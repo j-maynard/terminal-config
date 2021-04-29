@@ -51,8 +51,8 @@ usage() {
 }
 
 version() {
-    echo -e "Ubuntu Setup Script Version 0.5"
-    echo -e "(c) Jamie Maynard 2020"
+    echo -e "Ubuntu Setup Script Version 0.8"
+    echo -e "(c) Jamie Maynard 2021"
 }
 
 show_msg() {

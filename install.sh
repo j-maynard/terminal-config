@@ -35,7 +35,7 @@ set_username() {
     fi
 }
 
-export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/master"
+export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/main"
 
 usage() {
     echo -e "Usage:"
