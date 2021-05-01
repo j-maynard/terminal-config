@@ -158,13 +158,14 @@ apt_install() {
 
     show_msg "Installing the following packages using apt:"
     echo -e ${pkg_out[@]} | column -t -s "|" > /dev/tty
-    if [ $VERBOSE == 'true' ]; then
-	    show_msg "sudo apt-get install ${PKGS[@]}"
-    fi
-    exec > /dev/tty
-    sudo apt-get install -y ${PKGS[@]}
-    if [ $VERBOSE == "false" ]; then
-        exec > /dev/null
+    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+        exec > /dev/tty
+        sudo apt-get install -y ${PKGS[@]}
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
+    else
+        sudo apt-get install -y ${PKGS[@]}
     fi
 }
 
@@ -172,7 +173,16 @@ setup_openrazer() {
     if lsusb |grep 1532 > /dev/null 2>&1; then
         show_msg "Razer Hardware Detected... Installing OpenRazer..."
         sudo add-apt-repository -y ppa:openrazer/stable
-        sudo apt-get install -y openrazer-meta
+
+        if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+            exec > /dev/tty
+            sudo apt-get install -y openrazer-meta
+            if [ $VERBOSE == "false" ]; then
+                exec > /dev/null
+            fi
+        else
+            sudo apt-get install -y openrazer-meta
+        fi
 
         if [[ $COMMANDLINE_ONLY == "false" ]]; then
             # Add RazerGenie Repo
@@ -199,15 +209,30 @@ install_kvantum() {
 setup_obs() {
     exec > /dev/tty
     show_msg "Streaming selected... Installing Open Braodcase System (OBS)..."
-    sudo ubuntu-drivers autoinstall
-    if [ $VERBOSE == "false" ]; then
-        exec > /dev/null
+    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+        exec > /dev/tty
+        sudo ubuntu-drivers autoinstall
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
+    else
+        sudo ubuntu-drivers autoinstall
     fi
     sudo add-apt-repository -y ppa:obsproject/obs-studio
     if ! curl -Ss -f http://ppa.launchpad.net/obsproject/obs-studio/ubuntu/dists/$(lsb_release -c -s) > /dev/null 2>&1; then
         sed -i "s/$(lsb_release -c -s)/groovy/" /etc/apt/sources.list.d/obsproject-ubuntu-obs-studio-hirsute.list
     fi
-    sudo apt-get install -y obs-studio
+
+    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+        exec > /dev/tty
+        sudo apt-get install -y obs-studio
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
+    else
+        sudo apt-get install -y obs-studio
+    fi
+    
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
     echo 'v4l2loopback' | sudo tee -a /etc/modules 
     echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
@@ -225,7 +250,16 @@ setup_obs() {
 
 setup_streamdeck() {
     show_msg "Installing streamdeck libraries..."
-    sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
+    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+        exec > /dev/tty
+        sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
+    else
+        sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
+    fi
+    
     show_msg "Adding udev rules and reloading"
     sudo usermod -a -G plugdev `whoami`
 
@@ -291,7 +325,7 @@ install_qogir_theme() {
     if [[ $THEME == "false" ]]; then
         return
     fi
-    
+
     show_msg "Setting up Qogir Material Theme..."
     gsettings set org.gnome.desktop.wm.preferences button-layout appmenu:minimize,maximize,close
     cd /tmp
