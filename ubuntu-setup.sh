@@ -56,7 +56,7 @@ version() {
 }
 
 show_msg() {
-    echo -e $1 > /dev/tty
+    echo -e "${bold}${1}${normal}" > /dev/tty
 }
 
 install_feedparser() {
@@ -73,25 +73,28 @@ get_version() {
 apt_update() {
     show_msg "Updating the system..."
     sudo apt-get update
-    
-    if [ $VERBOSE == "false" ]; then
+    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
         exec > /dev/tty
-    fi
-
-    sudo apt-get upgrade -y
-    
-    if [ $VERBOSE == "false" ]; then 
-        exec > /dev/null
+        sudo apt-get upgrade -y
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
+    else
+        sudo apt-get upgrade -y
     fi
 }
 
 pkcon_update() {
     show_msg "Updating the system..."
     sudo apt-get update
-    exec > /dev/tty
-    sudo pkcon update -y --allow-downgrades
-    if [ $VERBOSE == "false" ]; then
-        exec > /dev/null
+    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+        exec > /dev/tty
+        sudo pkcon update -y --allow-downgrades
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
+    else
+        sudo pkcon update -y --allow-downgrades
     fi
 }
 
@@ -134,8 +137,8 @@ apt_install() {
                 PKGS="${PKGS} ${pkg} "
             done
         fi
-	sudo usermod -a -G disk `whoami`
-	sudo usermod -a -G users `whoami`
+        sudo usermod -a -G disk `whoami`
+        sudo usermod -a -G users `whoami`
     fi
 
     if [[ $STREAMING == "true" ]]; then
@@ -169,331 +172,43 @@ apt_install() {
     fi
 }
 
-setup_openrazer() {
-    if lsusb |grep 1532 > /dev/null 2>&1; then
-        show_msg "Razer Hardware Detected... Installing OpenRazer..."
-        sudo add-apt-repository -y ppa:openrazer/stable
-
-        if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
-            exec > /dev/tty
-            sudo apt-get install -y openrazer-meta
-            if [ $VERBOSE == "false" ]; then
-                exec > /dev/null
-            fi
-        else
-            sudo apt-get install -y openrazer-meta
-        fi
-
-        if [[ $COMMANDLINE_ONLY == "false" ]]; then
-            # Add RazerGenie Repo
-            echo 'deb http://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/hardware-razer.list
-            curl -LSso /tmp/razergenie.key https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key
-            sudo apt-key add /tmp/razergenie.key
-            # Add Polychromatic Repo
-            sudo add-apt-repository -y ppa:polychromatic/stable
-            # Install Both
-            sudo apt-get update
-            sudo apt-get install -y polychromatic razergenie
-        fi
-    fi
+install_antibody() {
+	which antibody
+	if [ $? != 0 ]; then
+	    show_msg "Installing antibody..."
+	    curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
+	fi
 }
 
-install_kvantum() {
-    if which plasmashell > /dev/null; then
-        sudo add-apt-repository -y ppa:papirus/papirus
-        sudo apt-get update
-        sudo apt-get install -y qt5-style-kvantum qt5-style-kvantum-themes
-    fi
+change_shell() {
+	if [[ $(awk -F: '/${USERNAME}/ {print $7}' /etc/passwd) != "/bin/zsh" ]]; then
+	    show_msg "Changing shells to ZSH..."
+	    sudo chsh -s /bin/zsh $USERNAME
+	fi
 }
 
-setup_obs() {
-    exec > /dev/tty
-    show_msg "Streaming selected... Installing Open Braodcase System (OBS)..."
-    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
-        exec > /dev/tty
-        sudo ubuntu-drivers autoinstall
-        if [ $VERBOSE == "false" ]; then
-            exec > /dev/null
-        fi
-    else
-        sudo ubuntu-drivers autoinstall
-    fi
-    sudo add-apt-repository -y ppa:obsproject/obs-studio
-    if ! curl -Ss -f http://ppa.launchpad.net/obsproject/obs-studio/ubuntu/dists/$(lsb_release -c -s) > /dev/null 2>&1; then
-        sed -i "s/$(lsb_release -c -s)/groovy/" /etc/apt/sources.list.d/obsproject-ubuntu-obs-studio-hirsute.list
-    fi
-
-    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
-        exec > /dev/tty
-        sudo apt-get install -y obs-studio
-        if [ $VERBOSE == "false" ]; then
-            exec > /dev/null
-        fi
-    else
-        sudo apt-get install -y obs-studio
-    fi
-    
-    sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
-    echo 'v4l2loopback' | sudo tee -a /etc/modules 
-    echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf
-    wget -q -O /tmp/obs-v4l2sink.deb https://github.com/CatxFish/obs-v4l2sink/releases/download/0.1.0/obs-v4l2sink.deb
-    sudo dpkg -i /tmp/obs-v4l2sink.deb
-    if lsusb |grep 0fd9:006d > /dev/null; then
-        setup_streamdeck
-    else
-        show_msg "If this system will be used with streamdeck you'll"
-        show_msg "need to run the streamdeck setup script"
-    fi
-    install_steam
-    install_minecraft
-}
-
-setup_streamdeck() {
-    show_msg "Installing streamdeck libraries..."
-    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
-        exec > /dev/tty
-        sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
-        if [ $VERBOSE == "false" ]; then
-            exec > /dev/null
-        fi
-    else
-        sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
-    fi
-    
-    show_msg "Adding udev rules and reloading"
-    sudo usermod -a -G plugdev `whoami`
-
-    sudo tee /etc/udev/rules.d/99-streamdeck.rules << EOF
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", MODE:="666", GROUP="plugdev"
-EOF
-
-    sudo udevadm control --reload-rules
-
-    show_msg "Unplug and replug in device for the new udev rules to take effect"
-    show_msg "Installing streamdeck_ui..."
-    pip3 install --user streamdeck_ui
-    if [ $? == 0 ]; then
-        show_msg "StreamDeck-UI Installed"
-    else
-        show_msg "Something went wrong installing StreamDeck-Ui"
-    fi
-}
-
-install_steam() {
-    show_msg "Installing Steam..."
-    sudo apt-get install -y zenity zenity-common
-    wget -O /tmp/steam.deb https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb
-    sudo dpkg -i /tmp/steam.deb
-}
-
-install_minecraft() {
-    show_msg "Installing Minecraft..."
-    wget -O /tmp/minecraft.deb https://launcher.mojang.com/download/Minecraft.deb
-    sudo dpkg -i /tmp/minecraft.deb
-}
-
-install_inkscape() {
-    show_msg "Installing Inkscape..."
-    sudo add-apt-repository -y ppa:inkscape.dev/stable
-    sudo apt-get update
-    sudo apt-get install -y inkscape
-}
-
-install_1password() {
-    show_msg "Installing 1Password..."
-    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo apt-key add -
-    echo 'deb [arch=amd64] https://downloads.1password.com/linux/debian/amd64 beta main' | sudo tee /etc/apt/sources.list.d/1password-beta.list
-    sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
-    curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol
-    sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
-    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
-    sudo apt update && sudo apt-get install -y 1password
-}
-
-setup_flatpak() {
-    show_msg "Setting up Flatpak and installing Geary..."
-    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    sudo flatpak install -y flathub org.gnome.Platform//40
-    sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
-    sudo flatpak install -y flathub org.gnome.Geary
-}
-
-install_qogir_theme() {
-    if [[ $THEME == "false" ]]; then
-        return
-    fi
-
-    show_msg "Setting up Qogir Material Theme..."
-    gsettings set org.gnome.desktop.wm.preferences button-layout appmenu:minimize,maximize,close
-    cd /tmp
-    git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-kde.git
-    sudo /tmp/Qogir-kde/install.sh
-    git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-theme
-    sudo /tmp/Qogir-theme/install.sh
-    git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-icon-theme.git
-    sudo /tmp/Qogir-icon-theme/install.sh
-    
-    sudo snap connect [other snap]:gtk-3-themes qogir-themes:gtk-3-themes
-    sudo snap connect [other snap]:icon-themes qogir-themes:icon-themes
-    for i in $(snap connections | grep gtk-common-themes:gtk-3-themes | awk '{print $2}'); do sudo snap connect $i orchis-themes:gtk-3-themes; done
-    for i in $(snap connections | grep gtk-common-themes:icon-themes | awk '{print $2}'); do sudo snap connect $i qogir-themes:icon-themes; done
-    ./install.sh -l ubuntu
-    flatpak install flathub org.gtk.Gtk3theme.Qogir-ubuntu-dark
-}
-
-install_vscode() {
-    show_msg "Installing Visual Studio Code..."
+install_lsd() {
+    install_feedparser
+    LSDVER=$(get_version https://github.com/Peltoche/lsd/tags.atom)
     case $(uname -m) in
-        x86_64)     ARCH=x64
+        x86_64)     ARCH=amd64
+                    ;;
+        armv6l)     ARCH=armv6l
                     ;;
         *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return
     esac
-    cd /tmp
-    wget "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-${ARCH}"
-    mv /tmp/"download?build=stable&os=linux-deb-${ARCH}" vscode.deb
-    sudo dpkg -i /tmp/vscode.deb
-    if which code >/dev/null; then
-        rm vscode.deb
+    show_msg "Installing the latest version of LSD -> version: ${LSDVER}..."
+    wget -q -O /tmp/lsd_${LSDVER}_${ARCH}.deb "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
+    if [ ! -f "lsd_${LSDVER}_${ARCH}.deb" ]; then
+        show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
+        return
+    fi
+    sudo dpkg -i /tmp/lsd_${LSDVER}_${ARCH}.deb
+    if [ $? == 0 ]; then
+        rm /tmp/lsd_${LSDVER}_${ARCH}.deb
     else
-        echo "Unable to install Visual Studio Code"
-    fi
-}
-
-install_docker() {
-    show_msg "Installing Docker Community Edition..."
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-    echo \
-  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    sudo apt-get update
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-    if [ $? ]; then
-        show_msg "Docker installed successfully"
-    fi
-    sudo usermod -a -G docker $USERNAME
-    show_msg "Installing docker-compose..."
-    sudo curl -L "https://github.com/docker/compose/releases/download/1.26.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    if which docker-compose > /dev/null; then
-        show_msg "Docker Compose installed successfully..."
-    else
-        show_msg "Docker Compose install failed... You may need to add /usr/local/bin to your path"
-    fi
-}
-
-install_libreoffice() {
-    show_msg "Removing bundled OpenOffice and installing office OpenOffice..."
-    sudo apt-get remove -y --purge libreoffice*
-    sudo apt-get clean -y
-    sudo apt-get autoremove -y
-    sudo add-apt-repository -y ppa:libreoffice/ppa
-    sudo apt-get update
-    sudo apt-get install -y libreoffice
-}
-
-install_virtualbox() {
-    show_msg "Installing Oracle Virtual Box..."
-    dist=$(lsb_release -c | cut -d':' -f 2 | tr -d '[:space:]')
-    echo "deb [arch=amd64] https://download.virtualbox.org/virtualbox/debian $dist contrib" | sudo tee -a /etc/apt/sources.list
-    curl -Ss https://www.virtualbox.org/download/oracle_vbox_2016.asc | sudo apt-key add -
-    sudo apt-get update
-    pkg=$(apt-cache search virtualbox | grep Oracle |sort -r |head -n1 |cut -d ' ' -f1)
-    sudo apt-get install -y $pkg
-}
-
-install_snaps() {
-    show_msg "Installing the following packages from snap:"
-    show_msg "Authy"
-    show_msg "Journey"
-    show_msg "Todoist"
-
-    if ! which authy > /dev/null; then
-        sudo snap install authy --beta
-    fi
-    if ! which todoist > /dev/null; then
-        sudo snap install todoist
-    fi
-    if ! which journey > /dev/null; then
-        sudo snap install journey
-    fi
-}
-
-install_chrome() {
-    if ! which google-chrome > /dev/null; then
-        show_msg "Installing Google Chrome (Latest)..."
-        wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        if [ ! -f "google-chrome-stable_current_amd64.deb" ]; then
-            show_msg "${red}Failed to download Google Chrome... ${normal}${green}Skipping install...${normal}"
-            return
-        fi
-        sudo dpkg -i google-chrome-stable_current_amd64.deb
-        if [ $? == 0 ]; then
-            rm google-chrome-stable_current_amd64.deb
-        else
-            show_msg "Failed to install chrome"
-        fi
-    fi
-}
-
-install_github_desktop() {
-    show_msg "Installing GitHub Desktop..."
-    wget -qO - https://packagecloud.io/shiftkey/desktop/gpgkey | sudo tee /etc/apt/trusted.gpg.d/shiftkey-desktop.asc > /dev/null
-    sudo sh -c 'echo "deb [arch=amd64] https://packagecloud.io/shiftkey/desktop/any/ any main" > /etc/apt/sources.list.d/packagecloud-shiftky-desktop.list'
-    sudo apt-get update
-    sudo apt-get install -y github-desktop
-}
-
-install_spotify() {
-    show_msg "Installing Spotify Client..."
-    if ! which spotify > /dev/null; then
-        curl -sS https://download.spotify.com/debian/pubkey_0D811D58.gpg | sudo apt-key add - 
-        echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
-        sudo apt-get update && sudo apt-get install spotify-client
-        if [[ $4K == "true" ]]; then
-            sed "s/Exec=spotify %U/Exec=spotify --force-device-scale-factor=1.75 %U/" /usr/local/share/applications/spotify.desktop | sudo tee /usr/local/share/applications/spotify.desktop
-        fi
-    fi
-}
-
-install_typora() {
-    show_msg "Install Typora (Markdown Viewer/Editor)..."
-    wget -qO - https://typora.io/linux/public-key.asc | sudo apt-key add -
-    sudo add-apt-repository -y 'deb https://typora.io/linux ./'
-    sudo apt-get update
-    sudo apt-get install -y typora
-}
-
-install_discord() {
-    if ! which discord; then
-        show_msg "Installing Discord (Latest)..."
-        sudo apt install libappindicator1 libc++1 
-        wget -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
-        sudo dpkg -i /tmp/discord.deb
-        if which discord >/dev/null; then
-            rm /tmp/discord.deb
-        else
-            sudo apt-get --fix-broken install
-            if which discord >/dev/null; then
-                rm /tmp/discord.deb
-                show_msg "Discord installed successfully"
-            else
-                show_msg "Failed to install discord"
-            fi
-        fi
-    fi
-}
-
-install_xidel() {
-    if ! which xidel; then
-        wget -q -O /tmp/xidel_0.9.8-1_amd64.deb https://sourceforge.net/projects/videlibri/files/Xidel/Xidel%200.9.8/xidel_0.9.8-1_amd64.deb/download 
-        if ! sudo dpkg -i xidel_0.9.8-1_amd64.deb; then
-            show_msg "Failed to install xidel"
-        fi
-        rm /tmp/xidel_0.9.8-1_amd64.deb
+        show_msg "Failed to install ls replacement lsd"
     fi
 }
 
@@ -541,8 +256,8 @@ install_bat() {
         show_msg "${red}Failed to download bat... ${normal}${green}Skipping install...${normal}"
         return
     fi
-    sudo dpkg -i /tmp/bat_${BATVER}_${ARCH}.deb > /dev/null 2&>1
-    if which bat > /dev/null; then
+    sudo dpkg -i /tmp/bat_${BATVER}_${ARCH}.deb
+    if [ $? == 0 ]; then
         rm /tmp/bat_${BATVER}_${ARCH}.deb
     else
         show_msg "Failed to install bat the cat clone with wings"
@@ -558,7 +273,7 @@ install_ncspot() {
         *)          echo "${red}ncspot only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return
     esac
-    show_msg "Installing the latest version of nvspot -> version: ${SPOTVER}..."
+    show_msg "Installing the latest version of ncspot -> version: ${SPOTVER}..."
     wget -q -O /tmp/ncspot-${SPOTVER}-linux.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/${SPOTVER}/ncspot-${SPOTVER}-linux.tar.gz"
     if [ ! -f "/tmp/ncspot-${SPOTVER}-linux.tar.gz" ]; then
         show_msg "${red}Failed to download ncspot... ${normal}${green}Skipping install...${normal}"
@@ -573,28 +288,28 @@ install_ncspot() {
     fi
 }
 
-install_lsd() {
+install_xidel() {
     install_feedparser
-    LSDVER=$(get_version https://github.com/Peltoche/lsd/tags.atom)
+    XIVER=$(get_version https://github.com/benibela/xidel/releases.atom | cut -d ' ' -f 2)
     case $(uname -m) in
         x86_64)     ARCH=amd64
                     ;;
-        armv6l)     ARCH=armv6l
-                    ;;
-        *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+        *)          echo "${red}Xidel only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return
     esac
-    show_msg "Installing the latest version of LSD -> version: ${LSDVER}..."
-    wget -q -O /tmp/lsd_${LSDVER}_${ARCH}.deb "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
-    if [ ! -f "lsd_${LSDVER}_${ARCH}.deb" ]; then
-        show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
+    show_msg "Installing the latest version of xidel -> version: ${XIVER}..."
+
+    https://github.com/benibela/xidel/releases/download/Xidel_${XIVER}/xidel_${XIVER}-1_${ARCH}.deb
+    wget -q -O /tmp/xidel_${XIVER}-1_${ARCH}.deb "https://github.com/benibela/xidel/releases/download/Xidel_${XIVER}/xidel_${XIVER}-1_${ARCH}.deb"
+    if [ ! -f "/tmp/xidel_${XIVER}-1_${ARCH}.deb" ]; then
+        show_msg "${red}Failed to download xidel... ${normal}${green}Skipping install...${normal}"
         return
     fi
-    sudo dpkg -i /tmp/lsd_${LSDVER}_${ARCH}.deb
-    if which lsd; then
-        rm /tmp/lsd_${LSDVER}_${ARCH}.deb
+    sudo dpkg -i /tmp/xidel_${XIVER}-1_${ARCH}.deb
+    if [ $? == 0 ]; then
+        rm xidel_${XIVER}-1_${ARCH}.deb
     else
-        show_msg "Failed to install ls replacement lsd"
+        show_msg "Failed to install Xidel XML Parser."
     fi
 }
 
@@ -639,72 +354,6 @@ install_go() {
     sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 }
 
-install_antibody() {
-	which antibody
-	if [ $? != 0 ]; then
-	    show_msg "Installing antibody..."
-	    curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
-	fi
-}
-
-change_shell() {
-	if [[ $(awk -F: '/${USERNAME}/ {print $7}' /etc/passwd) != "/bin/zsh" ]]; then
-	    show_msg "Changing shells to ZSH..."
-	    sudo chsh -s /bin/zsh $USERNAME
-	fi
-}
-
-fix_sddm() {
-    if [[ -f "/usr/share/sddm/scripts/Xsetup" ]]; then
-        show_msg "SDDM present"
-        grep term-config /usr/share/sddm/scripts/Xsetup
-        if [ $? != 0 ]; then
-            show_msg "Updating SDDM XSetup script..."
-            curl -LSs "$GIT_REPO/Xsetup.snippet" | sudo tee -a /usr/share/sddm/scripts/Xsetup
-        fi
-    fi
-}
-
-install_nvidia_modules_to_initramfs() {
-    if lspci |grep NVIDIA > /dev/null; then
-        echo -e "nvidia\nnvidia_modeset\nnvidia_uvm\nnvidia_drm" | sudo tee -a /etc/initramfs-tools/modules
-    fi
-}
-
-fix-update-grub() {
-	# Install Grub Theme
-	# TODO Make own GRUB theme for the Razer Blade
-    show_msg "Installing grub themes..."
-	t=/tmp/grub2-theme2
-	git clone ${GIT_QUIET} https://github.com/vinceliuice/grub2-themes.git $t
-        if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
-            R4K='-4'
-        fi
-	sudo $t/install.sh -b -v -w $R4K > /dev/null 2>&1
-	sudo $t/install.sh -b -s $R4K > /dev/null 2>&1
-	sudo $t/install.sh -b -l $R4K > /dev/null 2>&1
-	sudo $t/install.sh -b -t $R4K > /dev/null 2>&1
-	rm -rf $t
-	# As there is no accurate way to detect Kubuntu from Ubuntu
-	# We look for plasmashell instead and then assume its Kubuntu.
-	if plasmashell --version >/dev/null 2>&1; then
-        show_msg "Updating update grub script to replace Ubuntu with Kubuntu..."
-		cat << EOF | sudo tee - /usr/sbin/update-grub
-#!/bin/sh                                                               
-set -e                                                                  
-grub-mkconfig -o /boot/grub/grub.cfg "\$@"                          
-if plasmashell --version >/dev/null 2>&1; then                          
-        echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2 
-        C=/boot/grub/grub.cfg                                           
-        chmod +w \$C 
-        sed -i 's/ubuntu/kubuntu/' \$C
-        sed -i 's/Ubuntu/Kubuntu/' \$C
-        chmod -w \$C
-fi
-EOF
-	fi
-}
-
 setup_wsl() {
     if [ ! -v WSLENV ]; then
         return
@@ -747,17 +396,413 @@ EOF
     powershell.exe -ExecutionPolicy Bypass c:\\temp\\create-gpg-agent-lnk.ps1
 }
 
+setup_shims() {
+    show_msg "Running jenv/rbenv setup script..."
+    curl -LSs "$GIT_REPO/shim-setup.sh" | bash -s - $VARG
+}
+
+install_docker() {
+    show_msg "Installing Docker Community Edition..."
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo \
+  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+    if [ $? ]; then
+        show_msg "Docker installed successfully"
+    fi
+    sudo usermod -a -G docker $USERNAME
+    show_msg "Installing docker-compose..."
+    sudo curl -SsL "https://github.com/docker/compose/releases/download/1.26.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+    if which docker-compose > /dev/null; then
+        show_msg "Docker Compose installed successfully..."
+    else
+        show_msg "Docker Compose install failed... You may need to add /usr/local/bin to your path"
+    fi
+}
+
+install_snaps() {
+    show_msg "Installing the following packages from snap:"
+    show_msg "Authy"
+    show_msg "Journey"
+    show_msg "Todoist"
+
+    if ! which authy > /dev/null; then
+        sudo snap install authy --beta
+    fi
+    if ! which todoist > /dev/null; then
+        sudo snap install todoist
+    fi
+    if ! which journey > /dev/null; then
+        sudo snap install journey
+    fi
+}
+
+setup_flatpak() {
+    show_msg "Setting up Flatpak..."
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    sudo flatpak install -y flathub org.gnome.Platform//40
+    sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
+    show_msg "Installing Geary using Flatpak..."
+    sudo flatpak install -y flathub org.gnome.Geary
+    if [[ $(lsb_release -c -s) == "hirsute" ]]; then
+        show_msg "Installing Inkscape using Flatpak..."
+        sudo flatpak install -y flathub org.inkscape.Inkscape
+    fi
+}
+
+install_chrome() {
+    if ! which google-chrome > /dev/null; then
+        show_msg "Installing Google Chrome (Latest)..."
+        wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        if [ ! -f "google-chrome-stable_current_amd64.deb" ]; then
+            show_msg "${red}Failed to download Google Chrome... ${normal}${green}Skipping install...${normal}"
+            return
+        fi
+        sudo dpkg -i google-chrome-stable_current_amd64.deb
+        if [ $? == 0 ]; then
+            rm google-chrome-stable_current_amd64.deb
+        else
+            show_msg "Failed to install chrome"
+        fi
+    fi
+}
+
+install_1password() {
+    show_msg "Installing 1Password..."
+    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo apt-key add - > /dev/null 2>&1
+
+    echo 'deb [arch=amd64] https://downloads.1password.com/linux/debian/amd64 beta main' | sudo tee /etc/apt/sources.list.d/1password-beta.list
+    
+    sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
+    curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol
+    sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
+    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+
+    sudo apt-get update
+    sudo apt-get install -y 1password
+}
+
+install_inkscape() {
+    if [[ $(lsb_release -c -s) == "hirsute" ]]; then
+        show_msg "Skipping Inkscape install using PPA, already installed via Flatpak."
+        return
+    fi
+    show_msg "Installing Inkscape..."
+    sudo add-apt-repository -y ppa:inkscape.dev/stable
+    sudo apt-get update
+    sudo apt-get install -y inkscape > /dev/null
+    sudo apt-get install --fix-broken
+}
+
+install_discord() {
+    if ! which discord; then
+        show_msg "Installing Discord (Latest)..."
+        sudo apt-get install -y libappindicator1 libc++1 
+        wget -q -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
+        sudo dpkg -i /tmp/discord.deb
+        if which discord >/dev/null; then
+            rm /tmp/discord.deb
+        else
+            sudo apt-get --fix-broken install
+            if which discord >/dev/null; then
+                rm /tmp/discord.deb
+                show_msg "Discord installed successfully"
+            else
+                show_msg "Failed to install discord"
+            fi
+        fi
+    fi
+}
+
+install_libreoffice() {
+    show_msg "Removing bundled OpenOffice and installing office OpenOffice..."
+    sudo apt-get remove -y --purge libreoffice*
+    sudo apt-get clean -y
+    sudo apt-get autoremove -y
+    sudo add-apt-repository -y ppa:libreoffice/ppa
+    sudo apt-get update
+    sudo apt-get install -y libreoffice
+}
+
+install_vscode() {
+    show_msg "Installing Visual Studio Code..."
+    case $(uname -m) in
+        x86_64)     ARCH=x64
+                    ;;
+        *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return
+    esac
+    cd /tmp
+    wget -q "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-${ARCH}"
+    mv /tmp/"download?build=stable&os=linux-deb-${ARCH}" vscode.deb
+    sudo dpkg -i /tmp/vscode.deb >/dev/null
+    if which code >/dev/null; then
+        rm vscode.deb
+    else
+        echo "Unable to install Visual Studio Code"
+    fi
+}
+
+install_spotify() {
+    show_msg "Installing Spotify Client..."
+    if ! which spotify > /dev/null; then
+        curl -sS https://download.spotify.com/debian/pubkey_0D811D58.gpg | sudo apt-key add - > /dev/null 2>&1
+        echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list > /dev/null
+        sudo apt-get update && sudo apt-get install spotify-client > /dev/null
+        if [[ $4K == "true" ]]; then
+            sed "s/Exec=spotify %U/Exec=spotify --force-device-scale-factor=1.75 %U/" /usr/local/share/applications/spotify.desktop | sudo tee /usr/local/share/applications/spotify.desktop
+        fi
+    fi
+}
+
+install_typora() {
+    show_msg "Install Typora (Markdown Viewer/Editor)..."
+    wget -qO - https://typora.io/linux/public-key.asc | sudo apt-key add - > /dev/null 2>&1
+    sudo add-apt-repository -y 'deb https://typora.io/linux ./'
+    sudo apt-get update > /dev/null
+    sudo apt-get install -y typora  > /dev/null
+}
+
+install_virtualbox() {
+    show_msg "Installing Oracle Virtual Box..."
+    wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add - > /dev/null 2>&1
+    wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add - > /dev/null 2>&1
+    dist=$(lsb_release -c | cut -d':' -f 2 | tr -d '[:space:]')
+    echo "deb [arch=amd64] https://download.virtualbox.org/virtualbox/debian $dist contrib" | sudo tee -a /etc/apt/sources.list
+    sudo apt-get update
+    pkg=$(apt-cache search virtualbox | grep Oracle |sort -r |head -n1 |cut -d ' ' -f1)
+    sudo apt-get install -y $pkg
+}
+
+setup_obs() {
+    exec > /dev/tty
+    show_msg "Streaming selected... Installing Open Braodcase System (OBS)..."
+    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+        exec > /dev/tty
+        sudo ubuntu-drivers autoinstall
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
+    else
+        sudo ubuntu-drivers autoinstall
+    fi
+    sudo add-apt-repository -y ppa:obsproject/obs-studio  > /dev/null 2>&1
+    if ! curl -Ss -f http://ppa.launchpad.net/obsproject/obs-studio/ubuntu/dists/$(lsb_release -c -s) > /dev/null 2>&1; then
+        show_msg "No hirsute release... Falling back to groovy..."
+        sudo sed -i "s/$(lsb_release -c -s)/groovy/" /etc/apt/sources.list.d/obsproject-ubuntu-obs-studio-hirsute.list
+    fi
+    sudo apt-get update > /dev/null
+
+    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+        exec > /dev/tty
+        sudo apt-get install -y obs-studio
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
+    else
+        sudo apt-get install -y obs-studio > /dev/null
+    fi
+    
+    sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
+    echo 'v4l2loopback' | sudo tee -a /etc/modules 
+    echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf > /dev/null
+    wget -q -O /tmp/obs-v4l2sink.deb https://github.com/CatxFish/obs-v4l2sink/releases/download/0.1.0/obs-v4l2sink.deb
+    sudo dpkg -i /tmp/obs-v4l2sink.deb > /dev/null
+    if lsusb |grep 0fd9:006d > /dev/null; then
+        setup_streamdeck
+    else
+        show_msg "If this system will be used with streamdeck you'll need to run the streamdeck setup script"
+    fi
+}
+
+setup_streamdeck() {
+    show_msg "Installing streamdeck libraries..."
+    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+        exec > /dev/tty
+        sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
+    else
+        sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
+    fi
+    
+    show_msg "Adding udev rules and reloading"
+    sudo usermod -a -G plugdev `whoami`
+
+    sudo tee /etc/udev/rules.d/99-streamdeck.rules << EOF
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", MODE:="666", GROUP="plugdev"
+EOF
+
+    sudo udevadm control --reload-rules
+
+    show_msg "Unplug and replug in device for the new udev rules to take effect"
+    show_msg "Installing streamdeck_ui..."
+    pip3 install --user streamdeck_ui
+    if [ $? == 0 ]; then
+        show_msg "StreamDeck-UI Installed"
+    else
+        show_msg "Something went wrong installing StreamDeck-Ui"
+    fi
+}
+
+install_steam() {
+    show_msg "Installing Steam..."
+    sudo apt-get install -y zenity zenity-common > /dev/null 2>&1
+    wget -qO /tmp/steam.deb https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb
+    sudo dpkg -i /tmp/steam.deb > /dev/null
+}
+
+install_minecraft() {
+    show_msg "Installing Minecraft..."
+    wget -qO /tmp/minecraft.deb https://launcher.mojang.com/download/Minecraft.deb
+    sudo dpkg -i /tmp/minecraft.deb > /dev/null
+}
+
+fix_sddm() {
+    if [[ -f "/usr/share/sddm/scripts/Xsetup" ]]; then
+        show_msg "SDDM present"
+        grep term-config /usr/share/sddm/scripts/Xsetup
+        if [ $? != 0 ]; then
+            show_msg "Updating SDDM XSetup script..."
+            curl -LSs "$GIT_REPO/Xsetup.snippet" | sudo tee -a /usr/share/sddm/scripts/Xsetup >/dev/null
+        fi
+    fi
+}
+
+install_kvantum() {
+    if which plasmashell > /dev/null; then
+        show_msg "Installing Kvantum Plasma theme manager..."
+        sudo add-apt-repository -y ppa:papirus/papirus > /dev/null 2>&1
+        if ! curl -Ss -f http://ppa.launchpad.net/papirus/papirus/ubuntu/dists/$(lsb_release -c -s) > /dev/null 2>&1; then
+            show_msg "No hirsute release... Falling back to groovy..."
+            sudo sed -i "s/$(lsb_release -c -s)/groovy/" /etc/apt/sources.list.d/papirus-ubuntu-papirus-$(lsb_release -c -s).list
+        fi
+        sudo apt-get update > /dev/null
+        sudo apt-get install -y qt5-style-kvantum qt5-style-kvantum-themes > /dev/null
+    fi
+}
+
+install_virtual_desktop_bar() {
+    if which plasmashell > /dev/null; then
+        show_msg "Installing Virtual Desktop Bar plasmoid..."
+        sudo apt-get install -y cmake extra-cmake-modules g++ qtbase5-dev qtdeclarative5-dev libqt5x11extras5-dev libkf5plasma-dev libkf5globalaccel-dev libkf5xmlgui-dev > /dev/null
+        git clone -q https://github.com/wsdfhjxc/virtual-desktop-bar.git /tmp/virtual-desktop-bar
+        cd /tmp/virtual-desktop-bar
+        ./scripts/build-applet.sh > /dev/null 
+        ./scripts/install-applet.sh > /dev/null
+    fi
+}
+
+install_custom_panel() {
+    if which plasmashell > /dev/null; then
+        show_msg "Installing custom HUD Panel..."
+        git clone -q https://github.com/j-maynard/kde-panels /tmp/kde-panels
+        cd /tmp/kde-panels/panels
+        kpackagetool5 -t Plasma/LayoutTemplate --install org.kde.plasma.desktop.hudPanel
+    fi
+}
+
+install_qogir_theme() {
+    show_msg "Setting up Qogir Material Theme..."
+    mkdir -p ~/.local/share/plasma/plasmoids
+    gsettings set org.gnome.desktop.wm.preferences button-layout appmenu:minimize,maximize,close
+    cd /tmp
+    git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-kde.git
+    /tmp/Qogir-kde/install.sh > /dev/null
+    git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-theme
+    /tmp/Qogir-theme/install.sh > /dev/null
+    /tmp/Qogir-theme/install.sh -l ubuntu > /dev/null
+    git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-icon-theme.git
+    /tmp/Qogir-icon-theme/install.sh > /dev/null
+    sudo snap install qogir-themes > /dev/null
+    for i in $(snap connections | grep gtk-common-themes:gtk-3-themes | awk '{print $2}'); do sudo snap connect $i qogir-themes:gtk-3-themes; done
+    for i in $(snap connections | grep gtk-common-themes:icon-themes | awk '{print $2}'); do sudo snap connect $i qogir-themes:icon-themes; done
+    sudo flatpak install -y flathub org.gtk.Gtk3theme.Qogir-ubuntu-dark/x86_64/3.34
+    sudo flatpak override --filesystem=~/.themes
+}
+
+setup_openrazer() {
+    if lsusb |grep 1532 > /dev/null 2>&1; then
+        show_msg "Razer Hardware Detected... Installing OpenRazer..."
+        sudo add-apt-repository -y ppa:openrazer/stable
+
+        if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+            exec > /dev/tty
+            sudo apt-get install -y openrazer-meta
+            if [ $VERBOSE == "false" ]; then
+                exec > /dev/null
+            fi
+        else
+            sudo apt-get install -y openrazer-meta
+        fi
+
+        if [[ $COMMANDLINE_ONLY == "false" ]]; then
+            # Add RazerGenie Repo
+            echo 'deb http://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/hardware-razer.list
+            curl -LSso /tmp/razergenie.key https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key
+            sudo apt-key add /tmp/razergenie.key
+            # Add Polychromatic Repo
+            sudo add-apt-repository -y ppa:polychromatic/stable
+            # Install Both
+            sudo apt-get update
+            sudo apt-get install -y polychromatic razergenie
+        fi
+    fi
+}
+
+install_nvidia_modules_to_initramfs() {
+    if lspci |grep NVIDIA > /dev/null; then
+        echo -e "nvidia\nnvidia_modeset\nnvidia_uvm\nnvidia_drm" | sudo tee -a /etc/initramfs-tools/modules
+    fi
+}
+
+fix-update-grub() {
+	# Install Grub Theme
+	# TODO Make own GRUB theme for the Razer Blade
+    show_msg "Installing grub themes..."
+	t=/tmp/grub2-theme2
+	git clone ${GIT_QUIET} https://github.com/vinceliuice/grub2-themes.git $t
+        if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
+            R4K='-4'
+        fi
+	sudo $t/install.sh -b -v -w $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -s $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -l $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -t $R4K > /dev/null 2>&1
+	rm -rf $t
+	# As there is no accurate way to detect Kubuntu from Ubuntu
+	# We look for plasmashell instead and then assume its Kubuntu.
+	if plasmashell --version >/dev/null 2>&1; then
+        show_msg "Updating update grub script to replace Ubuntu with Kubuntu..."
+		cat << EOF | sudo tee - /usr/sbin/update-grub > /dev/null 2&>1
+#!/bin/sh                                                               
+set -e                                                                  
+grub-mkconfig -o /boot/grub/grub.cfg "\$@"                          
+if plasmashell --version >/dev/null 2>&1; then                          
+        echo "Looks like Kubuntu... Updating Ubuntu to Kubuntu... " >&2 
+        C=/boot/grub/grub.cfg                                           
+        chmod +w \$C 
+        sed -i 's/ubuntu/kubuntu/' \$C
+        sed -i 's/Ubuntu/Kubuntu/' \$C
+        chmod -w \$C
+fi
+EOF
+	fi
+}
+
 install_con_fonts() {
     if [ -v WSLENV ]; then
         return
     fi
     show_msg "Running console fonts setup script..."
-    curl -LSs "$GIT_REPO/console-font-setup.sh" | sudo bash -s - $VARG
-}
-
-setup_shims() {
-    show_msg "Running jenv/rbenv setup script..."
-    curl -LSs "$GIT_REPO/shim-setup.sh" | bash -s - $VARG
+    curl -LSs "$GIT_REPO/console-font-setup.sh" | sudo bash -s - $VARG 
 }
 
 install_nerd_fonts() {
@@ -788,7 +833,7 @@ install_nerd_fonts() {
         rm -rf /mnt/c/temp/patched-fonts
     else
         show_msg "Install NerdFonts..."
-        sudo ./install.sh --install-to-system-path
+        sudo ./install.sh --install-to-system-path > /dev/null 2>&1
         cd $STARTPWD
         rm -rf /tmp/fonts
     fi
@@ -806,12 +851,12 @@ PRIVATE=false
 WSL=false
 NEON=false
 FEEDPASER=false
-THEME=false
+GAMES=true
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
-        t | -t | --theme)               THEME=true
+        g | -g | --no-games)            GAMES=false
                                         ;;
         n | -n | --neon)                NEON=true
                                         ;;
@@ -852,7 +897,7 @@ fi
 
 set_username
 
-if [[ $NEON == "false" ]]; then
+if [[ $NEON == "true" ]]; then
     pkcon_update
 else
     apt_update
@@ -861,52 +906,68 @@ fi
 apt_install
 install_antibody
 change_shell
-install_lsd
-install_go
-setup_wsl
-install_con_fonts
-setup_shims
-install_docker
 install_feedparser
+install_lsd
 install_yq
 install_bat
-install_xidel
 install_ncspot
+install_xidel
+install_go
+
+setup_wsl
+setup_shims
+install_docker
 
 if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
+    show_msg "\n\nSetting up GUI Applications...\n\n"
     install_snaps
     setup_flatpak
     install_chrome
     install_1password
     install_inkscape
     install_discord
-    install_vscode
-    install_github_desktop
-    install_kvantum
-    install_virtualbox
-    install_typora
     install_libreoffice
-    install_qogir_theme
+    install_vscode
+    install_spotify
+    install_typora
+    install_virtualbox
+    
+    if [[ $STREAMING == "true" ]]; then
+        setup_obs
+    fi
+
+    if [[ $GAMES == "true" ]]; then
+        install_steam
+        install_minecraft
+    fi
+
     fix_sddm
+
+    show_msg "\n\nInstalling desktop themes...\n\n"
+    install_kvantum
+    install_virtual_desktop_bar
+    install_custom_panel
+    install_qogir_theme
 fi
 
+show_msg "\n\nDoing some hardware setup...\n\n"
 # Disabled while I wait for better support for the BlackWidow and Naga pro
 #setup_openrazer
-if [[ $STREAMING == "true" ]]; then
-    setup_obs
-fi
 install_nvidia_modules_to_initramfs
 fix-update-grub
+install_con_fonts
 
 if [[ $COMMANDLINE_ONLY == "false" ]]; then
     install_nerd_fonts
 fi
 
 # Post install tasks:
-show_msg "Linking /usr/bin/python3 to /usr/bin/python..."
-sudo ln -s /usr/bin/python3 /usr/bin/python
+if [ ! -f /usr/bin/python ]; then
+    show_msg "Linking /usr/bin/python3 to /usr/bin/python..."
+    sudo ln -s /usr/bin/python3 /usr/bin/python
+fi
 
 cd $STARTPWD
 
-show_msg "Ubuntu Setup Script has finished installing..."
+show_msg "\n\nUbuntu Setup Script has finished installing...\n\n"
 exit 0
