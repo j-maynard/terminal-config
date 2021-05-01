@@ -59,6 +59,17 @@ show_msg() {
     echo -e $1 > /dev/tty
 }
 
+install_feedparser() {
+    if [[ $FEEDPASER == "false" ]]; then
+        pip install feedparser > /dev/null 2>&1
+        export FEEDPASER=true
+    fi
+}
+
+get_version() {
+    echo -e "import feedparser\nd=feedparser.parse('$1')\nprint(d.entries[0].title)\n" | python3 -
+}
+
 apt_update() {
     show_msg "Updating the system..."
     sudo apt-get update
@@ -187,11 +198,15 @@ install_kvantum() {
 
 setup_obs() {
     exec > /dev/tty
+    show_msg "Streaming selected... Installing Open Braodcase System (OBS)..."
     sudo ubuntu-drivers autoinstall
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi
     sudo add-apt-repository -y ppa:obsproject/obs-studio
+    if ! curl -Ss -f http://ppa.launchpad.net/obsproject/obs-studio/ubuntu/dists/$(lsb_release -c -s) > /dev/null 2>&1; then
+        sed -i "s/$(lsb_release -c -s)/groovy/" /etc/apt/sources.list.d/obsproject-ubuntu-obs-studio-hirsute.list
+    fi
     sudo apt-get install -y obs-studio
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
     echo 'v4l2loopback' | sudo tee -a /etc/modules 
@@ -234,23 +249,27 @@ EOF
 }
 
 install_steam() {
+    show_msg "Installing Steam..."
     sudo apt-get install -y zenity zenity-common
     wget -O /tmp/steam.deb https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb
     sudo dpkg -i /tmp/steam.deb
 }
 
 install_minecraft() {
+    show_msg "Installing Minecraft..."
     wget -O /tmp/minecraft.deb https://launcher.mojang.com/download/Minecraft.deb
     sudo dpkg -i /tmp/minecraft.deb
 }
 
 install_inkscape() {
+    show_msg "Installing Inkscape..."
     sudo add-apt-repository -y ppa:inkscape.dev/stable
     sudo apt-get update
     sudo apt-get install -y inkscape
 }
 
 install_1password() {
+    show_msg "Installing 1Password..."
     curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo apt-key add -
     echo 'deb [arch=amd64] https://downloads.1password.com/linux/debian/amd64 beta main' | sudo tee /etc/apt/sources.list.d/1password-beta.list
     sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
@@ -261,6 +280,7 @@ install_1password() {
 }
 
 setup_flatpak() {
+    show_msg "Setting up Flatpak and installing Geary..."
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     sudo flatpak install -y flathub org.gnome.Platform//40
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
@@ -268,6 +288,11 @@ setup_flatpak() {
 }
 
 install_qogir_theme() {
+    if [[ $THEME == "false" ]]; then
+        return
+    fi
+    
+    show_msg "Setting up Qogir Material Theme..."
     gsettings set org.gnome.desktop.wm.preferences button-layout appmenu:minimize,maximize,close
     cd /tmp
     git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-kde.git
@@ -276,6 +301,7 @@ install_qogir_theme() {
     sudo /tmp/Qogir-theme/install.sh
     git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-icon-theme.git
     sudo /tmp/Qogir-icon-theme/install.sh
+    
     sudo snap connect [other snap]:gtk-3-themes qogir-themes:gtk-3-themes
     sudo snap connect [other snap]:icon-themes qogir-themes:icon-themes
     for i in $(snap connections | grep gtk-common-themes:gtk-3-themes | awk '{print $2}'); do sudo snap connect $i orchis-themes:gtk-3-themes; done
@@ -285,6 +311,7 @@ install_qogir_theme() {
 }
 
 install_vscode() {
+    show_msg "Installing Visual Studio Code..."
     case $(uname -m) in
         x86_64)     ARCH=x64
                     ;;
@@ -304,9 +331,11 @@ install_vscode() {
 
 install_docker() {
     show_msg "Installing Docker Community Edition..."
-    curl -fsSLo /tmp/docker.key https://download.docker.com/linux/ubuntu/gpg
-    sudo apt-key add -y /tmp/docker.key && rm /tmp/docker.key
-    sudo add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo \
+  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get update
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io
     if [ $? ]; then
         show_msg "Docker installed successfully"
@@ -323,6 +352,7 @@ install_docker() {
 }
 
 install_libreoffice() {
+    show_msg "Removing bundled OpenOffice and installing office OpenOffice..."
     sudo apt-get remove -y --purge libreoffice*
     sudo apt-get clean -y
     sudo apt-get autoremove -y
@@ -376,6 +406,7 @@ install_chrome() {
 }
 
 install_github_desktop() {
+    show_msg "Installing GitHub Desktop..."
     wget -qO - https://packagecloud.io/shiftkey/desktop/gpgkey | sudo tee /etc/apt/trusted.gpg.d/shiftkey-desktop.asc > /dev/null
     sudo sh -c 'echo "deb [arch=amd64] https://packagecloud.io/shiftkey/desktop/any/ any main" > /etc/apt/sources.list.d/packagecloud-shiftky-desktop.list'
     sudo apt-get update
@@ -394,19 +425,8 @@ install_spotify() {
     fi
 }
 
-install_1password() {
-    if ! which 1password > /dev/null; then
-        show_msg "Installing 1password (Beta)..."
-        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3FEF9748469ADBE15DA7CA80AC2D62742012EA22
-        sudo add-apt-repository -y 'deb [arch=amd64] https://onepassword.s3.amazonaws.com/linux/debian edge main'
-        sudo apt-get install -y 1password
-        if [ $? != 0 ]; then
-            show_msg "Failed to install 1password"
-        fi
-    fi 
-}
-
 install_typora() {
+    show_msg "Install Typora (Markdown Viewer/Editor)..."
     wget -qO - https://typora.io/linux/public-key.asc | sudo apt-key add -
     sudo add-apt-repository -y 'deb https://typora.io/linux ./'
     sudo apt-get update
@@ -441,17 +461,6 @@ install_xidel() {
         fi
         rm /tmp/xidel_0.9.8-1_amd64.deb
     fi
-}
-
-install_feedparser() {
-    if [[ $FEEDPASER == "false" ]]; then
-        pip install feedparser > /dev/null 2>&1
-        export FEEDPASER=true
-    fi
-}
-
-get_version() {
-    echo -e "import feedparser\nd=feedparser.parse('$1')\nprint(d.entries[0].title)\n" | python3 -
 }
 
 install_yq() {
@@ -630,7 +639,8 @@ install_nvidia_modules_to_initramfs() {
 
 fix-update-grub() {
 	# Install Grub Theme
-	# TODO Make own GRUB theme for the Razer Blade	
+	# TODO Make own GRUB theme for the Razer Blade
+    show_msg "Installing grub themes..."
 	t=/tmp/grub2-theme2
 	git clone ${GIT_QUIET} https://github.com/vinceliuice/grub2-themes.git $t
         if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
@@ -644,6 +654,7 @@ fix-update-grub() {
 	# As there is no accurate way to detect Kubuntu from Ubuntu
 	# We look for plasmashell instead and then assume its Kubuntu.
 	if plasmashell --version >/dev/null 2>&1; then
+        show_msg "Updating update grub script to replace Ubuntu with Kubuntu..."
 		cat << EOF | sudo tee - /usr/sbin/update-grub
 #!/bin/sh                                                               
 set -e                                                                  
@@ -761,10 +772,13 @@ PRIVATE=false
 WSL=false
 NEON=false
 FEEDPASER=false
+THEME=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
+        t | -t | --theme)               THEME=true
+                                        ;;
         n | -n | --neon)                NEON=true
                                         ;;
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
@@ -772,13 +786,13 @@ while [ "$1" != "" ]; do
         w | -w | --wsl-user)            shift
                                         WSL_USER=$1
                                         ;;
-	m | -m | --model)		shift
-					# Not used for ubuntu.  Skipping
-					;;
+	    m | -m | --model)		        shift
+					                    # Not used for ubuntu.  Skipping
+					                    ;;
         s | -s | --streaming)           STREAMING=true
                                         ;;
         V | -V | --verbose)             VERBOSE=true
-					VARG="-V"
+					                    VARG="-V"
                                     	;;
         v | -v | --version)             version
                                     	exit 0
