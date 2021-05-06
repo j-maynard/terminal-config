@@ -61,7 +61,7 @@ show_msg() {
 
 install_feedparser() {
     if [[ $FEEDPASER == "false" ]]; then
-        pip install feedparser > /dev/null 2>&1
+        pip3 install feedparser > /dev/null 2>&1
         export FEEDPASER=true
     fi
 }
