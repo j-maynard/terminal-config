@@ -101,7 +101,7 @@ pkcon_update() {
 apt_install() {
     show_msg "Installing from apt... "
 
-    apt_pkgs=( "git" "curl" "zsh"  "python3.10-dev" "python3-pip" 
+    apt_pkgs=( "git" "curl" "zsh"  "python3.9-dev" "python3-pip" 
         "build-essential" "jed" "htop" "links" "lynx" "tree" "tmux" 
         "openjdk-11-jdk" "maven" "vim" "vim-nox"
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
@@ -109,7 +109,7 @@ apt_install() {
 	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav"
         "openjdk-11-jdk" "default-jdk" )
 
-    x_apt_pkgs=( "idle-python3.10" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
+    x_apt_pkgs=( "idle-python3.9" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
 	    "gtk2-engines-pixbuf" "lm-sensors" "nvme-cli" "conky-all" "gdebi-core" )
 
