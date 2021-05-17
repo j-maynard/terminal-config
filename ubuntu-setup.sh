@@ -45,6 +45,7 @@ usage() {
     echo -e "  ${bold}${red}-w  --wsl-user [username]${normal}    Sets the Windows username which runs WSL.  This is used to find the windows"
     echo -e "                               users home directory. If not specified it matches it to the linux username."
     echo -e "                               If you run this script as root then you ${bold}MUST${normal} specify this."
+    echo -e "  ${bold}${red}-o  --virtual-box${normal}            Installs VirtualBox"
     echo -e "  ${bold}${red}-V  --verbose${normal}                Shows command output for debugging"
     echo -e "  ${bold}${red}-v  --version${normal}                Shows version details and exit"
     echo -e "  ${bold}${red}-h  --help${normal}                   Shows this usage message and exit"
@@ -402,6 +403,10 @@ setup_shims() {
 }
 
 install_docker() {
+    if [ -v WSLENV ]; then
+        show_msg "Skipping Docker install as this should be done through Windows Docker Desktop..."
+        return
+    fi 
     show_msg "Installing Docker Community Edition..."
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
     echo \
@@ -591,8 +596,8 @@ setup_obs() {
     fi
     sudo add-apt-repository -y ppa:obsproject/obs-studio  > /dev/null 2>&1
     if ! curl -Ss -f http://ppa.launchpad.net/obsproject/obs-studio/ubuntu/dists/$(lsb_release -c -s) > /dev/null 2>&1; then
-        show_msg "No hirsute release... Falling back to groovy..."
-        sudo sed -i "s/$(lsb_release -c -s)/groovy/" /etc/apt/sources.list.d/obsproject-ubuntu-obs-studio-hirsute.list
+        show_msg "No $(lsb_release -c -s) release... Skipping OBS install"
+        return
     fi
     sudo apt-get update > /dev/null
 
@@ -714,8 +719,10 @@ install_qogir_theme() {
     mkdir -p ~/.local/share/plasma/plasmoids
     gsettings set org.gnome.desktop.wm.preferences button-layout appmenu:minimize,maximize,close
     cd /tmp
-    git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-kde.git
-    /tmp/Qogir-kde/install.sh > /dev/null
+    if pgrep plasmashell; then
+        git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-kde.git
+        /tmp/Qogir-kde/install.sh > /dev/null
+    fi
     git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-theme
     /tmp/Qogir-theme/install.sh > /dev/null
     /tmp/Qogir-theme/install.sh -l ubuntu > /dev/null
@@ -852,6 +859,7 @@ WSL=false
 NEON=false
 FEEDPASER=false
 GAMES=true
+VM=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
@@ -869,6 +877,8 @@ while [ "$1" != "" ]; do
 					                    # Not used for ubuntu.  Skipping
 					                    ;;
         s | -s | --streaming)           STREAMING=true
+                                        ;;
+        o | -o | --virtualbox)          VM=true
                                         ;;
         V | -V | --verbose)             VERBOSE=true
 					                    VARG="-V"
@@ -930,7 +940,9 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     install_vscode
     install_spotify
     install_typora
-    install_virtualbox
+    if [ $VM == "true"]; then
+        install_virtualbox
+    fi
     
     if [[ $STREAMING == "true" ]]; then
         setup_obs
@@ -942,11 +954,12 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     fi
 
     fix_sddm
-
     show_msg "\n\nInstalling desktop themes...\n\n"
-    install_kvantum
-    install_virtual_desktop_bar
-    install_custom_panel
+    if pgrep plasmashell; then
+        install_kvantum
+        install_virtual_desktop_bar
+        install_custom_panel
+    fi
     install_qogir_theme
 fi
 

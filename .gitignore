@@ -11,3 +11,4 @@ tmux.env
 .optional.txt
  wingpg/socat-gpg.pid
  zshenv
+vim/.netrwhist
