@@ -34,3 +34,5 @@ map <C-n> :NERDTreeToggle<CR>
 set clipboard=unnamed
 map <F8> :setl noai nocin nosi inde=<CR>
 let g:airline_powerline_fonts = 1
+let g:NERDTreeDirArrowExpandable = '▸'
+let g:NERDTreeDirArrowCollapsible = '▾'

@@ -16,6 +16,7 @@ case $(uname) in
               
   Linux)      # Windows Subsystem for Linux requires some special care
               export PATH="${HOME}/.local/bin:${PATH}"
+              export AWS_VAULT_BACKEND=kwallet
               if [ -v WSLENV ]; then
                 ${HOME}/.term-config/wingpg/wingpg-connect.sh &
               fi

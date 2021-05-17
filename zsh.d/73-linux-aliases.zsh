@@ -8,5 +8,5 @@ if [[ $(uname) == "Linux" ]]; then
     alias pbpaste=getclip
     #alias xclip="xclip -selection c"
     alias vpn="gds vpn"
-    export AWS_VAULT_BACKEND=kwallet
+    alias plasma-reset="kquitapp5 plasmashell && kstart5 plasmashell"
 fi

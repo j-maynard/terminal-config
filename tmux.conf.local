@@ -18,7 +18,7 @@ bind -T off F12 \
     refresh-client -S
 
 if-shell 'test -n "$SSH_CLIENT"' \
-   'source-file ~/.tmux/tmux.remote.conf'
+   'source-file ~/.term-config/tmux.remote.conf'
 
 if-shell 'test "$NF_SAFE" = "false"' \
     'source-file ~/.term-config/tmux.local-safe.conf' \

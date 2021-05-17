@@ -35,7 +35,7 @@ set_username() {
     fi
 }
 
-export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/master"
+export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/main"
 
 usage() {
     echo -e "Usage:"
@@ -213,8 +213,17 @@ EOF
     /usr/bin/gpg-agent -q --daemon
 }
 
+setup_git() {
+    echo "Please supply your git user details:"
+    read -p "Name: " NAME
+    read -p "E-Mail:" EMAIL
+    git config --global user.name "${NAME}"
+    git config --global user.email "${EMAIL}"
+}
+
 private_setup() {
     if [ $PRIVATE != "true" ]; then
+        setup_git
         return
     fi
 

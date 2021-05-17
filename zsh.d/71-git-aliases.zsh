@@ -5,6 +5,7 @@ if [[ $? -eq 0 ]]; then
     alias ga='git add'
     alias gc='git commit'
     alias commit='git commit'
+    alias recommit='git recommit'
     alias gr='git rm --cache'
     alias gi='git init'
     alias clone='git clone'

@@ -201,7 +201,12 @@ setup_vim() {
     git -C ${TERMCONFIG} submodule update --recursive --remote
 }
 
-configFiles=("streamdeck_ui.json" "emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt")
+setup_git() {
+    show_msg "Adding recommit to git"
+    git config --global alias.recommit '!git commit -eF $(git rev-parse --git-dir)/COMMIT_EDITMSG'
+}
+
+configFiles=("streamdeck_ui.json" "emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt" "gitconfig")
 VERBOSE=false
 SHOW_ONLY=false
 set_username
@@ -244,6 +249,7 @@ set_username
 check_requirements
 remove_existing
 link_files
+setup_git
 setup_vim
 disable_optional
 
