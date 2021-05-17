@@ -185,6 +185,12 @@ link_files() {
   ln -s ${TERMCONFIG}/vim/init.vim ${USER_PATH}/.vimrc
 }
 
+setup_fzf() {
+  show_msg "Installing FZF..."
+  git clone --depth 1 https://github.com/junegunn/fzf.git ${USER_PATH}/.fzf
+  ${USER_PATH}/.fzf/install
+}
+
 setup_vim() {
     show_msg "Installing vim.pathogen..."
     mkdir -p ${TERMCONFIG}/vim/autoload ${TERMCONFIG}/vim/bundle
@@ -249,6 +255,7 @@ set_username
 check_requirements
 remove_existing
 link_files
+setup_fzf
 setup_git
 setup_vim
 disable_optional
