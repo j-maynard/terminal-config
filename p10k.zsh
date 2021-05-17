@@ -207,7 +207,7 @@
   ##############################[ custom_user: user with skull ]################################
 
   user_with_skull() {
-    if [[ "$(whoami)" == "jamesmaynard" ]]; then
+      if [[ "$(whoami)" == "jamesmaynard" || "$(whoami)" == "jamiemaynard" ]]; then
         echo -n " \ufb8a jamie (GDS)"
     else
       echo -n " \ufb8a $(whoami)"

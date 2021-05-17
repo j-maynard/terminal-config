@@ -345,7 +345,7 @@ install_spotify() {
     if ! which spotify > /dev/null; then
         curl -sS https://download.spotify.com/debian/pubkey_0D811D58.gpg | sudo apt-key add - 
         echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
-        sudo apt-get update && sudo apt-get install spotify-client
+        sudo apt-get update && sudo apt-get install -y spotify-client
         if [[ $4K == "true" ]]; then
             sed "s/Exec=spotify %U/Exec=spotify --force-device-scale-factor=1.75 %U/" /usr/local/share/applications/spotify.desktop | sudo tee /usr/local/share/applications/spotify.desktop
         fi

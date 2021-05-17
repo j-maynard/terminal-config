@@ -12,3 +12,5 @@ for f in "${HOME}"/.term-config/zsh.d/*.zsh; do
 	fi
 	source "${f}"
 done
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

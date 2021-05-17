@@ -1,5 +1,6 @@
 execute pathogen#infect()
 set rtp+=~/Development/powerline/bindings/vim
+set rtp+=~/.fzf
 set nocompatible
 "filetype plugin indent on
 filetype indent off

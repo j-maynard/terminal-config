@@ -19,4 +19,5 @@ if [[ $? -eq 0 ]]; then
     alias checkout='git checkout'
     alias force-push='git commit --amend --no-edit && git push -f'
     alias fp='force-push'
+    alias push-new="git push --set-upstream origin \$(git branch | grep '*' | cut -d ' ' -f 2)"
 fi
