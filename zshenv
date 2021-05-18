@@ -35,7 +35,8 @@ fi
 # Uncomment to stop TMUX from running at startup
 # export RUN=false
 
-# HiDPI Settings for GTK Apps
-export GDK_DPI_SCALE=1.75
-export GDK_SCALE=1.75
+# HiDPI Settings for GTK Apps doesn't work well with
+# KDE Plasma HiDPI Scalling.
+# export GDK_DPI_SCALE=1.75
+# export GDK_SCALE=1.75
 

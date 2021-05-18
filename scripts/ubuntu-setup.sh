@@ -108,7 +108,7 @@ apt_install() {
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
         "pinentry-curses" "libxml2-utils" "apt-transport-https"
 	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav"
-        "openjdk-11-jdk" "default-jdk" )
+        "openjdk-11-jdk" "default-jdk" "jq" )
 
     x_apt_pkgs=( "idle-python3.9" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
@@ -399,7 +399,7 @@ EOF
 
 setup_shims() {
     show_msg "Running jenv/rbenv setup script..."
-    curl -LSs "$GIT_REPO/shim-setup.sh" | bash -s - $VARG
+    curl -LSs "$GIT_REPO/scripts/shim-setup.sh" | bash -s - $VARG
 }
 
 install_docker() {
@@ -614,8 +614,6 @@ setup_obs() {
     sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
     echo 'v4l2loopback' | sudo tee -a /etc/modules 
     echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf > /dev/null
-    wget -q -O /tmp/obs-v4l2sink.deb https://github.com/CatxFish/obs-v4l2sink/releases/download/0.1.0/obs-v4l2sink.deb
-    sudo dpkg -i /tmp/obs-v4l2sink.deb > /dev/null
     if lsusb |grep 0fd9:006d > /dev/null; then
         setup_streamdeck
     else
@@ -866,8 +864,9 @@ PRIVATE=false
 WSL=false
 NEON=false
 FEEDPASER=false
-GAMES=true
+GAMES=false
 VM=false
+FUNC=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
@@ -887,6 +886,10 @@ while [ "$1" != "" ]; do
         s | -s | --streaming)           STREAMING=true
                                         ;;
         o | -o | --virtualbox)          VM=true
+                                        ;;
+        r | -r | --run)                 FUNC=true
+                                        shift
+                                        FUNC_NAME=$1
                                         ;;
         V | -V | --verbose)             VERBOSE=true
 					                    VARG="-V"
@@ -915,6 +918,11 @@ fi
 
 set_username
 
+if [[ $FUNC == "true" ]]; then
+    $FUNC_NAME
+    exit 0
+fi
+
 if [[ $NEON == "true" ]]; then
     pkcon_update
 else
@@ -941,7 +949,6 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     install_snaps
     setup_flatpak
     install_chrome
-    install_1password
     install_inkscape
     install_discord
     install_libreoffice
@@ -960,6 +967,7 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
         install_steam
         install_minecraft
     fi
+    install_1password
 
     fix_sddm
     show_msg "\n\nInstalling desktop themes...\n\n"

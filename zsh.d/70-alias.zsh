@@ -43,3 +43,6 @@ alias catp='bat -p'
 
 # JSON output view
 alias json='jq -C -r | bat'
+
+# 1Passowrd aliases
+alias 1p-signin="eval \$(op signin punkyideas)"
