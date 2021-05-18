@@ -98,10 +98,16 @@ os_script() {
     
     echo "Running OS/Distro setup script"
     ./${OS}-setup.sh $MODEL $VARG $CARG $WSLARG $SARGS $NEON_FLAG $GARGS $VMARGS
+    if [ $? -ne 0 ]; then
+        show_msg "${red}${bold}OS Install script failed to complete successful.  Exiting.${normal}"
+        exit 1
+    fi
+
     rm ${OS}-setup.sh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi
+
 }
 
 theme_only() {

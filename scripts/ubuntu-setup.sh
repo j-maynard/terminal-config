@@ -110,14 +110,16 @@ apt_install() {
 	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav"
         "openjdk-11-jdk" "default-jdk" "jq" "gnupg2" )
 
-    x_apt_pkgs=( "idle-python3.9" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
+    x_apt_pkgs=( "idle-python3.9" "vim-gtk3" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
 	    "gtk2-engines-pixbuf" "lm-sensors" "nvme-cli" "conky-all" "gdebi-core" )
 
     neon_pkgs=( "wget" "fonts-liberation" )
 
-    kde_pkgs=( "kmail" "latte-dock" "umbrello" "kdegames" "kaddressbook"
-        "akonadi-backend-postgresql" "akonadi-backend-sqlite" "kleopatra")
+    gnome_pkgs=( "pinentry-gnome3" "gnome-tweaks" )
+
+    kde_pkgs=( "kmail" "latte-dock" "umbrello" "kdegames" "kaddressbook" "pinentry-qt"
+        "akonadi-backend-postgresql" "akonadi-backend-sqlite" "kleopatra" )
     
     streaming_apt_pkgs=( "ffmpeg" "v4l2loopback-dkms" "v4l2loopback-utils" )
 
@@ -130,6 +132,10 @@ apt_install() {
         done
         if plasmashell --version >/dev/null 2>&1; then
             for pkg in ${kde_pkgs[@]}; do
+                PKGS="${PKGS} ${pkg} "
+            done
+        else
+            for pkg in ${gnome_pkgs[@]}; do
                 PKGS="${PKGS} ${pkg} "
             done
         fi
@@ -170,12 +176,15 @@ apt_install() {
         fi
     else
         sudo apt-get install -y ${PKGS[@]}
+        if [ $? -ne 0 ]; then
+            show_msg "${red}Packages are missing or apt-get failed to install properly.  Exiting!${nromal}"
+            exit 1
+        fi
     fi
 }
 
 install_antibody() {
-	which antibody
-	if [ $? != 0 ]; then
+	if ! which antibody > /dev/null; then
 	    show_msg "Installing antibody..."
 	    curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin
 	fi
