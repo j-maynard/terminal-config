@@ -108,7 +108,7 @@ apt_install() {
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
         "pinentry-curses" "libxml2-utils" "apt-transport-https"
 	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav"
-        "openjdk-11-jdk" "default-jdk" "jq" )
+        "openjdk-11-jdk" "default-jdk" "jq" "gnupg2" )
 
     x_apt_pkgs=( "idle-python3.9" "vim-gtk3" "pinentry-qt" "libappindicator3-1"
         "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
@@ -486,6 +486,7 @@ install_spotify() {
 }
 
 install_1password() {
+    show_msg "Installing 1Password..."
     if ! which 1password > /dev/null; then
         wget -q -O /tmp/1password-latest.deb "https://downloads.1password.com/linux/debian/amd64/stable/1password-latest.deb"
         if [ ! -f "/tmp/1password-latest.deb" ]; then
@@ -966,7 +967,7 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     install_vscode
     install_spotify
     install_typora
-    if [ $VM == "true"]; then
+    if [ $VM == "true" ]; then
         install_virtualbox
     fi
     
