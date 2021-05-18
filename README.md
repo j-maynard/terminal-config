@@ -13,7 +13,7 @@ super setup script at some point.
 Grab the installer script, make it executable and then run it:
 
 ```
-wget -O /tmp/install.sh https://raw.githubusercontent.com/j-maynard/terminal-config/main/install.sh
+wget -O /tmp/install.sh https://raw.githubusercontent.com/j-maynard/terminal-config/main/scripts/install.sh
 chmod +x /tmp/install.sh
 /tmp/install.sh --help
 ```
