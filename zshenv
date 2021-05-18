@@ -36,6 +36,6 @@ fi
 # export RUN=false
 
 # HiDPI Settings for GTK Apps
-GDK_DPI_SCALE=1.75
-GDK_SCALE=1.75
+export GDK_DPI_SCALE=1.75
+export GDK_SCALE=1.75
 

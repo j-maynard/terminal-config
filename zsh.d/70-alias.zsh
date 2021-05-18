@@ -6,7 +6,7 @@ alias findo=findoccurances
 if [[ $(uname) == 'Linux' ]]; then
     alias xopen='xdg-open'
 fi
- if [[ -v WSLENV ]]; then
+if [[ -v WSLENV ]]; then
     alias wingpg='${HOME}/.term-config/wingpg-connect.sh &'
 fi
 alias genairlinetmuxconf='nvim -c "+:Tmuxline" "+TmuxlineSnapshot ~/.term-config/tmux-airline.conf" "+q"'
@@ -40,3 +40,6 @@ alias vpn='gds vpn'
 alias cat='bat'
 alias cata='bat -A'
 alias catp='bat -p'
+
+# JSON output view
+alias json='jq -C -r | bat'

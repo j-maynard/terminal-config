@@ -728,15 +728,23 @@ install_qogir_theme() {
     /tmp/Qogir-theme/install.sh -l ubuntu > /dev/null
     git clone ${GIT_QUIET} https://github.com/vinceliuice/Qogir-icon-theme.git
     /tmp/Qogir-icon-theme/install.sh > /dev/null
-    sudo snap install qogir-themes > /dev/null
-    for i in $(snap connections | grep gtk-common-themes:gtk-3-themes | awk '{print $2}'); do sudo snap connect $i qogir-themes:gtk-3-themes; done
-    for i in $(snap connections | grep gtk-common-themes:icon-themes | awk '{print $2}'); do sudo snap connect $i qogir-themes:icon-themes; done
-    sudo flatpak install -y flathub org.gtk.Gtk3theme.Qogir-ubuntu-dark/x86_64/3.34
-    sudo flatpak override --filesystem=~/.themes
+    if which snap > /dev/null; then
+        sudo snap install qogir-themes > /dev/null
+        for i in $(snap connections | grep gtk-common-themes:gtk-3-themes | awk '{print $2}'); do sudo snap connect $i qogir-themes:gtk-3-themes; done
+        for i in $(snap connections | grep gtk-common-themes:icon-themes | awk '{print $2}'); do sudo snap connect $i qogir-themes:icon-themes; done
+    fi
+    if which flatpak > /dev/null; then
+        sudo flatpak install -y flathub org.gtk.Gtk3theme.Qogir-ubuntu-dark/x86_64/3.34
+        sudo flatpak override --filesystem=~/.themes
+    fi
 }
 
 setup_openrazer() {
     if lsusb |grep 1532 > /dev/null 2>&1; then
+        show_msg "Razer Hardware Detected... Applying Xorg Conf File"
+        wget -q -O /tmp/11-razer.conf "https://raw.githubusercontent.com/j-maynard/terminal-config/main/lib/11-razer.conf"
+        sudo mv /tmp/11-razer.conf /etc/X11/xorg.conf.d/
+
         show_msg "Razer Hardware Detected... Installing OpenRazer..."
         sudo add-apt-repository -y ppa:openrazer/stable
 

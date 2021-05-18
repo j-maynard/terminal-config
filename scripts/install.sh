@@ -35,7 +35,7 @@ set_username() {
     fi
 }
 
-export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/main"
+export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/main/scripts"
 
 usage() {
     echo -e "Usage:"
@@ -191,7 +191,7 @@ setup_config() {
     show_msg "Running config script at '${USER_PATH}/.term-config/config-setup.sh'..."
     
     exec > /dev/tty
-    $USER_PATH/.term-config/config-setup.sh $VARG
+    $USER_PATH/.term-config/scipts/config-setup.sh $VARG
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi
@@ -233,7 +233,7 @@ private_setup() {
     exec > /dev/tty
     eval "$(gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)"
     show_msg "Running git setup script..."
-    ${USER_PATH}/.term-config/git-setup.sh
+    ${USER_PATH}/.term-config/scripts/git-setup.sh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi
