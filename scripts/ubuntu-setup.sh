@@ -299,8 +299,6 @@ install_xidel() {
                     return
     esac
     show_msg "Installing the latest version of xidel -> version: ${XIVER}..."
-
-    https://github.com/benibela/xidel/releases/download/Xidel_${XIVER}/xidel_${XIVER}-1_${ARCH}.deb
     wget -q -O /tmp/xidel_${XIVER}-1_${ARCH}.deb "https://github.com/benibela/xidel/releases/download/Xidel_${XIVER}/xidel_${XIVER}-1_${ARCH}.deb"
     if [ ! -f "/tmp/xidel_${XIVER}-1_${ARCH}.deb" ]; then
         show_msg "${red}Failed to download xidel... ${normal}${green}Skipping install...${normal}"
