@@ -30,6 +30,11 @@ show_msg() {
 }
 
 set_username() {
+    if [[ $(uname) == "Darwin" ]]; then
+	HOME=/Users
+    else
+	HOME=/home
+    fi
     if [ -z $SUDO_USER ]; then
         USERNAME=$USER
     else
@@ -38,7 +43,7 @@ set_username() {
     if [ $USERNAME == "root" ]; then
 	USER_PATH="/root"
     else
-        USER_PATH="/home/$USER"
+        USER_PATH="$HOME/$USER"
     fi
     show_msg "User path is now set to '$USER_PATH'"
 }
@@ -150,6 +155,15 @@ remove_existing() {
     mv ${USER_PATH}/.tmux.conf $DOT_BACKUP/.tmux.conf
   fi
 
+  if [ -L "${USER_PATH}/.vimrc" ]; then
+    show_msg "Link to config file '.vimrc' exists... removing..."
+    rm ${USER_PATH}/.vimrc
+  elif [ -f "${USER_PATH}/.vimrc" ]; then
+    show_msg "config file '.vimrc' already exists... moving to ~/dot-backup/vimrc..."
+    mkdir -p $DOT_BACKUP
+    mv ${USER_PATH}/.vimrc $DOT_BACKUP/.vimrc
+  fi
+
   #Check back up directory for size... if empty remove it
   if [ -n "$(ls -A $DOT_BACKUP/* 2>/dev/null)" ]; then
     exec > /dev/tty 
@@ -198,8 +212,8 @@ setup_vim() {
 
     if which nvim > /dev/null; then
         show_msg "Setting up shared Vim / Neovim config"
-        mkdir -p "${HOME}/.config"
-        ln -s "${TERMCONFIG}/vim" "${HOME}/.config/nvim"
+        mkdir -p "${USER_PATH}/.config"
+        ln -s "${TERMCONFIG}/vim" "${USER_PATH}/.config/nvim"
     fi
 
     show_msg "Pulling git submodules..."

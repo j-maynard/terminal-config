@@ -1,4 +1,7 @@
 [user]
+	name = jamesmaynard
+	email = james.maynard@digital.cabinet-office.gov.uk
+	signingkey = 224AE4DCD3834D92
 [commit]
 	gpgsign = true
 [alias]

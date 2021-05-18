@@ -11,6 +11,12 @@ if [[ -v WSLENV ]]; then
 fi
 alias genairlinetmuxconf='nvim -c "+:Tmuxline" "+TmuxlineSnapshot ~/.term-config/tmux-airline.conf" "+q"'
 
+# Replace nvim
+if which nvim > /dev/null; then
+        alias vim="nvim"
+        alias vi="nvim"
+fi
+
 ## get rid of command not found ##
 alias cd..='cd ..'
  

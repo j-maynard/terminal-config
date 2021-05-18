@@ -32,8 +32,10 @@ else
         export POWERLINE_SAFE=true
     fi
 fi
+export TMUX_INTEGRATION=true
+
 # Uncomment to stop TMUX from running at startup
-# export RUN=false
+export RUN=false
 
 # HiDPI Settings for GTK Apps doesn't work well with
 # KDE Plasma HiDPI Scalling.

@@ -204,7 +204,7 @@ setup_config() {
     show_msg "Running config script at '${USER_PATH}/.term-config/config-setup.sh'..."
     
     exec > /dev/tty
-    $USER_PATH/.term-config/scripts/config-setup.sh $VARG
+    $USER_PATH/.term-config/scripts/config-setup.zsh $VARG
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi

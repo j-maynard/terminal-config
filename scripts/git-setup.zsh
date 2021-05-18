@@ -1,7 +1,10 @@
-#!/bin/bash
+#!/bin/zsh
+
+emulate -LR zsh
+emulate -LR bash
 
 check_requirements() {
-    if which apt > /dev/null; then
+    if which dpkg > /dev/null; then
         INSTALL=false
         if ! dpkg -l git > /dev/null; then
             INSTALL=true
@@ -58,7 +61,7 @@ do
 done
 echo "Total number of profiles = ${#profile_names[@]}"
 while true; do
-    read -p "Select a profile? [1 - ${#profile_names[@]}] " p
+    read "p?Select a profile? [1 - ${#profile_names[@]}] "
     case $p in
         * )       get_profile $p
                   if [ $? == 0 ]; then

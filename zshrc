@@ -14,3 +14,4 @@ for f in "${HOME}"/.term-config/zsh.d/*.zsh; do
 done
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+test -e /Users/jamesmaynard/.iterm2_shell_integration.zsh && source /Users/jamesmaynard/.iterm2_shell_integration.zsh || true

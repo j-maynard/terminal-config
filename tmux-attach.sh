@@ -51,10 +51,10 @@ case $(uname) in
 esac
 
 if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
-    if [[ "$(cat $SCRIPT_DIR/tmux_integration)" == "false" ]]; then
-        TMUX_CMD="tmux -s $USER"
+    if [[ $TMUX_INTEGRATION == "false" ]]; then
+        TMUX_CMD="tmux"
     else
-        TMUX_CMD="tmux -CC -s $USER"
+        TMUX_CMD='tmux -CC'
     fi
     ITERM2=TRUE
 else
@@ -63,9 +63,9 @@ else
 fi
 
 # First check no sessions are runing
-tmux ls &> /dev/null
+tmux ls > /dev/null 2&>1
 # If this exits with 1, no sessions are running, start a new one
-if [[ "$?" == "1" ]]; then
+if [ $? -ne 0 ]; then
   exec $TMUX_CMD new-session "echo && $MOTD && zsh"
   exit 0
 fi
