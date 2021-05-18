@@ -45,6 +45,8 @@ usage() {
     echo -e "  ${bold}${red}-t  --theme-only${normal}             Don't install anything just setup terminal"
     echo -e "  ${bold}${red}-c  --commandline-only${normal}       Don't install GUI/X components"
     echo -e "  ${bold}${red}-s  --streaming${normal}              Install OBS Studio and related components (Ubuntu Only)"
+    echo -e "  ${bold}${red}-o  --virtual-box${normal}            Installs VirtualBox (Ubuntu Only)"
+    echo -e "  ${bold}${red}-g  --nogames${normal}                Prevents installing games this includes Stream and Minecraft (Ubuntu Only)"
     echo -e "  ${bold}${red}-p  --private-script${normal}         Run private scripts (These are encrypted)"
     echo -e "  ${bold}${red}-V  --verbose${normal}                Shows command output for debugging"
     echo -e "  ${bold}${red}-v  --version${normal}                Shows version details"
@@ -87,8 +89,15 @@ os_script() {
     if [[ $OS == "ubuntu" && $STREAMING == "true" ]]; then
         SARGS="-s"
     fi
+    if [[ $OS == "ubuntu" && $VM == "true" ]]; then
+        VMARGS="-o"
+    fi
+    if [[ $OS == "ubuntu" && $GAMES == "false" ]]; then
+        GARGS="-g"
+    fi
+    
     echo "Running OS/Distro setup script"
-    ./${OS}-setup.sh $MODEL $VARG $CARG $WSLARG $SARGS $NEON_FLAG
+    ./${OS}-setup.sh $MODEL $VARG $CARG $WSLARG $SARGS $NEON_FLAG $GARGS $VMARGS
     rm ${OS}-setup.sh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
@@ -163,8 +172,6 @@ setup_os() {
                                         ;;
                         KDE | Neon)     NEON_FLAG=-n
                                         os_script $GET "ubuntu"
-                                        ;;
-                        Raspbian)       os_script $GET "raspbian" $MODEL
                                         ;;
                         *)              show_msg "Unknown Linux distribution.  Consider writing an OS/Distro install script.  Exiting..."
                                         exit 1
@@ -249,6 +256,8 @@ COMMANDLINE_ONLY=false
 VERBOSE=false
 PRIVATE=false
 STREAMING=false
+GAMES=true
+VM=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
@@ -266,6 +275,10 @@ while [ "$1" != "" ]; do
                                         fi
                                         WSL_USER=$1
                                         WSLARG="-w ${WSL_USER}"
+                                        ;;
+        o | -o | --virtualbox)          VM=true
+                                        ;;
+        g | -g | --no-games)            GAMES=false
                                         ;;
         p | -p | --private-script)      PRIVATE=true
                                         ;;
