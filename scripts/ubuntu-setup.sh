@@ -405,8 +405,13 @@ EOF
 }
 
 setup_shims() {
-    show_msg "Running jenv/rbenv setup script..."
-    curl -LSs "$GIT_REPO/scripts/shim-setup.sh" | bash -s - $VARG
+    curl -LSs "$GIT_REPO/scripts/shim-setup.sh"
+    if [ $? -eq 0 ]; then
+        show_msg "Running jenv/rbenv setup script..."
+        curl -LSs "$GIT_REPO/scripts/shim-setup.sh" | bash -s - $VARG
+    else
+        show_msg "${red}Unable to get shim script... Skipping."
+    fi
 }
 
 install_docker() {
@@ -556,7 +561,7 @@ install_discord() {
 }
 
 install_libreoffice() {
-    show_msg "Removing bundled OpenOffice and installing office OpenOffice..."
+    show_msg "Removing bundled LibreOffice and installing official LibreOffice from PPA..."
     sudo apt-get remove -y --purge libreoffice*
     sudo apt-get clean -y
     sudo apt-get autoremove -y
