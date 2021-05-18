@@ -459,14 +459,14 @@ setup_flatpak() {
 install_chrome() {
     if ! which google-chrome > /dev/null; then
         show_msg "Installing Google Chrome (Latest)..."
-        wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        if [ ! -f "google-chrome-stable_current_amd64.deb" ]; then
+        wget -q -O /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        if [ ! -f "/tmp/google-chrome-stable_current_amd64.deb" ]; then
             show_msg "${red}Failed to download Google Chrome... ${normal}${green}Skipping install...${normal}"
             return
         fi
-        sudo dpkg -i google-chrome-stable_current_amd64.deb
+        sudo dpkg -i /tmp/google-chrome-stable_current_amd64.deb
         if [ $? == 0 ]; then
-            rm google-chrome-stable_current_amd64.deb
+            rm /tmp/google-chrome-stable_current_amd64.deb
         else
             show_msg "Failed to install chrome"
         fi
@@ -486,19 +486,32 @@ install_spotify() {
 }
 
 install_1password() {
-    show_msg "Installing 1Password..."
-    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo apt-key add - > /dev/null 2>&1
-
-    echo 'deb [arch=amd64] https://downloads.1password.com/linux/debian/amd64 beta main' | sudo tee /etc/apt/sources.list.d/1password-beta.list
-    
-    sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
-    curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol
-    sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
-    curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
-
-    sudo apt-get update
-    sudo apt-get install -y 1password
+    if ! which 1password > /dev/null; then
+        wget -q -O /tmp/1password-latest.deb "https://downloads.1password.com/linux/debian/amd64/stable/1password-latest.deb"
+        if [ ! -f "/tmp/1password-latest.deb" ]; then
+            show_msg "${red}Failed to download 1Password Deb Package... ${normal}${green}Skipping install...${normal}"
+            return
+        fi
+        sudo dpkg -i /tmp/1password-latest.deb
+        if [ $? == 0 ]; then
+            rm /tmp/1password-latest.deb
+        else
+            show_msg "Failed to install 1Password..."
+        fi
+    fi
 }
+
+# install_1password() {
+#     show_msg "Installing 1Password..."
+#     curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo apt-key add - > /dev/null 2>&1
+#     echo 'deb [arch=amd64] https://downloads.1password.com/linux/debian/amd64 beta main' | sudo tee /etc/apt/sources.list.d/1password-beta.list
+#     sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
+#     curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol
+#     sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
+#     curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+#     sudo apt-get update
+#     sudo apt-get install -y 1password
+# }
 
 install_inkscape() {
     if [[ $(lsb_release -c -s) == "hirsute" ]]; then

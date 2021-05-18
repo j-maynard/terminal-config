@@ -6,7 +6,7 @@ SCRIPT=`realpath -s $0`
 SCRIPTPATH=`dirname $SCRIPT`
 
 if [ -z $GIT_REPO ]; then
-    GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/master"
+    GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/main"
 fi
 
 # Define colors and styles
