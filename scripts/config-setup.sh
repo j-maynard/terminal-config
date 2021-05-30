@@ -26,6 +26,9 @@ version() {
 }
 
 show_msg() {
+    if [[ $DOCKER == "true" ]]; then
+    	return
+    fi
     echo -e $1 > /dev/tty
 }
 
@@ -40,7 +43,7 @@ set_username() {
     else
         USERNAME=$SUDO_USER
     fi
-    if [ $USERNAME == "root" ]; then
+    if [[ $USERNAME == "root" ]]; then
 	USER_PATH="/root"
     else
         USER_PATH="$HOME/$USER"
@@ -238,6 +241,7 @@ while [ "$1" != "" ]; do
 				C=true
                                 ;;
 	-d | --docker-user)	USER=jamie
+				DOCKER=true
 				;;
 	-R | --root-user)	USER=root
 				SUDO_USER=root
