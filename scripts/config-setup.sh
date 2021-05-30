@@ -240,7 +240,8 @@ while [ "$1" != "" ]; do
                                 TERMCONFIG=$1
 				C=true
                                 ;;
-	-d | --docker-user)	USER=jamie
+	-d | --docker-user)	shift
+	                        USER=$1
 				DOCKER=true
 				;;
 	-R | --root-user)	USER=root
