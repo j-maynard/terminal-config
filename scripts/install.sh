@@ -228,8 +228,18 @@ EOF
 
 setup_git() {
     echo "Please supply your git user details:"
-    read -p "Name: " NAME
-    read -p "E-Mail:" EMAIL
+    if [ -z $GIT_NAME ]; then
+        read -p "Name: " NAME
+    else
+        echo "Name: ${GIT_NAME}"
+        NAME="${GIT_NAME}"
+    fi
+    if [ -z $GIT_EMAIL ]; then
+        echo "E-Mail: ${GIT_EMAIL}"
+        read -p "E-Mail:" EMAIL
+    else
+        EMAIL="${GIT_EMAIL}"
+    fi
     git config --global user.name "${NAME}"
     git config --global user.email "${EMAIL}"
 }
@@ -285,6 +295,12 @@ while [ "$1" != "" ]; do
         o | -o | --virtualbox)          VM=true
                                         ;;
         g | -g | --no-games)            GAMES=false
+                                        ;;
+        ge | -ge | --git-email)         shift
+                                        GIT_EMAIL=$1
+                                        ;;
+        gn | -gn | --git-name)          shift
+                                        GIT_NAME=$1
                                         ;;
         p | -p | --private-script)      PRIVATE=true
                                         ;;
