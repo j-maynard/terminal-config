@@ -22,7 +22,7 @@ set_username() {
     else
         USERNAME=$SUDO_USER
     fi
-    if [ $USERNAME == "root" ]; then
+    if [[ $USERNAME == "root" ]]; then
         if [[ -v WSLENV && ! -v WSL_USER ]]; then
             show_msg "WSL Username not set... Exiting!"
             exec > /dev/tty
