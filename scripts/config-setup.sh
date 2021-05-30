@@ -27,9 +27,10 @@ version() {
 
 show_msg() {
     if [[ $DOCKER == "true" ]]; then
-    	return
+    	echo -e $1
+    else
+	echo -e $1 > /dev/tty
     fi
-    echo -e $1 > /dev/tty
 }
 
 set_username() {
@@ -243,6 +244,7 @@ while [ "$1" != "" ]; do
 	-d | --docker-user)	shift
 	                        USER=$1
 				DOCKER=true
+				VERBOSE=true
 				;;
 	-R | --root-user)	USER=root
 				SUDO_USER=root
