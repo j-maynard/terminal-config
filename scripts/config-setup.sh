@@ -229,17 +229,18 @@ setup_git() {
 configFiles=("streamdeck_ui.json" "emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt" "gitconfig")
 VERBOSE=false
 SHOW_ONLY=false
-set_username
 TERMCONFIG="${USER_PATH}/.term-config"
+
 while [ "$1" != "" ]; do
     case $1 in
         -c | --term-config)     shift
                                 TERMCONFIG=$1
 				C=true
                                 ;;
+	-d | --docker-user)	USER=jamie
+				;;
 	-R | --root-user)	USER=root
 				SUDO_USER=root
-				set_username
 				if [ -z $C ]; then
 					TERMCONFIG="${USER_PATH}/.term-config"
 				fi
