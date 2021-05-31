@@ -368,7 +368,7 @@ setup_wsl() {
     fi 
     WSL=true
     show_msg "WSL Environment variable present.  Setup WSL specific stuff..."
-    sudo apt-get install -y socat
+    sudo apt-get install -y socat pass
     if [ ! -d "/mnt/c/Users/$WSL_USER" ]; then
         show_msg "${red}Can't match username to directory.  Tried ${bold}'/mnt/c/Users/$WSL_USER'${normal}${red}... Have you set the wsl-user option?${normal}"
         exec > /dev/tty

@@ -2,20 +2,33 @@
 # Launches socat+npiperelay to relay the gpg-agent socket file for use in WSL
 # See https://justyn.io/blog/using-a-yubikey-for-gpg-in-windows-10-wsl-windows-subsystem-for-linux/ for details
 
+DEBUG=false
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -d | --debug)   DEBUG=true
+                        ;;
+    esac
+    shift
+done
+
 GPGDIR="${HOME}/.gnupg"
-USERNAME=Jamie
+USERNAME=jamie
+# I use the same username for wsl and windows, but feel free to modify the paths below if that isn't the case
 WIN_GPGDIR="C:/Users/${USERNAME}/AppData/Roaming/gnupg"
 NPIPERELAY="/mnt/c/Users/${USERNAME}/AppData/Roaming/gnupg/npiperelay.exe"
 PIDFILE="${GPGDIR}/.gpg-agent-relay.pid"
-if [ -f "${PIDFILE}" ]; then
-    OLDPID=$(cat "${PIDFILE}")
-fi
+OLDPID=$(cat "${PIDFILE}")
 
 # Launch socat+npiperelay for the regular gpg-agent
 if [ ! -z "${OLDPID}" ]; then
     ps -p "${OLDPID}" >/dev/null && \
-    echo "gpg-agent-relay.sh already running with process id $(cat ${PIDFILE})" && \
-    exit 0
+    if [[ $DEBUG == "true" ]]; then
+        echo "gpg-agent-relay.sh already running with process id $(cat ${PIDFILE})" && \
+        exit 0
+    else
+        exit 0
+    fi
 fi
 
 rm -f "${GPGDIR}/S.gpg-agent*"
