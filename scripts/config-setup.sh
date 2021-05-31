@@ -26,7 +26,11 @@ version() {
 }
 
 show_msg() {
-    echo -e $1 > /dev/tty
+    if [[ $DOCKER == "true" ]]; then
+    	echo -e $1
+    else
+	echo -e $1 > /dev/tty
+    fi
 }
 
 set_username() {
@@ -40,7 +44,7 @@ set_username() {
     else
         USERNAME=$SUDO_USER
     fi
-    if [ $USERNAME == "root" ]; then
+    if [[ $USERNAME == "root" ]]; then
 	USER_PATH="/root"
     else
         USER_PATH="$HOME/$USER"
@@ -229,17 +233,21 @@ setup_git() {
 configFiles=("streamdeck_ui.json" "emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt" "gitconfig")
 VERBOSE=false
 SHOW_ONLY=false
-set_username
 TERMCONFIG="${USER_PATH}/.term-config"
+
 while [ "$1" != "" ]; do
     case $1 in
         -c | --term-config)     shift
                                 TERMCONFIG=$1
 				C=true
                                 ;;
+	-d | --docker-user)	shift
+	                        USER=$1
+				DOCKER=true
+				VERBOSE=true
+				;;
 	-R | --root-user)	USER=root
 				SUDO_USER=root
-				set_username
 				if [ -z $C ]; then
 					TERMCONFIG="${USER_PATH}/.term-config"
 				fi
