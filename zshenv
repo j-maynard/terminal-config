@@ -8,6 +8,7 @@ export GNUPGHOME=${HOME}/.gnupg-usbc
 export NERD_FONT=true
 export NF=true
 export POWERLINE_SAFE=true
+export PATH=$HOME/.local/bin:$PATH
 if [[ -v WSLENV ]]; then
     if [[ "$TERM_PROG" == "winterm" ]]; then
         export NF_SAFE=true

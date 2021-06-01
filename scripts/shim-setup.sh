@@ -5,10 +5,6 @@ STARTPWD=$(pwd)
 SCRIPT=`realpath -s $0`
 SCRIPTPATH=`dirname $SCRIPT`
 
-if [ -z $GIT_REPO ]; then
-    GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/main"
-fi
-
 # Define colors and styles
 normal="\033[0m"
 bold="\033[1m"
@@ -66,7 +62,8 @@ install_jenv() {
     git clone $GIT_QUIET https://github.com/gcuisinier/jenv.git $USER_PATH/.jenv
     mkdir $USER_PATH/.jenv/versions
     $USER_PATH/.jenv/bin/jenv add /usr/lib/jvm/java-11-openjdk-amd64
-    $USER_PATH/.jenv/bin/jenv add /usr/lib/jvm/java-8-openjdk-amd64
+    #Disabling Java8... will remove soon.
+    #$USER_PATH/.jenv/bin/jenv add /usr/lib/jvm/java-8-openjdk-amd64
   fi
 }
 
@@ -85,7 +82,6 @@ while [ "$1" != "" ]; do
                                     set_username
                                     ;;
         V | -V | --verbose)         VERBOSE=true
-				    VARG="-V"
                                     ;;
         v | -v | --version)         version
                                     exit 0
