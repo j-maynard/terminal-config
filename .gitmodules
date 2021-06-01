@@ -1,15 +1,7 @@
-[submodule "vim/bundle/git-gutter"]
-	path = vim/bundle/git-gutter
-	url = git://github.com/airblade/vim-gitgutter.git
-	branch = master
 [submodule "vim/bundle/nerdtree-git-plugin"]
         path = vim/bundle/nerdtree-git-plugin
         url = https://github.com/xuyuanp/nerdtree-git-plugin
         branch = master
-[submodule "vim/bundle/airline"]
-	path = vim/bundle/airline
-	url = git://github.com/vim-airline/vim-airline.git
-	branch = master
 [submodule "vim/bundle/vim-sensible"]
         path = vim/bundle/vim-sensible
         url = https://github.com/tpope/vim-sensible
@@ -29,6 +21,3 @@
         path = conky
         url = https://github.com/j-maynard/conky-setup
         branch = main
-[submodule "vim/bundle/nerdtree"]
-	path = vim/bundle/nerdtree
-	url = https://github.com/preservim/nerdtree.git
