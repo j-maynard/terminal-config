@@ -1,11 +1,12 @@
-[user]
-	name = jamie
-	email = jamie.maynard@me.com
-	signingkey = 224AE4DCD3834D92
+[include]
+        path = ~/.term-config/gituser
+[core]
+        pager = 'bat'
 [commit]
 	gpgsign = true
 [alias]
 	recommit = !git commit -eF $(git rev-parse --git-dir)/COMMIT_EDITMSG
+	spull = !git pull && git submodule sync --recursive && git submodule update --init --recursive
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f

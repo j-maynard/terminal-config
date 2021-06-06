@@ -1,3 +1,15 @@
+[submodule "vim/bundle/airline"]
+	path = vim/bundle/airline
+	url = https://github.com/vim-airline/vim-airline.git
+    branch = master
+[submodule "vim/bundle/git-gutter"]
+	path = vim/bundle/git-gutter
+	url = https://github.com/airblade/vim-gitgutter
+    branch = master
+[submodule "vim/bundle/nerdtree"]
+	path = vim/bundle/nerdtree
+	url = https://github.com/preservim/nerdtree.git
+    branch = master
 [submodule "vim/bundle/nerdtree-git-plugin"]
         path = vim/bundle/nerdtree-git-plugin
         url = https://github.com/xuyuanp/nerdtree-git-plugin
@@ -8,7 +20,7 @@
         branch = master
 [submodule "vim/bundle/sensible"]
 	path = vim/bundle/sensible
-	url = git://github.com/tpope/vim-sensible.git
+	url = https://github.com/tpope/vim-sensible.git
 	branch = master
 [submodule "vim/bundle/tmuxline.vim"]
 	path = vim/bundle/tmuxline.vim
