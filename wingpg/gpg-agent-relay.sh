@@ -12,7 +12,7 @@ while [ "$1" != "" ]; do
     shift
 done
 
-GPGDIR="${HOME}/.gnupg"
+GPGDIR="${HOME}/.gnupg-usbc"
 USERNAME=jamie
 # I use the same username for wsl and windows, but feel free to modify the paths below if that isn't the case
 WIN_GPGDIR="C:/Users/${USERNAME}/AppData/Roaming/gnupg"
@@ -31,7 +31,14 @@ if [ ! -z "${OLDPID}" ]; then
     fi
 fi
 
-rm -f "${GPGDIR}/S.gpg-agent*"
+# The previous rm command wasn't working
+# So now being more specific.
+if test -S "${GPGDIR}/S.gpg-agent"; then
+    rm -f $GPGDIR/S.gpg-agent
+fi
+if test -S "${GPGDIR}/S.gpg-agent.ssh"; then
+    rm -f $GPGDIR/S.gpg-agent.ssh
+fi
 echo $$ > ${PIDFILE}
 
 # Relay the regular gpg-agent socket for gpg operations
