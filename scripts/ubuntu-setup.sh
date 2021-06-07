@@ -516,18 +516,6 @@ install_1password() {
     fi
 }
 
-# install_1password() {
-#     show_msg "Installing 1Password..."
-#     curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo apt-key add - > /dev/null 2>&1
-#     echo 'deb [arch=amd64] https://downloads.1password.com/linux/debian/amd64 beta main' | sudo tee /etc/apt/sources.list.d/1password-beta.list
-#     sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/
-#     curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol
-#     sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22
-#     curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
-#     sudo apt-get update
-#     sudo apt-get install -y 1password
-# }
-
 install_inkscape() {
     if [[ $(lsb_release -c -s) == "hirsute" ]]; then
         show_msg "Skipping Inkscape install using PPA, already installed via Flatpak."
@@ -709,10 +697,6 @@ install_kvantum() {
     if which plasmashell > /dev/null; then
         show_msg "Installing Kvantum Plasma theme manager..."
         sudo add-apt-repository -y ppa:papirus/papirus > /dev/null 2>&1
-        if ! curl -Ss -f http://ppa.launchpad.net/papirus/papirus/ubuntu/dists/$(lsb_release -c -s) > /dev/null 2>&1; then
-            show_msg "No hirsute release... Falling back to groovy..."
-            sudo sed -i "s/$(lsb_release -c -s)/groovy/" /etc/apt/sources.list.d/papirus-ubuntu-papirus-$(lsb_release -c -s).list
-        fi
         sudo apt-get update > /dev/null
         sudo apt-get install -y qt5-style-kvantum qt5-style-kvantum-themes > /dev/null
     fi
@@ -735,6 +719,7 @@ install_custom_panel() {
         git clone -q https://github.com/j-maynard/kde-panels /tmp/kde-panels
         cd /tmp/kde-panels/panels
         kpackagetool5 -t Plasma/LayoutTemplate --install org.kde.plasma.desktop.hudPanel
+        kpackagetool5 -t Plasma/LayoutTemplate --install org.kde.plasma.desktop.gnomePanel
     fi
 }
 
@@ -830,6 +815,7 @@ if plasmashell --version >/dev/null 2>&1; then
         chmod +w \$C 
         sed -i 's/ubuntu/kubuntu/' \$C
         sed -i 's/Ubuntu/Kubuntu/' \$C
+        sed -i 's/kkubuntu/kubuntu/' \$C
         chmod -w \$C
 fi
 EOF

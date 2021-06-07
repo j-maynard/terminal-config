@@ -34,22 +34,22 @@ show_msg() {
 }
 
 set_username() {
-    if [[ $(uname) == "Darwin" ]]; then
-	HOME=/Users
-    else
-	HOME=/home
-    fi
-    if [ -z $SUDO_USER ]; then
-        USERNAME=$USER
-    else
-        USERNAME=$SUDO_USER
-    fi
-    if [[ $USERNAME == "root" ]]; then
-	USER_PATH="/root"
-    else
-        USER_PATH="$HOME/$USER"
-    fi
-    show_msg "User path is now set to '$USER_PATH'"
+  if [[ $(uname) == "Darwin" ]]; then
+    HOME=/Users
+  else
+    HOME=/home
+  fi
+  if [ -z $SUDO_USER ]; then
+    USERNAME=$(whoami)
+  else
+    USERNAME=$SUDO_USER
+  fi
+  if [[ $USERNAME == "root" ]]; then
+    USER_PATH="/root"
+  else
+    USER_PATH="$HOME/$USER"
+  fi
+  show_msg "User path is now set to '$USER_PATH'"
 }
 
 check_requirements() {
@@ -233,7 +233,6 @@ setup_git() {
 configFiles=("streamdeck_ui.json" "emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt" "gitconfig")
 VERBOSE=false
 SHOW_ONLY=false
-TERMCONFIG="${USER_PATH}/.term-config"
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -274,6 +273,7 @@ if [ $VERBOSE == "false" ]; then
 fi
 
 set_username
+TERMCONFIG="${USER_PATH}/.term-config"
 check_requirements
 remove_existing
 link_files

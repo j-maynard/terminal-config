@@ -72,7 +72,8 @@ while true; do
     esac
 done
 
-git config --global user.name "${USERNAME}"
-git config --global user.email "${EMAIL}"
-git config --global user.signingkey ${SIGNING_KEY}
+echo -e "[user]\n\t\tname = ${USERNAME}\n\t\temail = ${EMAIL}\n\t\tsigningkey = ${SIGNING_KEY}\n" > ${HOME}/.term-config/gituser
+#git config --global user.name "${USERNAME}"
+#git config --global user.email "${EMAIL}"
+#git config --global user.signingkey ${SIGNING_KEY}
 git config --global commit.gpgsign true
