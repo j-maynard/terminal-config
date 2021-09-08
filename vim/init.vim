@@ -22,6 +22,7 @@ set colorcolumn=72
 set shiftwidth=4
 set softtabstop=4
 set expandtab
+autocmd Filetype rb setlocal tabstop=4
 set guifont=UbuntuMonoDerivativePowerline-Regular:h16
 source $VIMRUNTIME/menu.vim
 color dracula
