@@ -104,14 +104,14 @@ apt_install() {
 
     apt_pkgs=( "git" "curl" "zsh"  "python3.9-dev" "python3-pip" 
         "build-essential" "jed" "htop" "links" "lynx" "tree" "tmux" 
-        "openjdk-11-jdk" "maven" "vim" "vim-nox"
+        "openjdk-11-jdk" "openjdk-17-jdk" "maven" "vim" "vim-nox"
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
         "pinentry-curses" "libxml2-utils" "apt-transport-https"
 	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav"
-        "openjdk-11-jdk" "default-jdk" "jq" "gnupg2" )
+        "default-jdk" "jq" "gnupg2" )
 
     x_apt_pkgs=( "idle-python3.9" "vim-gtk3" "libappindicator3-1"
-        "flatpak" "gnome-keyring" "neovim" "materia-gtk-theme" "gtk2-engines-murrine"
+        "flatpak" "gnome-keyring" "materia-gtk-theme" "gtk2-engines-murrine"
 	    "gtk2-engines-pixbuf" "lm-sensors" "nvme-cli" "conky-all" "gdebi-core" )
 
     neon_pkgs=( "wget" "fonts-liberation" )
@@ -197,28 +197,39 @@ change_shell() {
 	fi
 }
 
+retry_loop() {
+    FUNC_NAME="$1"
+    $FUNC_NAME
+    if [[ $? != 0 ]]; then
+        show_msg "Retrying function $FUNC_NAME..."
+        $FUNC_NAME
+    fi
+}
+
 install_lsd() {
     install_feedparser
     LSDVER=$(get_version https://github.com/Peltoche/lsd/tags.atom)
     case $(uname -m) in
         x86_64)     ARCH=amd64
                     ;;
-        armv6l)     ARCH=armv6l
+        arm64)     ARCH=arm64
                     ;;
         *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
-                    return
+                    return 0
     esac
     show_msg "Installing the latest version of LSD -> version: ${LSDVER}..."
     wget -q -O /tmp/lsd_${LSDVER}_${ARCH}.deb "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
     if [ ! -f "lsd_${LSDVER}_${ARCH}.deb" ]; then
         show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
-        return
+        return 1
     fi
     sudo dpkg -i /tmp/lsd_${LSDVER}_${ARCH}.deb
     if [ $? == 0 ]; then
         rm /tmp/lsd_${LSDVER}_${ARCH}.deb
+        return 0
     else
         show_msg "Failed to install ls replacement lsd"
+        return 1
     fi
 }
 
@@ -229,20 +240,22 @@ install_yq() {
         x86_64)     ARCH=amd64
                     ;;
         *)          echo "${red}yq only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
-                    return
+                    return 0
     esac
     show_msg "Installing the latest version of yq -> version: ${YQVER}..."
     wget -q -O /tmp/yq_linux_amd64.tar.gz "https://github.com/mikefarah/yq/releases/download/${YQVER}/yq_linux_amd64.tar.gz"
     if [ ! -f "yq_linux_amd64.tar.gz" ]; then
         show_msg "${red}Failed to download yq... ${normal}${green}Skipping install...${normal}"
-        return
+        return 1
     fi
     tar -zxf yq_linux_amd64.tar.gz
     sudo mv yq_linux_amd64 /usr/local/bin/yq
     if which yq > /dev/null; then
         rm yq_linux_amd64.tar.gz
+        return 0
     else
         show_msg "Failed to install ncspot Spotify Client"
+        return 1
     fi
 }
 
@@ -257,20 +270,22 @@ install_bat() {
         armhf)      ARCH=armhf
                     ;;
         *)          echo "${red}Can't identify Arch to match to an bat download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
-                    return
+                    return 0
     esac
     show_msg "Installing the latest version of bat -> version: ${BATVER}..."
 
     wget -q -O /tmp/bat_${BATVER}_${ARCH}.deb "https://github.com/sharkdp/bat/releases/download/v${BATVER}/bat_${BATVER}_${ARCH}.deb"
     if [ ! -f "/tmp/bat_${BATVER}_${ARCH}.deb" ]; then
         show_msg "${red}Failed to download bat... ${normal}${green}Skipping install...${normal}"
-        return
+        return 1
     fi
     sudo dpkg -i /tmp/bat_${BATVER}_${ARCH}.deb
     if [ $? == 0 ]; then
         rm /tmp/bat_${BATVER}_${ARCH}.deb
+        return 0
     else
         show_msg "Failed to install bat the cat clone with wings"
+        return 1
     fi
 }
 
@@ -281,20 +296,22 @@ install_ncspot() {
         x86_64)     ARCH=amd64
                     ;;
         *)          echo "${red}ncspot only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
-                    return
+                    return 0
     esac
     show_msg "Installing the latest version of ncspot -> version: ${SPOTVER}..."
     wget -q -O /tmp/ncspot-${SPOTVER}-linux.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/${SPOTVER}/ncspot-${SPOTVER}-linux.tar.gz"
     if [ ! -f "/tmp/ncspot-${SPOTVER}-linux.tar.gz" ]; then
         show_msg "${red}Failed to download ncspot... ${normal}${green}Skipping install...${normal}"
-        return
+        return 1
     fi
     tar -zxf /tmp/ncspot-${SPOTVER}-linux.tar.gz
     sudo mv /tmp/ncspot /usr/local/bin
     if which ncspot > /dev/null; then
         rm ncspot-${SPOTVER}-linux.tar.gz
+        return 0
     else
         show_msg "Failed to install ncspot Spotify Client"
+        return 1
     fi
 }
 
@@ -305,19 +322,21 @@ install_xidel() {
         x86_64)     ARCH=amd64
                     ;;
         *)          echo "${red}Xidel only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
-                    return
+                    return 0
     esac
     show_msg "Installing the latest version of xidel -> version: ${XIVER}..."
     wget -q -O /tmp/xidel_${XIVER}-1_${ARCH}.deb "https://github.com/benibela/xidel/releases/download/Xidel_${XIVER}/xidel_${XIVER}-1_${ARCH}.deb"
     if [ ! -f "/tmp/xidel_${XIVER}-1_${ARCH}.deb" ]; then
         show_msg "${red}Failed to download xidel... ${normal}${green}Skipping install...${normal}"
-        return
+        return 1
     fi
     sudo dpkg -i /tmp/xidel_${XIVER}-1_${ARCH}.deb
     if [ $? == 0 ]; then
         rm xidel_${XIVER}-1_${ARCH}.deb
+        return 0
     else
         show_msg "Failed to install Xidel XML Parser."
+        return 1
     fi
 }
 
@@ -328,7 +347,7 @@ install_go() {
         if [ -f /usr/local/go/bin/go ]; then
             if [ $(/usr/local/go/bin/go version | cut -d' ' -f3) ==  $GOVER ]; then
                 show_msg "${green}Latest Version of Go (${GOVER} is already installed.${normal}  Skipping go install..."
-                return
+                return 0
             fi
         fi
     fi
@@ -338,14 +357,16 @@ install_go() {
                     ;;
         armv6l)     ARCH=armv6l
                     ;;
+        arm64)      ARCH=arm64
+                    ;;
         *)          show_msg "${red}Can't identify Arch to match to a Go download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
-                    return
+                    return 0
     esac
     show_msg "Installing the latest version of Go -> version: ${GOVER}..."
     wget -q -O /tmp/${GOVER}.linux-${ARCH}.tar.gz https://dl.google.com/go/${GOVER}.linux-${ARCH}.tar.gz
     if [ ! -f "/tmp/${GOVER}.linux-${ARCH}.tar.gz" ]; then
         show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
-        return
+        return 1
     fi
     if [ -d "/usr/local/go" ]; then
         sudo rm -rf /usr/local/go
@@ -360,6 +381,7 @@ install_go() {
     fi
     sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
     sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
+    return 0
 }
 
 setup_wsl() {
@@ -405,12 +427,12 @@ EOF
 }
 
 setup_shims() {
-    curl -LSs "$GIT_REPO/scripts/shim-setup.sh"
+    show_msg "Running jenv/rbenv setup script..."
+    curl -LSs "$GIT_REPO/scripts/shim-setup.sh" | bash -s - $VARG
     if [ $? -eq 0 ]; then
-        show_msg "Running jenv/rbenv setup script..."
-        curl -LSs "$GIT_REPO/scripts/shim-setup.sh" | bash -s - $VARG
+        show_msg "${green}RBenv and Jenv installed successfully.${normal}"
     else
-        show_msg "${red}Unable to get shim script... Skipping."
+        show_msg "${red}Failed to install rbenv/jenv.${normal}"
     fi
 }
 
@@ -464,10 +486,6 @@ setup_flatpak() {
     sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
     show_msg "Installing Geary using Flatpak..."
     sudo flatpak install -y flathub org.gnome.Geary
-    if [[ $(lsb_release -c -s) == "hirsute" ]]; then
-        show_msg "Installing Inkscape using Flatpak..."
-        sudo flatpak install -y flathub org.inkscape.Inkscape
-    fi
 }
 
 install_chrome() {
@@ -517,10 +535,6 @@ install_1password() {
 }
 
 install_inkscape() {
-    if [[ $(lsb_release -c -s) == "hirsute" ]]; then
-        show_msg "Skipping Inkscape install using PPA, already installed via Flatpak."
-        return
-    fi
     show_msg "Installing Inkscape..."
     sudo add-apt-repository -y ppa:inkscape.dev/stable
     sudo apt-get update
@@ -688,7 +702,7 @@ fix_sddm() {
         grep term-config /usr/share/sddm/scripts/Xsetup
         if [ $? != 0 ]; then
             show_msg "Updating SDDM XSetup script..."
-            curl -LSs "$GIT_REPO/Xsetup.snippet" | sudo tee -a /usr/share/sddm/scripts/Xsetup >/dev/null
+            curl -LSs "$GIT_REPO/lib/Xsetup.snippet" | sudo tee -a /usr/share/sddm/scripts/Xsetup >/dev/null
         fi
     fi
 }
@@ -755,7 +769,7 @@ setup_openrazer() {
         sudo mv /tmp/11-razer.conf /etc/X11/xorg.conf.d/
 
         show_msg "Razer Hardware Detected... Installing OpenRazer..."
-        sudo add-apt-repository -y ppa:openrazer/stable
+        sudo add-apt-repository -y ppa:openrazer/daily
 
         if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
             exec > /dev/tty
@@ -827,7 +841,7 @@ install_con_fonts() {
         return
     fi
     show_msg "Running console fonts setup script..."
-    curl -LSs "$GIT_REPO/console-font-setup.sh" | sudo bash -s - $VARG 
+    curl -LSs "$GIT_REPO/scripts/console-font-setup.sh" | sudo bash -s - $VARG 
 }
 
 install_nerd_fonts() {
@@ -945,12 +959,12 @@ apt_install
 install_antibody
 change_shell
 install_feedparser
-install_lsd
-install_yq
-install_bat
-install_ncspot
-install_xidel
-install_go
+retry_loop "install_lsd"
+retry_loop "install_yq"
+retry_loop "install_bat"
+retry_loop "install_ncspot"
+retry_loop "install_xidel"
+retry_loop "install_go"
 
 setup_wsl
 setup_shims
@@ -991,12 +1005,14 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     install_qogir_theme
 fi
 
-show_msg "\n\nDoing some hardware setup...\n\n"
-# Disabled while I wait for better support for the BlackWidow and Naga pro
-#setup_openrazer
-install_nvidia_modules_to_initramfs
-fix-update-grub
-install_con_fonts
+if [[ $WSL == "false" ]]; then
+    show_msg "\n\nDoing some hardware setup...\n\n"
+    # Disabled while I wait for better support for the BlackWidow and Naga pro
+    #setup_openrazer
+    install_nvidia_modules_to_initramfs
+    fix-update-grub
+    install_con_fonts
+fi
 
 if [[ $COMMANDLINE_ONLY == "false" ]]; then
     install_nerd_fonts

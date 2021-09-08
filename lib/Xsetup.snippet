@@ -1,0 +1,15 @@
+# Added by term-config install script
+connectedOutputs=$(xrandr | grep " connected" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/")
+activeOutput=$(xrandr | grep -E " connected (primary )?[1-9]+" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/")
+
+for display in $connectedOutputs
+do
+	if [ ! -z $lastDisplay ]; then
+		xrandr --output "$display" --right-of "$lastDisplay" --auto
+	fi
+	lastDisplay=$display
+done
+
+if xrandr | fgrep '*' |grep 2160; then
+        xrandr --dpi 192
+fi

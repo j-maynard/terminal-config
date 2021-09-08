@@ -35,7 +35,7 @@ set_username() {
     fi
 }
 
-export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/main/scripts"
+export GIT_REPO="https://raw.githubusercontent.com/j-maynard/terminal-config/main"
 
 usage() {
     echo -e "Usage:"
@@ -77,13 +77,19 @@ get_file() {
     fi
 }
 
+setup_dev_dir() {
+    if [ ! -d $USER_PATH/Development ]; then
+        mkdir -p $USER_PATH/Development
+    fi
+}
+
 os_script() {
     GET=$1
     OS=$2
     MODEL=$3
     show_msg "Getting OS/Distro setup script for '${OS}' from git"
     cd /tmp
-    get_file $GET "${OS}-setup.sh" "$GIT_REPO/${OS}-setup.sh?$(date +%s)"
+    get_file $GET "${OS}-setup.sh" "$GIT_REPO/scripts/${OS}-setup.sh?$(date +%s)"
     chmod +x ${OS}-setup.sh
     exec > /dev/tty
     if [[ $OS == "ubuntu" && $STREAMING == "true" ]]; then
@@ -201,7 +207,7 @@ setup_config() {
         git clone $GIT_QUIET https://github.com/j-maynard/terminal-config.git "${USER_PATH}/.term-config"
     fi
 
-    show_msg "Running config script at '${USER_PATH}/.term-config/config-setup.sh'..."
+    show_msg "Running config script at '${USER_PATH}/.term-config/scripts/config-setup.sh'..."
     
     exec > /dev/tty
     $USER_PATH/.term-config/scripts/config-setup.zsh $VARG
@@ -327,6 +333,7 @@ if [ $VERBOSE == "false" ]; then
 fi
 
 set_username
+setup_dev_dir
 theme_only
 setup_os
 setup_config

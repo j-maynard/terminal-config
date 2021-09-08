@@ -204,9 +204,12 @@ link_files() {
 }
 
 setup_fzf() {
+  STARTPATH=$(pwd)
   show_msg "Installing FZF..."
   git clone --depth 1 https://github.com/junegunn/fzf.git ${USER_PATH}/.fzf
-  ${USER_PATH}/.fzf/install
+  cd ${USER_PATH}
+  ${USER_PATH}/.fzf/install --bin
+  cd $STARTPATH
 }
 
 setup_vim() {
@@ -230,7 +233,7 @@ setup_git() {
     git config --global alias.recommit '!git commit -eF $(git rev-parse --git-dir)/COMMIT_EDITMSG'
 }
 
-configFiles=("streamdeck_ui.json" "emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt" "gitconfig")
+configFiles=("streamdeck_ui.json" "emacs" "gitignore_global" "iterm2_shell_integration.zsh" "tmux" "tmux.conf.local" "zsh_plugins.txt" "zprofile" "zshenv" "zshrc" "vim" "mutt" "gitconfig" "fzf.bash" "fzf.zsh")
 VERBOSE=false
 SHOW_ONLY=false
 
