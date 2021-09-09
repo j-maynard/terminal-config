@@ -613,22 +613,12 @@ install_virtualbox() {
 setup_obs() {
     exec > /dev/tty
     show_msg "Streaming selected... Installing Open Braodcase System (OBS)..."
-    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
-        exec > /dev/tty
-        sudo ubuntu-drivers autoinstall
-        if [ $VERBOSE == "false" ]; then
-            exec > /dev/null
-        fi
-    else
-        sudo ubuntu-drivers autoinstall
-    fi
     sudo add-apt-repository -y ppa:obsproject/obs-studio  > /dev/null 2>&1
     if ! curl -Ss -f http://ppa.launchpad.net/obsproject/obs-studio/ubuntu/dists/$(lsb_release -c -s) > /dev/null 2>&1; then
         show_msg "No $(lsb_release -c -s) release... Skipping OBS install"
         return
     fi
     sudo apt-get update > /dev/null
-
     if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
         exec > /dev/tty
         sudo apt-get install -y obs-studio
@@ -638,48 +628,102 @@ setup_obs() {
     else
         sudo apt-get install -y obs-studio > /dev/null
     fi
-    
-    sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
-    echo 'v4l2loopback' | sudo tee -a /etc/modules 
-    echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf > /dev/null
-    if lsusb |grep 0fd9:006d > /dev/null; then
-        setup_streamdeck
-    else
-        show_msg "If this system will be used with streamdeck you'll need to run the streamdeck setup script"
+    # Disabled this as I think OBS now does this automatically
+    #sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
+    #echo 'v4l2loopback' | sudo tee -a /etc/modules 
+    #echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf > /dev/null
+}
+
+setup_nvidia_drivers() {
+	if lspci |grep NVIDIA > /dev/null; then
+		show_msg "${green}Checking NVIDIA driver status...${normal}"
+		if ! lsmod |grep nvidia_uvm; then
+			show_msg "${red}Installing NVIDIA Propriatory drivers...${normal}"
+			if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+				exec > /dev/tty
+				sudo ubuntu-drivers autoinstall
+				if [ $VERBOSE == "false" ]; then
+					exec > /dev/null
+				fi
+			else
+				sudo ubuntu-drivers autoinstall
+			fi
+		fi
+	fi
+}
+
+install_nvidia_modules_to_initramfs() {
+    if lspci |grep NVIDIA > /dev/null; then
+        echo -e "nvidia\nnvidia_modeset\nnvidia_uvm\nnvidia_drm" | sudo tee -a /etc/initramfs-tools/modules
     fi
 }
 
 setup_streamdeck() {
-    show_msg "Installing streamdeck libraries..."
-    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
-        exec > /dev/tty
-        sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
-        if [ $VERBOSE == "false" ]; then
-            exec > /dev/null
-        fi
-    else
-        sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
-    fi
-    
-    show_msg "Adding udev rules and reloading"
-    sudo usermod -a -G plugdev `whoami`
+    if lsusb |grep 0fd9:006d > /dev/null; then
+		show_msg "Installing streamdeck libraries..."
+		if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+			exec > /dev/tty
+			sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
+			if [ $VERBOSE == "false" ]; then
+				exec > /dev/null
+			fi
+		else
+			sudo apt-get install -y qt5-default libhidapi-hidraw0 libudev-dev libusb-1.0-0-dev python3-pip
+		fi
 
-    sudo tee /etc/udev/rules.d/99-streamdeck.rules << EOF
+		show_msg "Adding udev rules and reloading"
+		sudo usermod -a -G plugdev `whoami`
+
+		sudo tee /etc/udev/rules.d/99-streamdeck.rules << EOF
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", MODE:="666", GROUP="plugdev"
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0063", MODE:="666", GROUP="plugdev"
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006c", MODE:="666", GROUP="plugdev"
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="006d", MODE:="666", GROUP="plugdev"
 EOF
 
-    sudo udevadm control --reload-rules
+		sudo udevadm control --reload-rules
 
-    show_msg "Unplug and replug in device for the new udev rules to take effect"
-    show_msg "Installing streamdeck_ui..."
-    pip3 install --user streamdeck_ui
-    if [ $? == 0 ]; then
-        show_msg "StreamDeck-UI Installed"
-    else
-        show_msg "Something went wrong installing StreamDeck-Ui"
+		show_msg "Unplug and replug in device for the new udev rules to take effect"
+		show_msg "Installing streamdeck_ui..."
+		pip3 install --user streamdeck_ui
+		if [ $? == 0 ]; then
+			show_msg "StreamDeck-UI Installed"
+		else
+			show_msg "Something went wrong installing StreamDeck-Ui"
+		fi
+    fi
+}
+
+setup_openrazer() {
+    if lsusb |grep 1532 > /dev/null 2>&1; then
+        show_msg "Razer Hardware Detected... Applying Xorg Conf File"
+        wget -q -O /tmp/11-razer.conf "https://raw.githubusercontent.com/j-maynard/terminal-config/main/lib/11-razer.conf"
+        sudo mv /tmp/11-razer.conf /etc/X11/xorg.conf.d/
+
+        show_msg "Razer Hardware Detected... Installing OpenRazer..."
+        sudo add-apt-repository -y ppa:openrazer/daily
+
+        if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+            exec > /dev/tty
+            sudo apt-get install -y openrazer-meta
+            if [ $VERBOSE == "false" ]; then
+                exec > /dev/null
+            fi
+        else
+            sudo apt-get install -y openrazer-meta
+        fi
+
+        if [[ $COMMANDLINE_ONLY == "false" ]]; then
+            # Add RazerGenie Repo
+            echo 'deb http://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/hardware-razer.list
+            curl -LSso /tmp/razergenie.key https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key
+            sudo apt-key add /tmp/razergenie.key
+            # Add Polychromatic Repo
+            sudo add-apt-repository -y ppa:polychromatic/stable
+            # Install Both
+            sudo apt-get update
+            sudo apt-get install -y polychromatic razergenie
+        fi
     fi
 }
 
@@ -737,6 +781,12 @@ install_custom_panel() {
     fi
 }
 
+setup_breeze_dark() {
+	lookandfeeltool -a org.kde.breezedark.desktop
+	sudo flatpak install -y flathub flathub org.gtk.Gtk3theme.Breeze-Dark
+	sudo flatpak override --filesystem=~/.themes
+}
+
 install_qogir_theme() {
     show_msg "Setting up Qogir Material Theme..."
     mkdir -p ~/.local/share/plasma/plasmoids
@@ -762,60 +812,8 @@ install_qogir_theme() {
     fi
 }
 
-setup_openrazer() {
-    if lsusb |grep 1532 > /dev/null 2>&1; then
-        show_msg "Razer Hardware Detected... Applying Xorg Conf File"
-        wget -q -O /tmp/11-razer.conf "https://raw.githubusercontent.com/j-maynard/terminal-config/main/lib/11-razer.conf"
-        sudo mv /tmp/11-razer.conf /etc/X11/xorg.conf.d/
-
-        show_msg "Razer Hardware Detected... Installing OpenRazer..."
-        sudo add-apt-repository -y ppa:openrazer/daily
-
-        if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
-            exec > /dev/tty
-            sudo apt-get install -y openrazer-meta
-            if [ $VERBOSE == "false" ]; then
-                exec > /dev/null
-            fi
-        else
-            sudo apt-get install -y openrazer-meta
-        fi
-
-        if [[ $COMMANDLINE_ONLY == "false" ]]; then
-            # Add RazerGenie Repo
-            echo 'deb http://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/hardware-razer.list
-            curl -LSso /tmp/razergenie.key https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key
-            sudo apt-key add /tmp/razergenie.key
-            # Add Polychromatic Repo
-            sudo add-apt-repository -y ppa:polychromatic/stable
-            # Install Both
-            sudo apt-get update
-            sudo apt-get install -y polychromatic razergenie
-        fi
-    fi
-}
-
-install_nvidia_modules_to_initramfs() {
-    if lspci |grep NVIDIA > /dev/null; then
-        echo -e "nvidia\nnvidia_modeset\nnvidia_uvm\nnvidia_drm" | sudo tee -a /etc/initramfs-tools/modules
-    fi
-}
-
 fix-update-grub() {
-	# Install Grub Theme
-	# TODO Make own GRUB theme for the Razer Blade
-    show_msg "Installing grub themes..."
-	t=/tmp/grub2-theme2
-	git clone ${GIT_QUIET} https://github.com/vinceliuice/grub2-themes.git $t
-        if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
-            R4K='-4'
-        fi
-	sudo $t/install.sh -b -v -w $R4K > /dev/null 2>&1
-	sudo $t/install.sh -b -s $R4K > /dev/null 2>&1
-	sudo $t/install.sh -b -l $R4K > /dev/null 2>&1
-	sudo $t/install.sh -b -t $R4K > /dev/null 2>&1
-	rm -rf $t
-	# As there is no accurate way to detect Kubuntu from Ubuntu
+# As there is no accurate way to detect Kubuntu from Ubuntu
 	# We look for plasmashell instead and then assume its Kubuntu.
 	if plasmashell --version >/dev/null 2>&1; then
         show_msg "Updating update grub script to replace Ubuntu with Kubuntu..."
@@ -834,6 +832,22 @@ if plasmashell --version >/dev/null 2>&1; then
 fi
 EOF
 	fi
+}
+
+install_grub_themes() {
+	# Install Grub Theme
+	# TODO Make own GRUB theme for the Razer Blade
+    show_msg "Installing grub themes..."
+	t=/tmp/grub2-theme2
+	git clone ${GIT_QUIET} https://github.com/vinceliuice/grub2-themes.git $t
+        if /usr/bin/xrandr --query|/usr/bin/grep -A 1 connected|grep -v connected| grep 2160 > /dev/null 2&>1; then
+            R4K='-4'
+        fi
+	sudo $t/install.sh -b -v -w $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -s $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -l $R4K > /dev/null 2>&1
+	sudo $t/install.sh -b -t $R4K > /dev/null 2>&1
+	rm -rf $t
 }
 
 install_con_fonts() {
@@ -890,13 +904,16 @@ PRIVATE=false
 WSL=false
 NEON=false
 FEEDPASER=false
-GAMES=false
+GAMES=true
+DESKTOP_THEME=breeze-dark
 VM=false
 FUNC=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
+		q | -q | --qogir)				DESKTOP_THEME=qogir
+										;;
         g | -g | --no-games)            GAMES=false
                                         ;;
         n | -n | --neon)                NEON=true
@@ -1002,15 +1019,23 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
         install_virtual_desktop_bar
         install_custom_panel
     fi
-    install_qogir_theme
+	
+	case $DESKTOP_THEME in
+        qogir)	install_qogir_theme
+				;;
+		*)		setup_breeze_dark
+				;;
+		esac
 fi
 
 if [[ $WSL == "false" ]]; then
     show_msg "\n\nDoing some hardware setup...\n\n"
-    # Disabled while I wait for better support for the BlackWidow and Naga pro
-    #setup_openrazer
-    install_nvidia_modules_to_initramfs
+	setup_nvidia_drivers
+	install_nvidia_modules_to_initramfs
+	setup_openrazer
+	setup_streamdeck
     fix-update-grub
+	install_grub_themes
     install_con_fonts
 fi
 
