@@ -262,7 +262,7 @@ private_setup() {
     exec > /dev/tty
     eval "$(gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)"
     show_msg "Running git setup script..."
-    ${USER_PATH}/.term-config/scripts/git-setup.sh
+    ${USER_PATH}/.term-config/scripts/git-setup.zsh
     if [ $VERBOSE == "false" ]; then
         exec > /dev/null
     fi
