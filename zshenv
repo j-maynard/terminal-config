@@ -38,6 +38,12 @@ export TMUX_INTEGRATION=true
 # Uncomment to stop TMUX from running at startup
 export RUN=false
 
+# Bug in pip3 means it looks for a keyring
+# if it queries kwallet and no keyring exists
+# it prompts kwallet to create one.  This envvar
+# stops that from happening.
+export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+
 # HiDPI Settings for GTK Apps doesn't work well with
 # KDE Plasma HiDPI Scalling.
 # export GDK_DPI_SCALE=1.75
