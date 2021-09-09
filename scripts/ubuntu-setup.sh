@@ -299,7 +299,7 @@ install_ncspot() {
                     return 0
     esac
     show_msg "Installing the latest version of ncspot -> version: ${SPOTVER}..."
-    wget -q -O /tmp/ncspot-${SPOTVER}-linux.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/${SPOTVER}/ncspot-${SPOTVER}-linux.tar.gz"
+    wget -q -O /tmp/ncspot-${SPOTVER}-linux.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/v${SPOTVER}/ncspot-v${SPOTVER}-linux.tar.gz"
     if [ ! -f "/tmp/ncspot-${SPOTVER}-linux.tar.gz" ]; then
         show_msg "${red}Failed to download ncspot... ${normal}${green}Skipping install...${normal}"
         return 1
