@@ -299,15 +299,15 @@ install_ncspot() {
                     return 0
     esac
     show_msg "Installing the latest version of ncspot -> version: ${SPOTVER}..."
-    wget -q -O /tmp/ncspot-${SPOTVER}-linux.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/v${SPOTVER}/ncspot-v${SPOTVER}-linux.tar.gz"
-    if [ ! -f "/tmp/ncspot-${SPOTVER}-linux.tar.gz" ]; then
+    wget -q -O /tmp/ncspot-v${SPOTVER}-linux.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/v${SPOTVER}/ncspot-v${SPOTVER}-linux.tar.gz"
+    if [ ! -f "/tmp/ncspot-v${SPOTVER}-linux.tar.gz" ]; then
         show_msg "${red}Failed to download ncspot... ${normal}${green}Skipping install...${normal}"
         return 1
     fi
-    tar -zxf /tmp/ncspot-${SPOTVER}-linux.tar.gz
+    tar -zxf /tmp/ncspot-v${SPOTVER}-linux.tar.gz
     sudo mv /tmp/ncspot /usr/local/bin
     if which ncspot > /dev/null; then
-        rm ncspot-${SPOTVER}-linux.tar.gz
+        rm /tmp/ncspot-v${SPOTVER}-linux.tar.gz
         return 0
     else
         show_msg "Failed to install ncspot Spotify Client"
