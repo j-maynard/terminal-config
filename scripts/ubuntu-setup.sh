@@ -254,7 +254,7 @@ install_yq() {
         rm yq_linux_amd64.tar.gz
         return 0
     else
-        show_msg "Failed to install ncspot Spotify Client"
+        show_msg "Failed to install yq yaml parser"
         return 1
     fi
 }
@@ -304,7 +304,7 @@ install_ncspot() {
         show_msg "${red}Failed to download ncspot... ${normal}${green}Skipping install...${normal}"
         return 1
     fi
-    tar -zxf /tmp/ncspot-v${SPOTVER}-linux.tar.gz
+    tar -zxf "/tmp/ncspot-v${SPOTVER}-linux.tar.gz"
     sudo mv /tmp/ncspot /usr/local/bin
     if which ncspot > /dev/null; then
         rm /tmp/ncspot-v${SPOTVER}-linux.tar.gz
