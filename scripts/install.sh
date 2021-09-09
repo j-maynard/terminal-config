@@ -260,11 +260,33 @@ private_setup() {
     show_msg "Running private setup script..."
     show_msg "DEBUG: Running: source < (gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)"
     exec > /dev/tty
-    eval "$(gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)"
-    show_msg "Running git setup script..."
-    ${USER_PATH}/.term-config/scripts/git-setup.zsh
-    if [ $VERBOSE == "false" ]; then
-        exec > /dev/null
+    SCRIPT=$(gpg -d -q ${USER_PATH}/.term-config/encrypted/private-setup.gpg)
+    if [ $? != 0 ]; then
+        exec > /dev/tty 
+        echo ""
+        while true; do
+            read -p "Failed to run private setup script... Do you want to retry? [y/n]" yn
+            case $yn in
+                [Yy]* ) private_setup
+                        break
+                        ;;
+                [Nn]* ) setup_git
+                        break
+                        ;;
+                * )     echo "Please answer yes or no."
+                        ;;
+            esac
+        done
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
+    else
+        eval "$SCRIPT"
+        show_msg "Running git setup script..."
+        ${USER_PATH}/.term-config/scripts/git-setup.zsh
+        if [ $VERBOSE == "false" ]; then
+            exec > /dev/null
+        fi
     fi
 }
 
