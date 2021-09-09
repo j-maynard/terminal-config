@@ -62,6 +62,8 @@ show_msg() {
 
 install_feedparser() {
     if [[ $FEEDPASER == "false" ]]; then
+	show_msg "Installing feedparser using pip..."
+	export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
         pip3 install feedparser > /dev/null 2>&1
         export FEEDPASER=true
     fi
