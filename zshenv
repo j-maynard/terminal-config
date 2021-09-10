@@ -1,4 +1,3 @@
-export VERIFY_USE_PUBLIC_BINARIES=true
 export DEVDIR=$HOME/Development
 export TERMCONF=$HOME/.term-config
 export ITERM_INT=false
@@ -49,3 +48,6 @@ export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
 # export GDK_DPI_SCALE=1.75
 # export GDK_SCALE=1.75
 
+# Source local environment variables to over ride
+# any of the envars defined here.
+source ~/.term-config/zshenv.local
