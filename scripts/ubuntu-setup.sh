@@ -133,10 +133,10 @@ apt_install() {
 	PKGS="${PKGS} ${pkg} "
     done
     
-    if [ $(lsb_release -r |xargs| cut -d ":" -f 2 |cut -d "." -f 1 |xargs) -gt "20" ]
+    if [ $(lsb_release -r |xargs| cut -d ":" -f 2 |cut -d "." -f 1 |xargs) -gt "20" ]; then
         for pkg in ${recent_pkgs[@]}; do
-			PKGS="${PKGS} ${pkg} "
-		done
+		PKGS="${PKGS} ${pkg} "
+	done
     fi
     
     if [[ $COMMANDLINE_ONLY == "false" && ! -v WSLENV ]]; then
