@@ -106,15 +106,19 @@ apt_install() {
 
     apt_pkgs=( "git" "curl" "zsh"  "python3.9-dev" "python3-pip" 
         "build-essential" "jed" "htop" "links" "lynx" "tree" "tmux" 
-        "openjdk-11-jdk" "openjdk-17-jdk" "maven" "vim" "vim-nox"
+        "openjdk-11-jdk" "maven" "vim" "vim-nox"
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
         "pinentry-curses" "libxml2-utils" "apt-transport-https"
 	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav"
         "default-jdk" "jq" "gnupg2" )
+	
+    recent_pkgs=( "openjdk-17-jdk" "python3.10-dev" "pyton3.10" )
 
     x_apt_pkgs=( "idle-python3.9" "vim-gtk3" "libappindicator3-1"
         "flatpak" "gnome-keyring" "materia-gtk-theme" "gtk2-engines-murrine"
 	    "gtk2-engines-pixbuf" "lm-sensors" "nvme-cli" "conky-all" "gdebi-core" )
+	    
+    x_recent_pkgs=( "idle-python3.10" )
 
     neon_pkgs=( "wget" "fonts-liberation" )
 
@@ -128,10 +132,22 @@ apt_install() {
     for pkg in ${apt_pkgs[@]}; do
 	PKGS="${PKGS} ${pkg} "
     done
-    if [[ $COMMANDLINE_ONLY == "false" ]]; then
+    
+    if [ $(lsb_release -r |xargs| cut -d ":" -f 2 |cut -d "." -f 1 |xargs) -gt "20" ]
+        for pkg in ${recent_pkgs[@]}; do
+			PKGS="${PKGS} ${pkg} "
+		done
+    fi
+    
+    if [[ $COMMANDLINE_ONLY == "false" && ! -v WSLENV ]]; then
         for pkg in ${x_apt_pkgs[@]}; do
             PKGS="${PKGS} ${pkg} "
         done
+		if [ $(lsb_release -r |xargs| cut -d ":" -f 2 |cut -d "." -f 1 |xargs) -gt "20" ]
+			for pkg in ${x_recent_pkgs[@]}; do
+				PKGS="${PKGS} ${pkg} "
+			done
+		fi
         if plasmashell --version >/dev/null 2>&1; then
             for pkg in ${kde_pkgs[@]}; do
                 PKGS="${PKGS} ${pkg} "
