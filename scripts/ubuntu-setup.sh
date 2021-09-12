@@ -143,12 +143,14 @@ apt_install() {
         for pkg in ${x_apt_pkgs[@]}; do
             PKGS="${PKGS} ${pkg} "
         done
-		if [ $(lsb_release -r |xargs| cut -d ":" -f 2 |cut -d "." -f 1 |xargs) -gt "20" ]
+		
+		if [ $(lsb_release -r |xargs| cut -d ":" -f 2 |cut -d "." -f 1 |xargs) -gt "20" ]; then
 			for pkg in ${x_recent_pkgs[@]}; do
 				PKGS="${PKGS} ${pkg} "
 			done
 		fi
-        if plasmashell --version >/dev/null 2>&1; then
+        
+		if plasmashell --version >/dev/null 2>&1; then
             for pkg in ${kde_pkgs[@]}; do
                 PKGS="${PKGS} ${pkg} "
             done
