@@ -112,7 +112,7 @@ apt_install() {
 	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav"
         "default-jdk" "jq" "gnupg2" )
 	
-    recent_pkgs=( "openjdk-17-jdk" "python3.10-dev" "pyton3.10" )
+    recent_pkgs=( "openjdk-17-jdk" "python3.10-dev" "python3.10" )
 
     x_apt_pkgs=( "idle-python3.9" "vim-gtk3" "libappindicator3-1"
         "flatpak" "gnome-keyring" "materia-gtk-theme" "gtk2-engines-murrine"
