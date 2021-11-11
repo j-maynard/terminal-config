@@ -309,6 +309,36 @@ install_bat() {
     fi
 }
 
+install_glow() {
+    install_feedparser
+    GLOWVER=$(get_version https://github.com/charmbracelet/glow/releases.atom |cut -d 'v' -f 2)
+    case $(uname -m) in
+        x86_64)     ARCH=amd64
+                    ;;
+        arm64)      ARCH=arm64
+                    ;;
+        armhf)      ARCH=armv6
+                    ;;
+        *)          echo "${red}Can't identify Arch to match to a glow download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return 0
+    esac
+    show_msg "Installing the latest version of Glow -> version: ${GLOWVER}..."
+
+    wget -q -O /tmp/glow_${GLOWVER}_${ARCH}.deb "https://github.com/charmbracelet/glow/releases/download/v${GLOWVER}/glow_${GLOWVER}_linux_${ARCH}.deb"
+    if [ ! -f "/tmp/glow_${GLOWVER}_${ARCH}.deb" ]; then
+        show_msg "${red}Failed to download glow... ${normal}${green}Skipping install...${normal}"
+        return 1
+    fi
+    sudo dpkg -i /tmp/glow_${GLOWVER}_${ARCH}.deb
+    if [ $? == 0 ]; then
+        rm /tmp/glow_${GLOWVER}_${ARCH}.deb
+        return 0
+    else
+        show_msg "Failed to install glow the markdown viewer for the commandline"
+        return 1
+    fi
+}
+
 install_ncspot() {
     install_feedparser
     SPOTVER=$(get_version https://github.com/hrkfdn/ncspot/releases.atom)

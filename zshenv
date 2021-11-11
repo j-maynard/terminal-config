@@ -8,6 +8,13 @@ export NERD_FONT=true
 export NF=true
 export POWERLINE_SAFE=true
 export PATH=$HOME/.local/bin:$PATH
+export XDG_CONFIG_HOME=$HOME/.config
+if [[ $XDG_SESSION_TYPE == 'wayland' ]]; then
+    export CHROME_FLAGS='--enable-features=UseOzonePlatform --ozone-platform=wayland'
+    export CHROMIUM_FLAGS='--enable-features=UseOzonePlatform --ozone-platform=wayland'
+    export ELECTRON_FLAGS='--enable-features=UseOzonePlatform --ozone-platform=wayland'
+    export ELECTRON12_FLAGS='--enable-features=UseOzonePlatform --ozone-platform=wayland'
+fi
 if [[ -v WSLENV ]]; then
     if [[ "$TERM_PROG" == "winterm" ]]; then
         export NF_SAFE=true
@@ -47,6 +54,9 @@ export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
 # KDE Plasma HiDPI Scalling.
 # export GDK_DPI_SCALE=1.75
 # export GDK_SCALE=1.75
+
+export PAGER=/usr/bin/bat
+export EDITOR=/usr/bin/nvim
 
 # Source local environment variables to over ride
 # any of the envars defined here.

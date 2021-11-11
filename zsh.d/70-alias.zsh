@@ -39,16 +39,19 @@ alias www='python -m SimpleHTTPServer 8000'
 alias cls='clear'
 alias c='clear'
 
-## GDS Aliases
-alias vpn='gds vpn'
-
 ## Replace cat with bat
 alias cat='bat'
 alias cata='bat -A'
 alias catp='bat -p'
+
+## glow doesn't pager by default
+alias glow='glow -p'
 
 # JSON output view
 alias json='jq -C -r | bat'
 
 # 1Passowrd aliases
 alias 1p-signin="eval \$(op signin punkyideas)"
+
+# Update GPG Yubikey pointer
+alias ykswitch='gpg-connect-agent "scd serialno" "learn --force" /bye'
