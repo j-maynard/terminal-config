@@ -259,6 +259,8 @@ install_yq() {
     case $(uname -m) in
         x86_64)     ARCH=amd64
                     ;;
+        arm64)      ARCH=arm64
+                    ;;
         *)          echo "${red}yq only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
     esac
@@ -356,23 +358,25 @@ install_ncspot() {
     fi
     tar -zxf "/tmp/ncspot-v${SPOTVER}-linux.tar.gz"
     sudo mv /tmp/ncspot /usr/local/bin
-    if which ncspot > /dev/null; then
-        rm /tmp/ncspot-v${SPOTVER}-linux.tar.gz
-        return 0
-    else
-        show_msg "Failed to install ncspot Spotify Client"
-        return 1
-    fi
-}
-
-install_xidel() {
-    install_feedparser
-    XIVER=$(get_version https://github.com/benibela/xidel/releases.atom | cut -d ' ' -f 2)
+    if which install_feedparser
+    YQVER=$(get_version https://github.com/mikefarah/yq/releases.atom | cut -d ' ' -f 1)
     case $(uname -m) in
         x86_64)     ARCH=amd64
                     ;;
-        *)          echo "${red}Xidel only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+        arm64)      ARCH=arm64
+                    ;;
+        *)          echo "${red}yq only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
+    esac
+    show_msg "Installing the latest version of yq -> version: ${YQVER}..."
+    wget -q -O /tmp/yq_linux_amd64.tar.gz "https://github.com/mikefarah/yq/releases/download/${YQVER}/yq_linux_amd64.tar.gz"
+    if [ ! -f "yq_linux_amd64.tar.gz" ]; then
+        show_msg "${red}Failed to download yq... ${normal}${green}Skipping install...${normal}"
+        return 1
+    fi
+    tar -zxf yq_linux_amd64.tar.gz
+    sudo mv yq_linux_amd64 /usr/local/bin/yq
+    if which yq > /       return 0
     esac
     show_msg "Installing the latest version of xidel -> version: ${XIVER}..."
     wget -q -O /tmp/xidel_${XIVER}-1_${ARCH}.deb "https://github.com/benibela/xidel/releases/download/Xidel_${XIVER}/xidel_${XIVER}-1_${ARCH}.deb"
@@ -462,7 +466,7 @@ setup_wsl() {
     WINGPG_HOME="$WSL_HOME/AppData/Roaming/gnupg"
     mkdir -p $WINGPG_HOME
     if [ ! -f "${WINGPG_HOME}/npiperelay.exe" ]; then
-        wget -q -O "${WINGPG_HOME}/npiperelay.exe" https://github.com/NZSmartie/npiperelay/releases/download/v0.1/npiperelay.exe
+        wget -q -O "${WINGPG_HOME}/npiperelay.exe" httpeval "$SCRIPT"s://github.com/NZSmartie/npiperelay/releases/download/v0.1/npiperelay.exe
     fi
     cat << EOF > "${WINGPG_HOME}/gpg-agent.conf"
 enable-ssh-support
@@ -486,6 +490,33 @@ setup_shims() {
     fi
 }
 
+install_docker_compose() {
+    install_feedparser
+    COMPVER=$(get_version https://github.com/docker/compose/releases.atom)
+    case $(uname -m) in
+        x86_64)     ARCH=amd64
+                    ;;
+        arm64)      ARCH=aarch64
+                    ;;
+        *)          show_msg "${red}Can't identify Arch to match to a docker-compose download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return 0
+    esac
+    show_msg "Installing the latest version of docker-compose -> version: ${COMPVER}..."
+    wget -q -O docker-compose-linux-${ARCH} "https://github.com/docker/compose/releases/download/v${COMPVER}/docker-compose-linux-${ARCH}"
+    if [ ! -f "/tmp/docker-compose-linux-${ARCH}" ]; then
+        show_msg "${red}Failed to download docker-compose... ${normal}${green}Skipping install...${normal}"
+        return 1
+    fi
+    chmod +x docker-compose-linux-${ARCH}
+    sudo mv docker-compose-linux-${ARCH} /usr/local/bin/docker-compose
+    if which docker-compose > /dev/null; then
+        return 0
+    else
+        show_msg "Failed to install docker compose"
+        return 1
+    fi
+}
+
 install_docker() {
     if [ -v WSLENV ]; then
         show_msg "Skipping Docker install as this should be done through Windows Docker Desktop..."
@@ -503,13 +534,7 @@ install_docker() {
     fi
     sudo usermod -a -G docker $USERNAME
     show_msg "Installing docker-compose..."
-    sudo curl -SsL "https://github.com/docker/compose/releases/download/1.26.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    if which docker-compose > /dev/null; then
-        show_msg "Docker Compose installed successfully..."
-    else
-        show_msg "Docker Compose install failed... You may need to add /usr/local/bin to your path"
-    fi
+    install_docker_compose
 }
 
 install_snaps() {
