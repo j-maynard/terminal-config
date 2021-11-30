@@ -582,6 +582,13 @@ install_1password() {
             show_msg "Failed to install 1Password..."
         fi
     fi
+    show_msg "Installing 1Password CLI..."
+    if ! which op > /dev/null; then
+        $OPVER=$(xidel -s --xquery '//h3' https://app-updates.agilebits.com/product_history/CLI | head -n 1)
+        wget -q -O /tmp/op_linux_amd64_v$OPVER.zip https://cache.agilebits.com/dist/1P/op/pkg/v$OPVER/op_linux_amd64_v$OPVER.zip
+        unzip -q /tmp/op_linux_amd64_v$OPVER.zip -d /tmp
+        sudo mv /tmp/op /usr/local/bin
+    fi
 }
 
 install_inkscape() {
@@ -678,10 +685,9 @@ setup_obs() {
     else
         sudo apt-get install -y obs-studio > /dev/null
     fi
-    # Disabled this as I think OBS now does this automatically
-    #sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
-    #echo 'v4l2loopback' | sudo tee -a /etc/modules 
-    #echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf > /dev/null
+    sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
+    echo 'v4l2loopback' | sudo tee -a /etc/modules 
+    echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf > /dev/null
 }
 
 setup_nvidia_drivers() {
@@ -1026,10 +1032,12 @@ apt_install
 install_antibody
 change_shell
 install_feedparser
+
 retry_loop "install_lsd"
 retry_loop "install_yq"
 retry_loop "install_bat"
 retry_loop "install_ncspot"
+retry_loop "install_glow"
 retry_loop "install_xidel"
 retry_loop "install_go"
 

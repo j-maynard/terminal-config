@@ -1,0 +1,10 @@
+a:findo:Find occurances within files in a directory
+a:resetcam:Resets V4L2 Loopback device on Linux
+a:ykswitch:Updates GPG with the current Yubikey
+a:1p-signin:Signs in to 1Password
+a:1p:1Password CLI (op)
+c:xdg-desktop-menu forceupdate:Updates the Desktop Menu on Linux
+c:plasma-reset:Restarts Plasmashell
+c:pbcopy:copies the pipe to the clipboard
+c:pbpaste:outputs clipboard contents
+a:test:Some help text for test
