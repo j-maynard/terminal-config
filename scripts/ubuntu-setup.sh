@@ -40,12 +40,12 @@ set_username() {
 
 usage() {
     echo -e "Usage:"
-    echo -e "  ${bold}${red}-s  --streaming${normal}              Install OBS studio as well as v4l2loopback for steaming"
+    echo -e "  ${bold}${red}-o  --obs${normal}                    Don't install OBS studio or v4l2loopback"
     echo -e "  ${bold}${red}-c  --commandline-only${normal}       Install only commandline tools (no snaps, no chrome, etc...)"
     echo -e "  ${bold}${red}-w  --wsl-user [username]${normal}    Sets the Windows username which runs WSL.  This is used to find the windows"
     echo -e "                               users home directory. If not specified it matches it to the linux username."
     echo -e "                               If you run this script as root then you ${bold}MUST${normal} specify this."
-    echo -e "  ${bold}${red}-o  --virtual-box${normal}            Installs VirtualBox"
+    echo -e "  ${bold}${red}-b  --virtual-box${normal}            Installs VirtualBox"
     echo -e "  ${bold}${red}-V  --verbose${normal}                Shows command output for debugging"
     echo -e "  ${bold}${red}-v  --version${normal}                Shows version details and exit"
     echo -e "  ${bold}${red}-h  --help${normal}                   Shows this usage message and exit"
@@ -222,7 +222,7 @@ install_qogir_theme() {
 
 # Set default options
 COMMANDLINE_ONLY=false
-STREAMING=false
+OBS=true
 VERBOSE=false
 PRIVATE=false
 WSL=false
@@ -233,6 +233,7 @@ DESKTOP_THEME=breeze-dark
 VM=false
 FUNC=false
 HOST=system
+SCREEN_4K=true
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
@@ -251,9 +252,11 @@ while [ "$1" != "" ]; do
 	    m | -m | --model)		        shift
 					                    # Not used for ubuntu.  Skipping
 					                    ;;
-        s | -s | --streaming)           STREAMING=true
+        o | -o | --obs)                 OBS=false
                                         ;;
-        o | -o | --virtualbox)          VM=true
+        s | -s | --screen)              SCREEN_4K=false
+                                        ;;
+        b | -b | --virtualbox)          VM=true
                                         ;;
         r | -r | --run)                 FUNC=true
                                         shift
@@ -265,7 +268,7 @@ while [ "$1" != "" ]; do
         v | -v | --version)             version
                                     	exit 0
                                     	;;
-        H | -H | --hostname)            shift
+        H | -h | --hostname)            shift
                                         HOST=$1
                                         ;;
         h | -h | --help)                usage

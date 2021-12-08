@@ -44,8 +44,8 @@ usage() {
     echo -e "                               If you run this script as root then you ${bold}MUST${normal} specify this."
     echo -e "  ${bold}${red}-t  --theme-only${normal}             Don't install anything just setup terminal"
     echo -e "  ${bold}${red}-c  --commandline-only${normal}       Don't install GUI/X components"
-    echo -e "  ${bold}${red}-s  --streaming${normal}              Install OBS Studio and related components (Ubuntu Only)"
-    echo -e "  ${bold}${red}-o  --virtual-box${normal}            Installs VirtualBox (Ubuntu Only)"
+    echo -e "  ${bold}${red}-o  --streaming${normal}              Don't nstall OBS Studio and related components (Ubuntu Only)"
+    echo -e "  ${bold}${red}-b  --virtual-box${normal}            Installs VirtualBox (Ubuntu Only)"
     echo -e "  ${bold}${red}-g  --nogames${normal}                Prevents installing games this includes Stream and Minecraft (Ubuntu Only)"
     echo -e "  ${bold}${red}-p  --private-script${normal}         Run private scripts (These are encrypted)"
     echo -e "  ${bold}${red}-V  --verbose${normal}                Shows command output for debugging"
@@ -92,11 +92,11 @@ os_script() {
     get_file $GET "${OS}-setup.sh" "$GIT_REPO/scripts/${OS}-setup.sh?$(date +%s)"
     chmod +x ${OS}-setup.sh
     exec > /dev/tty
-    if [[ $OS == "ubuntu" && $STREAMING == "true" ]]; then
-        SARGS="-s"
+    if [[ $OS == "ubuntu" && $STREAMING == "false" ]]; then
+        SARGS="-o"
     fi
     if [[ $OS == "ubuntu" && $VM == "true" ]]; then
-        VMARGS="-o"
+        VMARGS="-b"
     fi
     if [[ $OS == "ubuntu" && $GAMES == "false" ]]; then
         GARGS="-g"
@@ -299,7 +299,7 @@ THEME_ONLY=false
 COMMANDLINE_ONLY=false
 VERBOSE=false
 PRIVATE=false
-STREAMING=false
+STREAMING=true
 GAMES=true
 VM=false
 
@@ -311,7 +311,7 @@ while [ "$1" != "" ]; do
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
                                         CARG="-c"
                                         ;;
-        s | -s | --streaming)           STREAMING=true
+        o | -o | --obs)                 STREAMING=false
                                         ;;
         w | -w | --wsl-user)            shift
                                         if [[ $1 =~ ^-.* ]]; then
