@@ -18,3 +18,12 @@ chmod +x /tmp/install.sh
 /tmp/install.sh --help
 ```
 
+# Install only apps on Ubuntu
+
+Grab the ubuntu system installer script, make it executable and then run it:
+
+```
+wget -O /tmp/ubuntu-setup-system.sh https://raw.githubusercontent.com/j-maynard/terminal-config/main/scripts/ubuntu-setup-system.sh
+chmod +x /tmp/ubuntu-setup-system.sh
+/tmp/ubuntu-setup-system.sh --help
+```

@@ -64,7 +64,7 @@ install_feedparser() {
     if [[ $FEEDPASER == "false" ]]; then
 	show_msg "Installing feedparser using pip..."
 	export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
-        pip3 install feedparser > /dev/null 2>&1
+        sudo pip3 install feedparser > /dev/null 2>&1
         export FEEDPASER=true
     fi
 }
@@ -77,11 +77,11 @@ setup_ppas() {
     if [[ $COMMANDLINE_ONLY == "false" && ! -v WSLENV ]]; then
         if which plasmashell >/dev/null 2>&1; then
         show_msg "Setting up PPA for KDA Plasma backports..."
-            sudo add-apt-repository ppa:kubuntu-ppa/backports
+            sudo add-apt-repository -y ppa:kubuntu-ppa/backports
         fi
     fi
     show_msg "Setting up PPA for Git..."
-    add-apt-repository ppa:git-core/ppa
+    add-apt-repository -y  ppa:git-core/ppa
 }
 
 apt_update() {
