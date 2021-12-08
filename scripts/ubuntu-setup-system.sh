@@ -236,7 +236,7 @@ install_lsd() {
     esac
     show_msg "Installing the latest version of LSD -> version: ${LSDVER}..."
     wget -q -O /tmp/lsd_${LSDVER}_${ARCH}.deb "https://github.com/Peltoche/lsd/releases/download/${LSDVER}/lsd_${LSDVER}_${ARCH}.deb"
-    if [ ! -f "lsd_${LSDVER}_${ARCH}.deb" ]; then
+    if [ ! -f "/tmp/lsd_${LSDVER}_${ARCH}.deb" ]; then
         show_msg "${red}Failed to download go... ${normal}${green}Skipping install...${normal}"
         return 1
     fi
@@ -261,12 +261,12 @@ install_yq() {
     esac
     show_msg "Installing the latest version of yq -> version: ${YQVER}..."
     wget -q -O /tmp/yq_linux_amd64.tar.gz "https://github.com/mikefarah/yq/releases/download/${YQVER}/yq_linux_amd64.tar.gz"
-    if [ ! -f "yq_linux_amd64.tar.gz" ]; then
+    if [ ! -f "/tmp/yq_linux_amd64.tar.gz" ]; then
         show_msg "${red}Failed to download yq... ${normal}${green}Skipping install...${normal}"
         return 1
     fi
-    tar -zxf yq_linux_amd64.tar.gz
-    sudo mv yq_linux_amd64 /usr/local/bin/yq
+    tar -zxf /tmp/yq_linux_amd64.tar.gz
+    sudo mv /tmp/yq_linux_amd64 /usr/local/bin/yq
     if which yq > /dev/null; then
         rm yq_linux_amd64.tar.gz
         return 0
@@ -340,13 +340,13 @@ install_ncspot() {
     install_feedparser
     SPOTVER=$(get_version https://github.com/hrkfdn/ncspot/releases.atom)
     case $(uname -m) in
-        x86_64)     ARCH=amd64
+        x86_64)     ARCH=x86_64
                     ;;
         *)          echo "${red}ncspot only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
     esac
     show_msg "Installing the latest version of ncspot -> version: ${SPOTVER}..."
-    wget -q -O /tmp/ncspot-v${SPOTVER}-linux.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/v${SPOTVER}/ncspot-v${SPOTVER}-linux.tar.gz"
+    wget -q -O /tmp/ncspot-v${SPOTVER}-linux.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/v${SPOTVER}/ncspot-v${SPOTVER}-linux-${ARCH}.tar.gz"
     if [ ! -f "/tmp/ncspot-v${SPOTVER}-linux.tar.gz" ]; then
         show_msg "${red}Failed to download ncspot... ${normal}${green}Skipping install...${normal}"
         return 1
@@ -988,7 +988,7 @@ fi
 
 cd $STARTPWD
 
-sudo echo script_run = true > /etc/post-install-script-run
+echo script_run = true | sudo tee /etc/post-install-script-run
 
 show_msg "\n\nUbuntu Setup Script has finished installing...\n\n"
 exit 0
