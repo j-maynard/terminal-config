@@ -14,8 +14,9 @@ case $(uname) in
               fi
               ;;
               
-  Linux)      # Windows Subsystem for Linux requires some special care
+  Linux)      # Add local bin directory to the path
               export PATH="${HOME}/.local/bin:${PATH}"
+              # Windows Subsystem for Linux requires some special care
               if [ -v WSLENV ]; then
                   killall gpg-agent > /dev/null 2>&1
                   ${HOME}/.term-config/wingpg/gpg-agent-relay.sh & disown > /dev/null 2>&1

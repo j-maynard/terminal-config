@@ -15,3 +15,7 @@ done
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 test -e /Users/jamesmaynard/.iterm2_shell_integration.zsh && source /Users/jamesmaynard/.iterm2_shell_integration.zsh || true
+
+# Add JBang to environment
+alias j!=jbang
+export PATH="$HOME/.jbang/bin:$PATH"
