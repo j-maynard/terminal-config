@@ -260,15 +260,17 @@ install_yq() {
                     return 0
     esac
     show_msg "Installing the latest version of yq -> version: ${YQVER}..."
-    wget -q -O /tmp/yq_linux_amd64.tar.gz "https://github.com/mikefarah/yq/releases/download/${YQVER}/yq_linux_amd64.tar.gz"
-    if [ ! -f "/tmp/yq_linux_amd64.tar.gz" ]; then
+    wget -q -O /tmp/yq_linux_${ARCH}.tar.gz "https://github.com/mikefarah/yq/releases/download/${YQVER}/yq_linux_${ARCH}.tar.gz"
+    if [ ! -f "/tmp/yq_linux_${ARCH}.tar.gz" ]; then
         show_msg "${red}Failed to download yq... ${normal}${green}Skipping install...${normal}"
         return 1
     fi
-    tar -zxf /tmp/yq_linux_amd64.tar.gz
-    sudo mv /tmp/yq_linux_amd64 /usr/local/bin/yq
+    tar -zxf /tmp/yq_linux_${ARCH}.tar.gz --directory /tmp
+    sudo mv /tmp/yq_linux_${ARCH} /usr/local/bin/yq
+    sudo /tmp/install-man-page.sh
     if which yq > /dev/null; then
-        rm yq_linux_amd64.tar.gz
+        rm /tmp/yq*
+        rm /tmp/install-man-page.sh
         return 0
     else
         show_msg "Failed to install yq yaml parser"
@@ -346,15 +348,15 @@ install_ncspot() {
                     return 0
     esac
     show_msg "Installing the latest version of ncspot -> version: ${SPOTVER}..."
-    wget -q -O /tmp/ncspot-v${SPOTVER}-linux.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/v${SPOTVER}/ncspot-v${SPOTVER}-linux-${ARCH}.tar.gz"
-    if [ ! -f "/tmp/ncspot-v${SPOTVER}-linux.tar.gz" ]; then
+    wget -q -O /tmp/ncspot-v${SPOTVER}-linux-${ARCH}.tar.gz "https://github.com/hrkfdn/ncspot/releases/download/v${SPOTVER}/ncspot-v${SPOTVER}-linux-${ARCH}.tar.gz"
+    if [ ! -f "/tmp/ncspot-v${SPOTVER}-linux-${ARCH}.tar.gz" ]; then
         show_msg "${red}Failed to download ncspot... ${normal}${green}Skipping install...${normal}"
         return 1
     fi
-    tar -zxf "/tmp/ncspot-v${SPOTVER}-linux.tar.gz"
+    tar -zxf "/tmp/ncspot-v${SPOTVER}-linux-${ARCH}.tar.gz" --directory /tmp
     sudo mv /tmp/ncspot /usr/local/bin
     if which ncspot > /dev/null; then
-        rm /tmp/ncspot-v${SPOTVER}-linux.tar.gz
+        rm /tmp/ncspot-v${SPOTVER}-linux-${ARCH}.tar.gz
         return 0
     else
         show_msg "Failed to install ncspot Spotify Client"
@@ -476,32 +478,6 @@ install_docker() {
     sudo usermod -a -G docker $USERNAME
     show_msg "Installing docker-compose..."
     install_docker_compose
-}
-
-install_snaps() {
-    show_msg "Installing the following packages from snap:"
-    show_msg "Authy"
-    show_msg "Journey"
-    show_msg "Todoist"
-
-    if ! which authy > /dev/null; then
-        sudo snap install authy --beta
-    fi
-    if ! which todoist > /dev/null; then
-        sudo snap install todoist
-    fi
-    if ! which journey > /dev/null; then
-        sudo snap install journey
-    fi
-}
-
-setup_flatpak() {
-    show_msg "Setting up Flatpak..."
-    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    sudo flatpak install -y flathub org.gnome.Platform//40
-    sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
-    show_msg "Installing Geary using Flatpak..."
-    sudo flatpak install -y flathub org.gnome.Geary
 }
 
 install_chrome() {
@@ -644,7 +620,8 @@ setup_obs() {
     else
         sudo apt-get install -y obs-studio > /dev/null
     fi
-    sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
+    # Disabling doing the modprobe at this stage.
+    # sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
     echo 'v4l2loopback' | sudo tee -a /etc/modules 
     echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf > /dev/null
 }
@@ -661,7 +638,7 @@ setup_nvidia_drivers() {
 					exec > /dev/null
 				fi
 			else
-				sudo ubuntu-drivers autoinstall
+				sudo ubuntu-drivers autoinstall > /dev/null
 			fi
 		fi
 	fi
@@ -689,7 +666,7 @@ setup_openrazer() {
                 exec > /dev/null
             fi
         else
-            sudo apt-get install -y openrazer-meta
+            sudo apt-get install -y openrazer-meta > /dev/null
         fi
 
         if [[ $COMMANDLINE_ONLY == "false" ]]; then
@@ -698,10 +675,10 @@ setup_openrazer() {
             curl -LSso /tmp/razergenie.key https://download.opensuse.org/repositories/hardware:/razer/xUbuntu_20.04/Release.key
             sudo apt-key add /tmp/razergenie.key
             # Add Polychromatic Repo
-            sudo add-apt-repository -y ppa:polychromatic/stable
+            sudo add-apt-repository -y ppa:polychromatic/stable 
             # Install Both
-            sudo apt-get update
-            sudo apt-get install -y polychromatic razergenie
+            sudo apt-get update > /dev/null
+            sudo apt-get install -y polychromatic razergenie > /dev/null
         fi
     fi
 }
@@ -739,21 +716,10 @@ install_kvantum() {
     fi
 }
 
-install_virtual_desktop_bar() {
-    if which plasmashell > /dev/null; then
-        show_msg "Installing Virtual Desktop Bar plasmoid..."
-        sudo apt-get install -y cmake extra-cmake-modules g++ qtbase5-dev qtdeclarative5-dev libqt5x11extras5-dev libkf5plasma-dev libkf5globalaccel-dev libkf5xmlgui-dev > /dev/null
-        git clone -q https://github.com/wsdfhjxc/virtual-desktop-bar.git /tmp/virtual-desktop-bar
-        cd /tmp/virtual-desktop-bar
-        ./scripts/build-applet.sh > /dev/null 
-        ./scripts/install-applet.sh > /dev/null
-    fi
-}
-
 fix-update-grub() {
 # As there is no accurate way to detect Kubuntu from Ubuntu
 	# We look for plasmashell instead and then assume its Kubuntu.
-	if plasmashell --version >/dev/null 2>&1; then
+	if which plasmashell > /dev/null; then
         show_msg "Updating update grub script to replace Ubuntu with Kubuntu..."
 		cat << EOF | sudo tee - /usr/sbin/update-grub > /dev/null 2&>1
 #!/bin/sh                                                               
@@ -779,9 +745,9 @@ install_grub_themes() {
 	t=/root/grub2-theme2
 	git clone ${GIT_QUIET} https://github.com/vinceliuice/grub2-themes.git $t
     if [[ $SCREEN_4K == "true" ]]; then
-        $R4K="-s 4k"
+        R4K='-s 4k'
     fi
-	sudo $t/install.sh -b -i whitesur -t whitesur $R4K > /dev/null 2>&1
+	sudo ${t}/install.sh -b -i whitesur -t whitesur ${R4K} > /dev/null 2>&1
 }
 
 install_con_fonts() {
@@ -828,11 +794,12 @@ install_nerd_fonts() {
 
 post_system_install() {
     show_msg "Setting up Plymouth..."
-    sudo apt install plymouth-theme-spinner plymouth-theme-breeze plymouth-themes
+    sudo apt-get install -y plymouth-theme-spinner plymouth-theme-breeze plymouth-themes
     sudo update-alternatives --set default.plymouth /usr/share/plymouth/themes/bgrt/bgrt.plymouth
     show_msg "Setting up crypttab..."
-    BLKID=$(sudo blkid /dev/mapper/*-root | cut -d ' ' -f 2 | cut -d '"' -f 2)
-    sudo echo "${HOST}_crypt $BLKID none luks,discard" | tee -a /etc/crypttab
+    CRYPT_DEVICE=$(lsblk --json -o name,type,mountpoint | jq '.blockdevices[] | .children[]? | select(.children[]?.type == "crypt") | .name')
+    BLKID=$(sudo blkid /dev/${CRYPT_DEVICE} | cut -d ' ' -f 2 | cut -d '"' -f 2)
+    sudo echo "$(cat /etc/hostname)_crypt UUID=${BLKID} none luks,discard" | tee -a /etc/crypttab
     update-initramfs -k all -c
 }
 
@@ -852,7 +819,6 @@ GAMES=true
 DESKTOP_THEME=breeze-dark
 VM=false
 FUNC=false
-HOST=system
 SCREEN_4K=true
 
 # Process commandline arguments
@@ -888,9 +854,6 @@ while [ "$1" != "" ]; do
         v | -v | --version)             version
                                     	exit 0
                                     	;;
-        H | -h | --hostname)            shift
-                                        HOST=$1
-                                        ;;
         h | -h | --help)                usage
                                     	exit 0
                                     	;;
@@ -931,13 +894,12 @@ retry_loop "install_yq"
 retry_loop "install_bat"
 retry_loop "install_ncspot"
 retry_loop "install_xidel"
+retry_loop "install_glow"
 retry_loop "install_go"
 install_docker
 
 if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     show_msg "\n\nSetting up GUI Applications...\n\n"
-    install_snaps
-    setup_flatpak
     install_chrome
     install_inkscape
     install_discord

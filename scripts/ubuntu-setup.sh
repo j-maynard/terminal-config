@@ -87,6 +87,32 @@ change_shell() {
 	fi
 }
 
+install_snaps() {
+    show_msg "Installing the following packages from snap:"
+    show_msg "Authy"
+    show_msg "Journey"
+    show_msg "Todoist"
+
+    if ! which authy > /dev/null; then
+        sudo snap install authy --beta
+    fi
+    if ! which todoist > /dev/null; then
+        sudo snap install todoist
+    fi
+    if ! which journey > /dev/null; then
+        sudo snap install journey
+    fi
+}
+
+setup_flatpak() {
+    show_msg "Setting up Flatpak..."
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    sudo flatpak install -y flathub org.gnome.Platform//40
+    sudo flatpak install -y flathub org.gtk.Gtk3theme.Breeze-Dark
+    show_msg "Installing Geary using Flatpak..."
+    sudo flatpak install -y flathub org.gnome.Geary
+}
+
 setup_wsl() {
     if [ ! -v WSLENV ]; then
         return
@@ -216,6 +242,18 @@ install_qogir_theme() {
     fi
 }
 
+
+install_virtual_desktop_bar() {
+    if which plasmashell > /dev/null; then
+        show_msg "Installing Virtual Desktop Bar plasmoid..."
+        sudo apt-get install -y cmake extra-cmake-modules g++ qtbase5-dev qtdeclarative5-dev libqt5x11extras5-dev libkf5plasma-dev libkf5globalaccel-dev libkf5xmlgui-dev > /dev/null
+        git clone -q https://github.com/wsdfhjxc/virtual-desktop-bar.git /tmp/virtual-desktop-bar
+        cd /tmp/virtual-desktop-bar
+        ./scripts/build-applet.sh > /dev/null 
+        ./scripts/install-applet.sh > /dev/null
+    fi
+}
+
 ################################
 # Main Script body starts here #
 ################################
@@ -232,7 +270,6 @@ GAMES=true
 DESKTOP_THEME=breeze-dark
 VM=false
 FUNC=false
-HOST=system
 SCREEN_4K=true
 
 # Process commandline arguments
@@ -268,9 +305,6 @@ while [ "$1" != "" ]; do
         v | -v | --version)             version
                                     	exit 0
                                     	;;
-        H | -h | --hostname)            shift
-                                        HOST=$1
-                                        ;;
         h | -h | --help)                usage
                                     	exit 0
                                     	;;
@@ -311,6 +345,8 @@ setup_shims
 
 if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     show_msg "\n\nSetting up GUI Applications...\n\n"
+    install_snaps
+    setup_flatpak
     show_msg "\n\nInstalling desktop themes...\n\n"
     if pgrep plasmashell; then
         install_virtual_desktop_bar
