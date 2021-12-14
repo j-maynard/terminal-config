@@ -33,9 +33,9 @@ SPACESHIP_PROMPT_ORDER=(
   #kubecontext   # Kubectl context section
   exec_time     # Execution time
   line_sep      # Line break
-  battery       # Battery level and status
+  # battery       # Battery level and status
   vi_mode       # Vi-mode indicator
-  # jobs          # Background jobs indicator
+  jobs          # Background jobs indicator
   exit_code     # Exit code section
   char          # Prompt character
 )

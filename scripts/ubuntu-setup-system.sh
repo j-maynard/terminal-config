@@ -73,6 +73,10 @@ get_version() {
     echo -e "import feedparser\nd=feedparser.parse('$1')\nprint(d.entries[0].title)\n" | python3 -
 }
 
+get_deb() {
+    echo "import html5lib, requests; print(html5lib.parse(requests.get('$1').text, treebuilder='lxml', namespaceHTMLElements=False).xpath(\"/html/body//a[contains(@href, 'deb')]/@href\")[0])" | python3
+}
+
 setup_ppas() {   
     if [[ $COMMANDLINE_ONLY == "false" && ! -v WSLENV ]]; then
         if which plasmashell >/dev/null 2>&1; then
@@ -87,7 +91,7 @@ setup_ppas() {
 apt_update() {
     show_msg "Updating the system..."
     sudo apt-get update
-    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+    if [[ $SECUREBOOT == "true" ]]; then
         exec > /dev/tty
         sudo apt-get upgrade -y
         if [ $VERBOSE == "false" ]; then
@@ -95,20 +99,6 @@ apt_update() {
         fi
     else
         sudo apt-get upgrade -y
-    fi
-}
-
-pkcon_update() {
-    show_msg "Updating the system..."
-    sudo apt-get update
-    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
-        exec > /dev/tty
-        sudo pkcon update -y --allow-downgrades
-        if [ $VERBOSE == "false" ]; then
-            exec > /dev/null
-        fi
-    else
-        sudo pkcon update -y --allow-downgrades
     fi
 }
 
@@ -120,18 +110,16 @@ apt_install() {
         "openjdk-11-jdk" "maven" "vim" "vim-nox"
         "vim-scripts" "most" "ruby-dev" "scdaemon" "pinentry-tty"
         "pinentry-curses" "libxml2-utils" "apt-transport-https"
-	    "neovim" "libgconf-2-4" "libappindicator1" "libc++1" "clamav"
-        "default-jdk" "jq" "gnupg2" "libssl-dev" "libgdk-pixbuf2.0-0" )
+	    "neovim" "libgconf-2-4"  "clamav"
+        "default-jdk" "jq" "gnupg2" "libssl-dev" )
 	
     recent_pkgs=( "openjdk-17-jdk" "python3.10-dev" "python3.10" )
 
-    x_apt_pkgs=( "idle-python3.9" "vim-gtk3" "libappindicator3-1"
-        "flatpak" "gnome-keyring" "materia-gtk-theme" "gtk2-engines-murrine"
+    x_apt_pkgs=( "idle-python3.9" "vim-gtk3" "libappindicator3-1" "libappindicator1" "libc++1"
+        "flatpak" "gnome-keyring" "materia-gtk-theme" "gtk2-engines-murrine" "libgdk-pixbuf2.0-0"
 	    "gtk2-engines-pixbuf" "lm-sensors" "nvme-cli" "conky-all" "gdebi-core" )
-	    
-    x_recent_pkgs=( "idle-python3.10" )
 
-    neon_pkgs=( "wget" "fonts-liberation" )
+    x_recent_pkgs=( "idle-python3.10" )
 
     gnome_pkgs=( "pinentry-gnome3" "gnome-tweaks" )
 
@@ -199,7 +187,7 @@ apt_install() {
 
     show_msg "Installing the following packages using apt:"
     echo -e ${pkg_out[@]} | column -t -s "|" > /dev/tty
-    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+    if [[ $SECUREBOOT == "true" ]]; then
         exec > /dev/tty
         sudo apt-get install -y ${PKGS[@]}
         if [ $VERBOSE == "false" ]; then
@@ -256,7 +244,11 @@ install_yq() {
     case $(uname -m) in
         x86_64)     ARCH=amd64
                     ;;
-        *)          echo "${red}yq only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+        armf)       ARCH=arm
+                    ;;
+        arm64)      ARCH=arm64
+                    ;;
+        *)          echo "${red}Unable to match arch to an available download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
     esac
     show_msg "Installing the latest version of yq -> version: ${YQVER}..."
@@ -381,12 +373,43 @@ install_xidel() {
     fi
     sudo dpkg -i /tmp/xidel_${XIVER}-1_${ARCH}.deb
     if [ $? == 0 ]; then
-        rm xidel_${XIVER}-1_${ARCH}.deb
+        rm /tmp/xidel_${XIVER}-1_${ARCH}.deb
         return 0
     else
         show_msg "Failed to install Xidel XML Parser."
         return 1
     fi
+}
+
+install_aws_cli() {
+    case $(uname -m) in
+        x86_64)     ARCH=x86_64
+                    ;;
+        arm64)      ARCH=aarch64
+                    ;;
+        *)          echo "${red}Can't identify Arch to match to an aws cli download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return 0
+    esac
+    show_msg "Installing AWS CLI..."
+    wget -q -O /tmp/awscliv2.zip "https://awscli.amazonaws.com/awscli-exe-linux-${ARCH}.zip"
+    unzip /tmp/awscliv2.zip -d /tmp
+    sudo /tmp/aws/install
+}
+
+install_aws_sam() {
+    show_msg "Installing AWS SAM..."  
+    case $(uname -m) in
+        x86_64)     ARCH=x86_64
+                    wget -q -O /tmp/aws-sam-cli-linux-${ARCH}.zip "https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-${ARCH}.zip"
+                    unzip /tmp/aws-sam-cli-linux-${ARCH}.zip -d /tmp/sam
+                    sudo /tmp/sam/install
+                    ;;
+        arm64)      ARCH=arm64
+                    sudo pip install aws-sam-cli
+                    ;;
+        *)          echo "${red}Can't identify Arch to match to an aws sam download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return 0
+    esac 
 }
 
 install_go() {
@@ -461,14 +484,18 @@ install_docker_compose() {
 }
 
 install_docker() {
-    if [ -v WSLENV ]; then
-        show_msg "Skipping Docker install as this should be done through Windows Docker Desktop..."
-        return
-    fi 
     show_msg "Installing Docker Community Edition..."
+    case $(uname -m) in
+        x86_64)     ARCH=amd64
+                    ;;
+        arm64)      ARCH=aarch64
+                    ;;
+        *)          show_msg "${red}Can't identify Arch to match to a docker-compose download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return 0
+    esac
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
     echo \
-  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  "deb [arch=${ARCH} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     sudo apt-get update
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io
@@ -482,6 +509,12 @@ install_docker() {
 
 install_chrome() {
     if ! which google-chrome > /dev/null; then
+        case $(uname -m) in
+            x86_64)     ARCH=x64
+                        ;;
+            *)          echo "${red}Can't identify Arch to match to a Chrome download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                        return
+        esac
         show_msg "Installing Google Chrome (Latest)..."
         wget -q -O /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
         if [ ! -f "/tmp/google-chrome-stable_current_amd64.deb" ]; then
@@ -500,6 +533,12 @@ install_chrome() {
 install_spotify() {
     show_msg "Installing Spotify Client..."
     if ! which spotify > /dev/null; then
+        case $(uname -m) in
+            x86_64)     ARCH=x64
+                        ;;
+            *)          echo "${red}Can't identify Arch to match to a Spotify download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                        return
+        esac
         curl -sS https://download.spotify.com/debian/pubkey_5E3C45D7B312C643.gpg | sudo apt-key add - 
         echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
         sudo apt-get update && sudo apt-get install -y spotify-client
@@ -512,12 +551,18 @@ install_spotify() {
 install_1password() {
     show_msg "Installing 1Password..."
     if ! which 1password > /dev/null; then
+        case $(uname -m) in
+            x86_64)     ARCH=x64
+                        ;;
+            *)          echo "${red}Can't identify Arch to match to a 1Password download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                        return
+        esac
         wget -q -O /tmp/1password-latest.deb "https://downloads.1password.com/linux/debian/amd64/stable/1password-latest.deb"
         if [ ! -f "/tmp/1password-latest.deb" ]; then
             show_msg "${red}Failed to download 1Password Deb Package... ${normal}${green}Skipping install...${normal}"
             return
         fi
-        sudo dpkg -i /tmp/1password-latest.deb
+        sudo dpkg -i /tmp/1password-latest.deb > /dev/null
         if [ $? == 0 ]; then
             rm /tmp/1password-latest.deb
         else
@@ -531,13 +576,12 @@ install_inkscape() {
     sudo add-apt-repository -y ppa:inkscape.dev/stable
     sudo apt-get update
     sudo apt-get install -y inkscape > /dev/null
-    sudo apt-get install --fix-broken
+    #sudo apt-get install --fix-broken
 }
 
 install_discord() {
     if ! which discord; then
         show_msg "Installing Discord (Latest)..."
-        sudo apt-get install -y libappindicator1 libc++1 
         wget -q -O /tmp/discord.deb "https://discord.com/api/download?platform=linux&format=deb"
         sudo dpkg -i /tmp/discord.deb
         if which discord >/dev/null; then
@@ -569,37 +613,60 @@ install_vscode() {
     case $(uname -m) in
         x86_64)     ARCH=x64
                     ;;
-        *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+        arm64)      ARCH=arm64
+                    ;;
+        *)          echo "${red}Can't identify Arch to match to an VS Code download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return
     esac
-    cd /tmp
-    wget -q "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-${ARCH}"
-    mv /tmp/"download?build=stable&os=linux-deb-${ARCH}" vscode.deb
+    wget -q -O /tmp/vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-${ARCH}"
     sudo dpkg -i /tmp/vscode.deb >/dev/null
     if which code >/dev/null; then
-        rm vscode.deb
+        rm /tmp/vscode.deb
     else
         echo "Unable to install Visual Studio Code"
     fi
 }
 
-install_typora() {
-    show_msg "Install Typora (Markdown Viewer/Editor)..."
-    wget -qO - https://typora.io/linux/public-key.asc | sudo apt-key add - > /dev/null 2>&1
-    sudo add-apt-repository -y 'deb https://typora.io/linux ./'
-    sudo apt-get update > /dev/null
-    sudo apt-get install -y typora  > /dev/null
+install_obsidian() {
+    show_msg "Installing Obsidian..."
+    case $(uname -m) in
+        x86_64)     ARCH=x64
+                    ;;
+        *)          echo "${red}Obsidian only supports X86 on Ubuntu.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
+                    return
+    esac
+    DEB=$(get_deb "https://obsidian.md/download")
+    wget -q -O /tmp/obsidian.deb $DEB
+    if [ ! -f /tmp/obsidian.deb ]; then
+        show_msg "${red}Error:${normal} Failed to download obsidian from ${DEB}."
+    fi
+    sudo dpkg -i /tmp/obsidian.deb
+    if [[ $? == 0 ]]; then
+        rm /tmp/obsidian.deb
+    else
+        show_msg "${red}Error:${normal} Failed to install obsidian."
+    fi
 }
 
-install_virtualbox() {
-    show_msg "Installing Oracle Virtual Box..."
-    wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add - > /dev/null 2>&1
-    wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add - > /dev/null 2>&1
-    dist=$(lsb_release -c | cut -d':' -f 2 | tr -d '[:space:]')
-    echo "deb [arch=amd64] https://download.virtualbox.org/virtualbox/debian $dist contrib" | sudo tee -a /etc/apt/sources.list
-    sudo apt-get update
-    pkg=$(apt-cache search virtualbox | grep Oracle |sort -r |head -n1 |cut -d ' ' -f1)
-    sudo apt-get install -y $pkg
+install_slack() {
+    show_msg "Installing Slack..."
+    case $(uname -m) in
+        x86_64)     ARCH=x64
+                    ;;
+        *)          echo "${red}Error:${normal} Slack only supports X86 on Ubuntu.  Arch = $(uname -m)... ${green}Skipping...${normal}"
+                    return
+    esac
+    DEB=$(get_deb "https://slack.com/intl/en-gb/downloads/instructions/ubuntu")
+    wget -q -O /tmp/slack.deb $DEB
+    if [ ! -f /tmp/slack.deb ]; then
+        show_msg "${red}Error:${normal} Failed to download slack from ${DEB}."
+    fi
+    sudo dpkg -i /tmp/slack.deb
+    if [[ $? == 0 ]]; then
+        rm /tmp/slack.deb
+    else
+        show_msg "${red}Error:${normal} Failed to install slack."
+    fi
 }
 
 setup_obs() {
@@ -611,7 +678,7 @@ setup_obs() {
         return
     fi
     sudo apt-get update > /dev/null
-    if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+    if [[ $SECUREBOOT == "true" ]]; then
         exec > /dev/tty
         sudo apt-get install -y obs-studio
         if [ $VERBOSE == "false" ]; then
@@ -622,7 +689,7 @@ setup_obs() {
     fi
     # Disabling doing the modprobe at this stage.
     # sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1
-    echo 'v4l2loopback' | sudo tee -a /etc/modules 
+    echo 'v4l2loopback' | sudo tee -a /etc/modules > /dev/null
     echo 'options v4l2loopback devices=1 video_nr=10 card_label="OBS Cam" exclusive_caps=1' | sudo tee - /etc/modprobe.d/v4l2loopback.conf > /dev/null
 }
 
@@ -631,7 +698,7 @@ setup_nvidia_drivers() {
 		show_msg "${green}Checking NVIDIA driver status...${normal}"
 		if ! lsmod |grep nvidia_uvm; then
 			show_msg "${red}Installing NVIDIA Propriatory drivers...${normal}"
-			if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+			if [[ $SECUREBOOT == "true" ]]; then
 				exec > /dev/tty
 				sudo ubuntu-drivers autoinstall
 				if [ $VERBOSE == "false" ]; then
@@ -659,7 +726,7 @@ setup_openrazer() {
         show_msg "Razer Hardware Detected... Installing OpenRazer..."
         sudo add-apt-repository -y ppa:openrazer/daily
 
-        if [[ $(mokutil --sb-state) == "SecureBoot enabled" ]]; then
+        if [[ $SECUREBOOT == "true" ]]; then
             exec > /dev/tty
             sudo apt-get install -y openrazer-meta
             if [ $VERBOSE == "false" ]; then
@@ -751,9 +818,6 @@ install_grub_themes() {
 }
 
 install_con_fonts() {
-    if [ -v WSLENV ]; then
-        return
-    fi
     show_msg "Running console fonts setup script..."
     curl -LSs "$GIT_REPO/scripts/console-font-setup.sh" | sudo bash -s - $VARG 
 }
@@ -794,10 +858,10 @@ install_nerd_fonts() {
 
 post_system_install() {
     show_msg "Setting up Plymouth..."
-    sudo apt-get install -y plymouth-theme-spinner plymouth-theme-breeze plymouth-themes
-    sudo update-alternatives --set default.plymouth /usr/share/plymouth/themes/bgrt/bgrt.plymouth
+    sudo apt-get install -y plymouth-theme-spinner plymouth-theme-breeze plymouth-themes > /dev/null
+    sudo update-alternatives --set default.plymouth /usr/share/plymouth/themes/bgrt/bgrt.plymouth > /dev/null
     show_msg "Setting up crypttab..."
-    CRYPT_DEVICE=$(lsblk --json -o name,type,mountpoint | jq '.blockdevices[] | .children[]? | select(.children[]?.type == "crypt") | .name')
+    CRYPT_DEVICE=$(lsblk --json -o name,type,mountpoint | jq '.blockdevices[] | .children[]? | select(.children[]?.type == "crypt") | .name' | cut -d '"' -f 2)
     BLKID=$(sudo blkid /dev/${CRYPT_DEVICE} | cut -d ' ' -f 2 | cut -d '"' -f 2)
     sudo echo "$(cat /etc/hostname)_crypt UUID=${BLKID} none luks,discard" | tee -a /etc/crypttab
     update-initramfs -k all -c
@@ -817,9 +881,9 @@ NEON=false
 FEEDPASER=false
 GAMES=true
 DESKTOP_THEME=breeze-dark
-VM=false
 FUNC=false
 SCREEN_4K=true
+SECUREBOOT=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
@@ -841,8 +905,6 @@ while [ "$1" != "" ]; do
         o | -o | --obs)                 OBS=false
                                         ;;
         s | -s | --screen)              SCREEN_4K=false
-                                        ;;
-        b | -b | --virtualbox)          VM=true
                                         ;;
         r | -r | --run)                 FUNC=true
                                         shift
@@ -873,20 +935,19 @@ if [ $VERBOSE == "false" ]; then
     exec > /dev/null 
 fi
 
+if [[ $SECUREBOOT == "true" ]]; then
+    SECUREBOOT=true
+fi
+
 set_username
 
 if [[ $FUNC == "true" ]]; then
     $FUNC_NAME
-    exit 0
+    exit $?
 fi
 
 setup_ppas
-if [[ $NEON == "true" ]]; then
-    pkcon_update
-else
-    apt_update
-fi
-
+apt_update
 apt_install
 install_feedparser
 retry_loop "install_lsd"
@@ -896,7 +957,15 @@ retry_loop "install_ncspot"
 retry_loop "install_xidel"
 retry_loop "install_glow"
 retry_loop "install_go"
-install_docker
+install_aws_cli
+
+if [ -v WSLENV ]; then
+    show_msg "Skipping Docker install as this should be done through Windows Docker Desktop..."
+    return
+else
+    install_docker
+    install_aws_sam
+fi
 
 if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     show_msg "\n\nSetting up GUI Applications...\n\n"
@@ -906,10 +975,6 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
     install_libreoffice
     install_vscode
     install_spotify
-    install_typora
-    if [ $VM == "true" ]; then
-        install_virtualbox
-    fi
     
     if [[ $OBS == "true" ]]; then
         setup_obs
@@ -942,15 +1007,11 @@ if [[ $COMMANDLINE_ONLY == "false" ]]; then
     install_nerd_fonts
 fi
 
-# Post install tasks:
-if [ ! -f /usr/bin/python ]; then
-    show_msg "Linking /usr/bin/python3 to /usr/bin/python..."
-    sudo ln -s /usr/bin/python3 /usr/bin/python
-fi
-
 cd $STARTPWD
 
-echo script_run = true | sudo tee /etc/post-install-script-run
-
+echo script_run = true | sudo tee /etc/post-install-script-run > /dev/null
+if [[ $USERNAME == "root" ]]; then
+    rm -r /tmp/*
+fi
 show_msg "\n\nUbuntu Setup Script has finished installing...\n\n"
 exit 0
