@@ -21,7 +21,11 @@ set_username() {
     if [ $USERNAME == "root" ]; then
         USER_PATH="/root"
     else
-        USER_PATH="/home/$USER"
+        if [[ $(uname) ==  "Darwin" ]]; then
+           USER_PATH="/Users/$USER"
+        else
+            USER_PATH="/home/$USER"
+        fi
     fi
 }
 
@@ -53,17 +57,27 @@ install_rbenv() {
 }
 
 install_jenv() {
-  if [[ $(uname) != "Linux" ]]; then
-    return
-  fi
-  
   if [ ! -d "${USER_PATH}/.jenv" ]; then
     show_msg "Setting JEnv up...."
     git clone $GIT_QUIET https://github.com/gcuisinier/jenv.git $USER_PATH/.jenv
     mkdir $USER_PATH/.jenv/versions
-    $USER_PATH/.jenv/bin/jenv add /usr/lib/jvm/java-11-openjdk-amd64
-    #Disabling Java8... will remove soon.
-    #$USER_PATH/.jenv/bin/jenv add /usr/lib/jvm/java-8-openjdk-amd64
+    case $(uname) in
+        Linux)          for i in /usr/lib/jvm/*; do
+                            # Skip symbolic links
+                            [ -L "$i" ] && continue
+                            if [ -d "$i/bin" ]; then
+                                $USER_PATH/.jenv/bin/jenv add $i
+                            fi
+                        done
+                        ;;
+        Darwin)         for i in /opt/homebrew/Cellar/openjdk*/*; do
+                            # Skip symbolic links
+                            [ -L "$i" ] && continue
+                            if [ -d "$i/bin" ]; then
+                                $USER_PATH/.jenv/bin/jenv add $i
+                            fi
+                        done
+    esac
   fi
 }
 

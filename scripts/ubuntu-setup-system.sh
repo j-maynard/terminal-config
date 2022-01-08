@@ -40,6 +40,7 @@ set_username() {
 
 usage() {
     echo -e "Usage:"
+    echo -e "  ${bold}${red}-M  --multipass${normal}              Skip hardware stuff and don't install docker"
     echo -e "  ${bold}${red}-d  --no-docker${normal}              Don't install docker."
     echo -e "  ${bold}${red}-o  --obs${normal}                    Don't install OBS studio or v4l2loopback"
     echo -e "  ${bold}${red}-c  --commandline-only${normal}       Install only commandline tools (no snaps, no chrome, etc...)"
@@ -139,7 +140,7 @@ apt_install() {
 	done
     fi
     
-    if [[ $COMMANDLINE_ONLY == "false" && ! -v WSLENV ]]; then
+    if [[ $COMMANDLINE_ONLY == "false"  && $CONTAINER == "false" ]]; then
         for pkg in ${x_apt_pkgs[@]}; do
             PKGS="${PKGS} ${pkg} "
         done
@@ -166,12 +167,11 @@ apt_install() {
         fi
         sudo usermod -a -G disk `whoami`
         sudo usermod -a -G users `whoami`
-    fi
-
-    if [[ $STREAMING == "true" ]]; then
-        for pkg in ${streaming_apt_pkgs[@]}; do
-            PKGS="${PKGS} ${pkg} "
-        done
+        if [[ $STREAMING == "true" ]]; then
+            for pkg in ${streaming_apt_pkgs[@]}; do
+                PKGS="${PKGS} ${pkg} "
+            done
+        fi
     fi
 
     SORTED_PKGS=($(for a in "${PKGS[@]}"; do echo "$a "; done | sort))
@@ -481,6 +481,8 @@ install_docker_compose() {
         x86_64)     ARCH=x86_64
                     ;;
         arm64)      ARCH=aarch64
+                    ;;
+        aarch64)    ARCH=aarch64
                     ;;
         *)          show_msg "${red}Can't identify Arch to match to a docker-compose download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
@@ -887,6 +889,31 @@ post_system_install() {
     update-initramfs -k all -c
 }
 
+install_gui_apps() {
+    show_msg "\n\nSetting up GUI Applications...\n\n"
+    install_chrome
+    install_inkscape
+    install_discord
+    install_libreoffice
+    install_vscode
+    install_spotify
+    
+    if [[ $OBS == "true" ]]; then
+        setup_obs
+    fi
+
+    if [[ $GAMES == "true" ]]; then
+        install_steam
+        install_minecraft
+    fi
+    install_1password
+
+    fix_sddm
+    if pgrep plasmashell; then
+        install_kvantum
+    fi
+}
+
 ################################
 # Main Script body starts here #
 ################################
@@ -896,7 +923,7 @@ COMMANDLINE_ONLY=false
 OBS=true
 VERBOSE=false
 PRIVATE=false
-WSL=false
+CONTAINER=false
 NEON=false
 FEEDPASER=false
 GAMES=true
@@ -909,6 +936,11 @@ NODOCKER=false
 # Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
+        M | -M | --multipass)           show_msg "Setting up for multipass environment..."
+                                        CONTAINER=true
+                                        COMMANDLINE_ONLY=true
+                                        OBS=false
+                                        ;;
 		d | -d | --no-docker)           NODOCKER=true
                                         ;;
         q | -q | --qogir)				DESKTOP_THEME=qogir
@@ -918,6 +950,7 @@ while [ "$1" != "" ]; do
         n | -n | --neon)                NEON=true
                                         ;;
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
+                                        OBS=false
                                     	;;
         w | -w | --wsl-user)            shift
                                         WSL_USER=$1
@@ -958,8 +991,11 @@ if [ $VERBOSE == "false" ]; then
     exec > /dev/null 
 fi
 
-if [[ $SECUREBOOT == "true" ]]; then
-    SECUREBOOT=true
+if [ -v WSLENV ]; then
+    if [[ $SECUREBOOT == "true" ]]; then
+        SECUREBOOT=false
+    fi
+    CONTAINER=true
 fi
 
 set_username
@@ -980,43 +1016,23 @@ retry_loop "install_ncspot"
 retry_loop "install_xidel"
 retry_loop "install_glow"
 retry_loop "install_go"
-install_aws_cli
 
-if [ -v WSLENV ]; then
-    show_msg "Skipping Docker install as this should be done through Windows Docker Desktop..."
+if [ $CONTAINER == "true" ]; then
+    show_msg "Skipping Docker install as we're running in a container environment..."
 elif [[ $NODOCKER == "true" ]]; then
     show_msg "Skipping Docker install..."
 else
     install_docker
+    install_aws_cli
     install_aws_sam
 fi
 
-if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
-    show_msg "\n\nSetting up GUI Applications...\n\n"
-    install_chrome
-    install_inkscape
-    install_discord
-    install_libreoffice
-    install_vscode
-    install_spotify
-    
-    if [[ $OBS == "true" ]]; then
-        setup_obs
-    fi
-
-    if [[ $GAMES == "true" ]]; then
-        install_steam
-        install_minecraft
-    fi
-    install_1password
-
-    fix_sddm
-    if pgrep plasmashell; then
-        install_kvantum
-    fi
+if [[ $COMMANDLINE_ONLY == "false"  && $CONTAINER == "false" ]]; then
+    install_gui_apps
+    install_nerd_fonts
 fi
 
-if [[ $WSL == "false" ]]; then
+if [[ $CONTAINER == "false" ]]; then
     show_msg "\n\nDoing some hardware setup...\n\n"
 	setup_nvidia_drivers
 	install_nvidia_modules_to_initramfs
@@ -1025,10 +1041,6 @@ if [[ $WSL == "false" ]]; then
 	install_grub_themes
     install_con_fonts
     post_system_install
-fi
-
-if [[ $COMMANDLINE_ONLY == "false" ]]; then
-    install_nerd_fonts
 fi
 
 cd $STARTPWD

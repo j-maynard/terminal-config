@@ -1,6 +1,6 @@
 #!/bin/bash
 STARTPWD=$(pwd)
-
+ARGS=$@
 SCRIPT=`realpath -s $0`
 SCRIPTPATH=`dirname $SCRIPT`
 
@@ -40,6 +40,8 @@ set_username() {
 
 usage() {
     echo -e "Usage:"
+    echo -e "  ${bold}${red}-M  --multipass${normal}              Skip hardware stuff and don't install docker"
+    echo -e "  ${bold}${red}-d  --no-docker${normal}              Don't install docker."
     echo -e "  ${bold}${red}-o  --obs${normal}                    Don't install OBS studio or v4l2loopback"
     echo -e "  ${bold}${red}-c  --commandline-only${normal}       Install only commandline tools (no snaps, no chrome, etc...)"
     echo -e "  ${bold}${red}-w  --wsl-user [username]${normal}    Sets the Windows username which runs WSL.  This is used to find the windows"
@@ -263,25 +265,34 @@ COMMANDLINE_ONLY=false
 OBS=true
 VERBOSE=false
 PRIVATE=false
-WSL=false
+CONTAINER=false
 NEON=false
 FEEDPASER=false
 GAMES=true
 DESKTOP_THEME=breeze-dark
-VM=false
 FUNC=false
 SCREEN_4K=true
+SECUREBOOT=false
+NODOCKER=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
-		q | -q | --qogir)				DESKTOP_THEME=qogir
+        M | -M | --multipass)           show_msg "Setting up for multipass environment..."
+                                        CONTAINER=true
+                                        COMMANDLINE_ONLY=true
+                                        OBS=false
+                                        ;;
+		d | -d | --no-docker)           NODOCKER=true
+                                        ;;
+        q | -q | --qogir)				DESKTOP_THEME=qogir
 										;;
         g | -g | --no-games)            GAMES=false
                                         ;;
         n | -n | --neon)                NEON=true
                                         ;;
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
+                                        OBS=false
                                     	;;
         w | -w | --wsl-user)            shift
                                         WSL_USER=$1
@@ -292,8 +303,6 @@ while [ "$1" != "" ]; do
         o | -o | --obs)                 OBS=false
                                         ;;
         s | -s | --screen)              SCREEN_4K=false
-                                        ;;
-        b | -b | --virtualbox)          VM=true
                                         ;;
         r | -r | --run)                 FUNC=true
                                         shift
@@ -333,7 +342,7 @@ fi
 
 if [ ! -f /etc/post-install-script-run ]; then
     wget -q -O /tmp/ubuntu-setup-system.sh $GIT_REPO/scripts/ubuntu-setup-system.sh
-    bash /tmp/ubuntu-setup-system.sh $@
+    bash /tmp/ubuntu-setup-system.sh $ARGS
 fi
 
 install_antibody
@@ -343,7 +352,7 @@ install_feedparser
 setup_wsl
 setup_shims
 
-if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
+if [[ $COMMANDLINE_ONLY == "false" && $CONTAINER == "false" ]]; then
     show_msg "\n\nSetting up GUI Applications...\n\n"
     install_snaps
     setup_flatpak
@@ -361,7 +370,7 @@ if [[ $COMMANDLINE_ONLY == "false" && $WSL == "false" ]]; then
 		esac
 fi
 
-if [[ $WSL == "false" ]]; then
+if [[ $CONTAINER == "false" ]]; then
 	setup_streamdeck
 fi
 

@@ -43,6 +43,7 @@ usage() {
     echo -e "                               users home directory. If not specified it matches it to the linux username."
     echo -e "                               If you run this script as root then you ${bold}MUST${normal} specify this."
     echo -e "  ${bold}${red}-t  --theme-only${normal}             Don't install anything just setup terminal"
+    echo -e "  ${bold}${red}-M  --multipass${normal}              Skip hardware stuff and don't install docker"
     echo -e "  ${bold}${red}-c  --commandline-only${normal}       Don't install GUI/X components"
     echo -e "  ${bold}${red}-o  --streaming${normal}              Don't nstall OBS Studio and related components (Ubuntu Only)"
     echo -e "  ${bold}${red}-b  --virtual-box${normal}            Installs VirtualBox (Ubuntu Only)"
@@ -103,7 +104,7 @@ os_script() {
     fi
     
     echo "Running OS/Distro setup script"
-    ./${OS}-setup.sh $MODEL $VARG $CARG $WSLARG $SARGS $NEON_FLAG $GARGS $VMARGS
+    ./${OS}-setup.sh $MODEL $VARG $CARG $WSLARG $SARGS $NEON_FLAG $GARGS $VMARGS $MULTIPASS_FLAG
     if [ $? -ne 0 ]; then
         show_msg "${red}${bold}OS Install script failed to complete successful.  Exiting.${normal}"
         exit 1
@@ -306,6 +307,8 @@ VM=false
 # Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
+        M | -M | --multipass)           MULTIPASS_FLAG="-M"
+                                        ;;
         t | -t | --theme-only)          THEME_ONLY=true
                                         ;;
         c | -c | --commandline-only)    COMMANDLINE_ONLY=true
