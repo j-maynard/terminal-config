@@ -25,7 +25,7 @@ set expandtab
 autocmd Filetype rb setlocal tabstop=4
 set guifont=UbuntuMonoDerivativePowerline-Regular:h16
 source $VIMRUNTIME/menu.vim
-color dracula
+color spacecamp 
 set updatetime=500
 autocmd StdinReadPre * let s:std_in=1
 " autocmd vimenter * NERDTree

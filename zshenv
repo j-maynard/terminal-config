@@ -39,6 +39,12 @@ else
         export POWERLINE_SAFE=true
     fi
 fi
+
+# Setup homebrew on the mac
+if [[ $(uname) == "Darwin" ]]; then
+    eval $(/opt/homebrew/bin/brew shellenv)
+fi
+
 export TMUX_INTEGRATION=true
 
 # Uncomment to stop TMUX from running at startup

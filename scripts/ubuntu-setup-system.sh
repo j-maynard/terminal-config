@@ -40,6 +40,7 @@ set_username() {
 
 usage() {
     echo -e "Usage:"
+    echo -e "  ${bold}${red}-d  --no-docker${normal}              Don't install docker."
     echo -e "  ${bold}${red}-o  --obs${normal}                    Don't install OBS studio or v4l2loopback"
     echo -e "  ${bold}${red}-c  --commandline-only${normal}       Install only commandline tools (no snaps, no chrome, etc...)"
     echo -e "  ${bold}${red}-w  --wsl-user [username]${normal}    Sets the Windows username which runs WSL.  This is used to find the windows"
@@ -217,7 +218,9 @@ install_lsd() {
     case $(uname -m) in
         x86_64)     ARCH=amd64
                     ;;
-        arm64)     ARCH=arm64
+        arm64)      ARCH=arm64
+                    ;;
+        aarch64)    ARCH=arm64
                     ;;
         *)          echo "${red}Can't identify Arch to match to an LSD download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
@@ -247,6 +250,8 @@ install_yq() {
         armf)       ARCH=arm
                     ;;
         arm64)      ARCH=arm64
+                    ;;
+        aarch64)    ARCH=arm64
                     ;;
         *)          echo "${red}Unable to match arch to an available download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
@@ -278,6 +283,8 @@ install_bat() {
                     ;;
         arm64)      ARCH=arm64
                     ;;
+        aarch64)    ARCH=arm64
+                    ;;
         armhf)      ARCH=armhf
                     ;;
         *)          echo "${red}Can't identify Arch to match to an bat download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
@@ -308,6 +315,8 @@ install_glow() {
                     ;;
         arm64)      ARCH=arm64
                     ;;
+        aarch64)    ARCH=arm64
+                    ;;
         armhf)      ARCH=armv6
                     ;;
         *)          echo "${red}Can't identify Arch to match to a glow download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
@@ -335,6 +344,8 @@ install_ncspot() {
     SPOTVER=$(get_version https://github.com/hrkfdn/ncspot/releases.atom)
     case $(uname -m) in
         x86_64)     ARCH=x86_64
+                    ;;
+        aarch64)    ARCH=arm64
                     ;;
         *)          echo "${red}ncspot only runs on AMD64 Linux.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
@@ -387,6 +398,8 @@ install_aws_cli() {
                     ;;
         arm64)      ARCH=aarch64
                     ;;
+        aarch64)    ARCH=arm64
+                    ;;
         *)          echo "${red}Can't identify Arch to match to an aws cli download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
     esac
@@ -405,6 +418,9 @@ install_aws_sam() {
                     sudo /tmp/sam/install
                     ;;
         arm64)      ARCH=arm64
+                    sudo pip install aws-sam-cli
+                    ;;
+        aarch64)    ARCH=arm64
                     sudo pip install aws-sam-cli
                     ;;
         *)          echo "${red}Can't identify Arch to match to an aws sam download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
@@ -430,6 +446,8 @@ install_go() {
         armv6l)     ARCH=armv6l
                     ;;
         arm64)      ARCH=arm64
+                    ;;
+        aarch64)    ARCH=arm64
                     ;;
         *)          show_msg "${red}Can't identify Arch to match to a Go download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
@@ -489,6 +507,8 @@ install_docker() {
         x86_64)     ARCH=amd64
                     ;;
         arm64)      ARCH=aarch64
+                    ;;
+        aarch64)    ARCH=arm64
                     ;;
         *)          show_msg "${red}Can't identify Arch to match to a docker-compose download.  Arch = $(uname -m)... ${normal}${green}Skipping...${normal}"
                     return 0
@@ -884,11 +904,14 @@ DESKTOP_THEME=breeze-dark
 FUNC=false
 SCREEN_4K=true
 SECUREBOOT=false
+NODOCKER=false
 
 # Process commandline arguments
 while [ "$1" != "" ]; do
     case $1 in
-		q | -q | --qogir)				DESKTOP_THEME=qogir
+		d | -d | --no-docker)           NODOCKER=true
+                                        ;;
+        q | -q | --qogir)				DESKTOP_THEME=qogir
 										;;
         g | -g | --no-games)            GAMES=false
                                         ;;
@@ -961,7 +984,8 @@ install_aws_cli
 
 if [ -v WSLENV ]; then
     show_msg "Skipping Docker install as this should be done through Windows Docker Desktop..."
-    return
+elif [[ $NODOCKER == "true" ]]; then
+    show_msg "Skipping Docker install..."
 else
     install_docker
     install_aws_sam
