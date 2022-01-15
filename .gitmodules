@@ -33,3 +33,6 @@
         path = conky
         url = https://github.com/j-maynard/conky-setup
         branch = main
+[submodule "vim/bundle/vim-airline-themes"]
+	path = vim/bundle/vim-airline-themes
+	url = git@github.com:vim-airline/vim-airline-themes.git
