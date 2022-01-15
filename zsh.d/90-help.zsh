@@ -80,3 +80,4 @@ add_help_command() {
 }
 
 alias help=show_help
+echo ""

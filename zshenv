@@ -61,9 +61,15 @@ export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
 # export GDK_DPI_SCALE=1.75
 # export GDK_SCALE=1.75
 
-export PAGER=/usr/bin/bat
-export EDITOR=/usr/bin/nvim
+if [[ $(uname) == "Darwin" ]]; then
+    export PAGER=/opt/homebrew/bin/bat
+    export EDITOR=/opt/homebrew/bin/nvim
+else
+    export PAGER=/usr/bin/bat
+    export EDITOR=/usr/bin/nvim
+fi
 
 # Source local environment variables to over ride
 # any of the envars defined here.
 source ~/.term-config/zshenv.local
+. "$HOME/.cargo/env"
