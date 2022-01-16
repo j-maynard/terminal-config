@@ -18,10 +18,6 @@
         path = vim/bundle/vim-sensible
         url = https://github.com/tpope/vim-sensible
         branch = master
-[submodule "vim/bundle/sensible"]
-	path = vim/bundle/sensible
-	url = https://github.com/tpope/vim-sensible.git
-	branch = master
 [submodule "vim/bundle/tmuxline.vim"]
 	path = vim/bundle/tmuxline.vim
 	url = https://github.com/edkolev/tmuxline.vim
@@ -36,3 +32,9 @@
 [submodule "vim/bundle/vim-airline-themes"]
 	path = vim/bundle/vim-airline-themes
 	url = git@github.com:vim-airline/vim-airline-themes.git
+[submodule "vim/bundle/vim-fugitive"]
+	path = vim/bundle/vim-fugitive
+	url = git@github.com:tpope/vim-fugitive.git
+[submodule "vim/bundle/vim-devicons"]
+	path = vim/bundle/vim-devicons
+	url = git@github.com:ryanoasis/vim-devicons.git

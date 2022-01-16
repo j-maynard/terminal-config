@@ -1,5 +1,4 @@
 execute pathogen#infect()
-set rtp+=~/Development/powerline/bindings/vim
 set rtp+=~/.fzf
 set nocompatible
 "filetype plugin indent on
@@ -18,27 +17,38 @@ set confirm
 "set mouse=a
 set cmdheight=2
 set number
-set colorcolumn=72
+set colorcolumn=80
 set shiftwidth=4
 set softtabstop=4
 set expandtab
-autocmd Filetype rb setlocal tabstop=4
-set guifont=UbuntuMonoDerivativePowerline-Regular:h16
+autocmd Filetype rb setlocal tabstop=2
 source $VIMRUNTIME/menu.vim
-color spacecamp 
+color spacecamp
 set updatetime=500
 autocmd StdinReadPre * let s:std_in=1
-" autocmd vimenter * NERDTree
-" autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in") | exe 'NERDTree' argv()[0] | wincmd p | ene | exe 'cd '.argv()[0] | endif
-" autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-map <C-n> :NERDTreeToggle<CR>
+
+" Setup nerdtree
+autocmd vimenter * NERDTree | wincmd p
+autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in") | exe 'NERDTree' argv()[0] | wincmd p | ene | exe 'cd '.argv()[0] | endif
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
+nnoremap <leader>n :NERDTreeFocus<CR>
+nnoremap <C-n> :NERDTree<CR>
+nnoremap <C-t> :NERDTreeToggle<CR>
+nnoremap <C-f> :NERDTreeFind<CR>
+nnoremap <C-]> :wincmd p<CR>
 set clipboard=unnamed
-map <F8> :setl noai nocin nosi inde=<CR>
-let g:airline_powerline_fonts = 1
+
+let g:NERDTreeMinimalUI = 1
+let g:NERDTreeDirArrows = 1
 let g:NERDTreeDirArrowExpandable = '▸'
 let g:NERDTreeDirArrowCollapsible = '▾'
-nmap <F6> :NERDTreeToggle<CR>
 
+nmap <F6> :NERDTreeToggle<CR>
+map <F8> :setl noai nocin nosi inde=<CR>
+
+"<Leader> Airline Setup below this point
+let g:airline_powerline_fonts = 1
 if !exists('g:airline_symbols')
   let g:airline_symbols = {}
 endif
@@ -51,3 +61,56 @@ let g:airline_symbols.readonly = ' '
 let g:airline_symbols.linenr = '☰ '
 let g:airline_symbols.maxlinenr = ' '
 let g:airline_symbols.dirty=' '
+let g:airline_theme='wombat'
+let g:airline#extensions#tabline#buffer_nr_show = 1
+let g:airline#extensions#whitespace#enabled = 0
+hi Normal guibg=NONE ctermbg=NONE
+let g:airline_section_z = airline#section#create(['windowswap', '%3p%% ', 'linenr', ':%3v'])
+set noshowmode
+
+let g:webdevicons_enable = 1
+let g:WebDevIconsOS = 'Darwin'
+
+let g:DevIconsEnableFolderPatternMatching = 1
+let g:DevIconsEnableFolderExtensionPatternMatching = 1
+let g:WebDevIconsUnicodeDecorateFileNodesExactSymbols = {} " needed
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols = {} " needed
+let g:WebDevIconsUnicodeDecorateFileNodesPatternSymbols = {} " needed
+
+let g:WebDevIconsUnicodeDecorateFileNodesDefaultSymbol = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['md'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['gpg'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['zip'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['pdf'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['doc'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['docx'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['xls'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['xlsx'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['ppt'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['pptx'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['mov'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['heic'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['txt'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['text'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['env'] = ''
+
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['Dockerfile'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['dockerfile'] = ''
+
+let g:WebDevIconsUnicodeDecorateFileNodesExactSymbols['Dockerfile'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExactSymbols['Downloads'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExactSymbols['Development'] = ''
+let g:WebDevIconsUnicodeDecorateFileNodesExactSymbols['Library'] = ''
+
+let g:NERDTreeGitStatusIndicatorMapCustom = {
+                \ 'Modified'  :'ﳁ',
+                \ 'Staged'    :'',
+                \ 'Untracked' :'',
+                \ 'Renamed'   :'',
+                \ 'Unmerged'  :'ﭥ',
+                \ 'Deleted'   :'',
+                \ 'Dirty'     :'ﯽ',
+                \ 'Ignored'   :'',
+                \ 'Clean'     :'',
+                \ 'Unknown'   :'',
+                \ }
