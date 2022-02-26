@@ -43,6 +43,8 @@ fi
 # Setup homebrew on the mac
 if [[ $(uname) == "Darwin" ]]; then
     eval $(/opt/homebrew/bin/brew shellenv)
+    # Build MacOS Path
+    export PATH="/Library/Frameworks/Python.framework/Versions/3.10/bin:${PATH}"
 fi
 
 export TMUX_INTEGRATION=true

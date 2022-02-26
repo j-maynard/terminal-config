@@ -9,13 +9,12 @@ ENV USER_PASSWORD $USER_PASSWORD
 # Install useful applications and libraries
 RUN apt-get update \
 && apt-get install -y  zsh git sudo nano curl wget neovim jq htop jed \
-links lynx tmux most python3-pip python3.9-dev tree openjdk-11-jdk \ 
+links lynx tmux most python3-pip python3.9-dev tree openjdk-11-jdk bat \ 
 ruby-dev libssl-dev build-essential default-jdk pinentry-curses scdaemon \
 gnupg2 time \ 
 && curl -sfL git.io/antibody | sudo sh -s - -b /usr/local/bin \
 && wget -q -O /tmp/bat.deb "https://github.com/sharkdp/bat/releases/download/v0.18.1/bat_0.18.1_amd64.deb" \
 && wget -q -O /tmp/lsd.deb "https://github.com/Peltoche/lsd/releases/download/0.20.1/lsd_0.20.1_amd64.deb" \
-&& wget -q -O /tmp/xidel.deb "https://github.com/benibela/xidel/releases/download/Xidel_0.9.8/xidel_0.9.8-1_amd64.deb" \
 && dpkg -i /tmp/*.deb \
 && wget -q -O /usr/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.9.3/yq_linux_amd64" \
 && chmod +x /usr/bin/yq

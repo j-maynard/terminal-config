@@ -1,6 +1,7 @@
 *.swp
 .optional.txt
 vim/autoload/
+vim/bundle/
 mutt/cache/
 mutt/gmail/
 mutt/icloud-passwords.txt
@@ -10,7 +11,6 @@ encrypted/*.txt
 tmux.env
 .optional.txt
 wingpg/socat-gpg.pid
-zshenv
 vim/.netrwhist
 gituser
-zshenv.local
+vim/plugged

@@ -1,4 +1,20 @@
-execute pathogen#infect()
+" Load vim-plug
+call plug#begin('~/.vim/plugged')
+
+" Get plugins
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'https://github.com/airblade/vim-gitgutter.git'
+Plug 'preservim/nerdtree' | Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'kyazdani42/nvim-web-devicons'
+Plug 'akinsho/bufferline.nvim'
+Plug 'ryanoasis/vim-devicons'
+Plug 'https://github.com/tpope/vim-fugitive.git'
+Plug 'arcticicestudio/nord-vim'
+
+" Start plugins
+call plug#end()
+
 set rtp+=~/.fzf
 set nocompatible
 "filetype plugin indent on
@@ -23,9 +39,10 @@ set softtabstop=4
 set expandtab
 autocmd Filetype rb setlocal tabstop=2
 source $VIMRUNTIME/menu.vim
-color spacecamp
+"colorscheme nord
 set updatetime=500
 autocmd StdinReadPre * let s:std_in=1
+set hidden
 
 " Setup nerdtree
 autocmd vimenter * NERDTree | wincmd p
@@ -61,10 +78,11 @@ let g:airline_symbols.readonly = ' '
 let g:airline_symbols.linenr = '☰ '
 let g:airline_symbols.maxlinenr = ' '
 let g:airline_symbols.dirty=' '
-let g:airline_theme='wombat'
+"let g:airline_theme='wombat'
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#fnamemod = ':t'
 let g:airline#extensions#tabline#buffer_nr_show = 1
 let g:airline#extensions#whitespace#enabled = 0
-hi Normal guibg=NONE ctermbg=NONE
 let g:airline_section_z = airline#section#create(['windowswap', '%3p%% ', 'linenr', ':%3v'])
 set noshowmode
 
@@ -114,3 +132,10 @@ let g:NERDTreeGitStatusIndicatorMapCustom = {
                 \ 'Clean'     :'',
                 \ 'Unknown'   :'',
                 \ }
+"hi Normal guibg=NONE ctermbg=NONE
+
+lua << EOF
+require("bufferline").setup{}
+EOF
+colorscheme nord
+

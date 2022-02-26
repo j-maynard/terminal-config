@@ -9,4 +9,4 @@ fi
 antibody bundle romkatv/powerlevel10k
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.term-config/p10k.zsh ]] || source ~/.term-config/p10k.zsh
+[[ ! -f ~/.term-config/theme/p10k.zsh ]] || source ~/.term-config/theme/p10k.zsh

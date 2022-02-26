@@ -31,9 +31,9 @@ alias .5='cd ../../../../..'
 ## Go Home
 alias home="cd ${HOME}"
 
-alias untar='tar -zxvf '
+alias untar='tar -zxf '
 alias wget='wget -c '
-alias getpass="openssl rand -base64 20"
+alias genpass="openssl rand -base64 20"
 alias sha='shasum -a 256 '
 alias www='python -m SimpleHTTPServer 8000'
 alias cls='clear'

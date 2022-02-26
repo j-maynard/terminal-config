@@ -3,4 +3,3 @@
 # the variables in zshenv.  Don't change zshenv unless you have to and
 # make sure its not changed with scripts.
 export VERIFY_USE_PUBLIC_BINARIES=true
-

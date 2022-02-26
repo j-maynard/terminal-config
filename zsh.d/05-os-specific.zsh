@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Mac Specific
+# OS Specific stuff goes here 
 case $(uname) in
   Darwin)     PATH="/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/opt/ruby/bin:/usr/local/lib/ruby/gems/2.6.0/bin:/usr/local/opt/coreutils/libexec/gnubin:$PATH"
               MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
@@ -13,7 +13,6 @@ case $(uname) in
                   export SSH_AUTH_SOCK
               fi
               ;;
-              
   Linux)      # Add local bin directory to the path
               export PATH="${HOME}/.local/bin:${PATH}"
               # Windows Subsystem for Linux requires some special care
